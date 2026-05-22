@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { agents as agentsTable, agentSessions, agentMemory } from '../lib/schema'
 import { authMiddleware } from '../middleware/auth'
+import { createAgentWallet } from '../services/wallet.service'
 
 export const agentRoutes = new Hono()
 
