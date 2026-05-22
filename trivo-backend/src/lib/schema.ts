@@ -123,3 +123,13 @@ export const skills = pgTable('skills', {
   config: text('config'),
   createdAt: timestamp('created_at').defaultNow(),
 })
+
+// ── Agent Tools ──
+export const agentTools = pgTable('agent_tools', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  toolName: text('tool_name').notNull(),
+  enabled: text('enabled').default('true'),
+  config: text('config'),
+  createdAt: timestamp('created_at').defaultNow(),
+});

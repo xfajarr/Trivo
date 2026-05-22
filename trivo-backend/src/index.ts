@@ -2,6 +2,12 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { validateConfig } from './config'
+
+// Validate env vars on startup (not in tests)
+if (!process.env.VITEST) {
+  validateConfig()
+}
 
 import { healthRoutes } from './routes/health'
 import { authRoutes } from './routes/auth'
@@ -27,6 +33,15 @@ app.route('/api/copy', copyRoutes)
 app.route('/api/wallets', walletRoutes)
 app.route('/api/strategy', strategyRoutes)
 app.route('/api', memoryRoutes)
+
+setTimeout(async () => {
+  try {
+    const { startAllCrons } = await import('./services/cron')
+    startAllCrons()
+  } catch (err) {
+    console.log('⏰ Cron not started (DB may not be available yet)')
+  }
+}, 1000)
 
 const port = parseInt(process.env.PORT || '3000')
 serve({

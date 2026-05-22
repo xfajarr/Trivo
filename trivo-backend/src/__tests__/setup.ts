@@ -1,0 +1,12 @@
+// Set env vars at module level — runs before any imports in test files
+process.env.NODE_ENV = 'test'
+process.env.VITEST = 'true'
+process.env.PRIVY_APP_ID = 'test-app-id'
+process.env.PRIVY_APP_SECRET = 'test-secret'
+process.env.ARC_RPC_URL = 'https://rpc.testnet.arc-node.thecanteenapp.com/v1/test'
+process.env.SIMPLE_ORACLE = '0x0000000000000000000000000000000000000001'
+process.env.COPY_TRADING = '0x0000000000000000000000000000000000000002'
+process.env.MOCK_PERP = '0x0000000000000000000000000000000000000003'
+process.env.MOCK_POLYMARKET = '0x0000000000000000000000000000000000000004'
+process.env.MOCK_LPV3 = '0x0000000000000000000000000000000000000005'
+process.env.FEE_MANAGER = '0x0000000000000000000000000000000000000006'
