@@ -1,0 +1,31 @@
+# Foundry compiler files
+cache/
+out/
+broadcast/
+forge-artifacts/
+
+# Dependencies (Forge libs)
+lib/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Coverage
+coverage/
+lcov.info
+
+# Logs
+*.log
+.logs/
+.ignore/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Optional: keep foundry.lock committed (it's like package-lock)
+# foundry.lock
