@@ -15,7 +15,7 @@ const createAgentSchema = z.object({
   avatar: z.string().optional(),
   hostingType: z.enum(['trivo', 'self_hosted']).optional(),
   endpoint: z.string().optional(),
-  modelProvider: z.enum(['deepseek', 'claude', 'openai', 'qwen', 'byok']),
+  modelProvider: z.enum(['deepseek', 'claude', 'openai', 'qwen', 'byok', 'asi1-mini', 'asi1', 'asi1-ultra']),
   modelConfig: z.string().optional(),
   skills: z.string().optional(),
   strategy: z.string().optional(),
