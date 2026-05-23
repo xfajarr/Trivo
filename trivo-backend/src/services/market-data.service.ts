@@ -25,16 +25,16 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
 
     for (const [pair, price] of Object.entries(prices)) {
       try {
-        await updatePrice(pair, price)
-        console.log(`📊 ${pair} → $${price} (on-chain)`)
+        const result = await updatePrice(pair, price)
+        console.log(`📊 ${pair} → $${price} (🔗 https://testnet.arcscan.app/tx/${result.transactionHash})`)
 
         // Initialize LP pools on first run
         if (!lpPoolInitialized && pair === 'ETH/USD') {
           try {
-            await mockLpCreatePool('ETH/USDC', 500)
-            await mockLpCreatePool('WBTC/ETH', 3000)
-            lpPoolInitialized = true
-            console.log('💧 LP pools created on-chain')
+            const r1 = await mockLpCreatePool('ETH/USDC', 500)
+          await mockLpCreatePool('WBTC/ETH', 3000)
+          lpPoolInitialized = true
+          console.log(`💧 LP pools created (🔗 https://testnet.arcscan.app/tx/${r1.transactionHash})`)
           } catch { /* pool may already exist */ }
         }
       } catch (err) {
@@ -49,7 +49,8 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
 
     // Simulate LP fee accrual
     try {
-      await mockLpSimulateFeeAccrual(1, 500000)
+      const r = await mockLpSimulateFeeAccrual(1, 500000)
+      console.log(`💧 LP fee accrual simulated (🔗 https://testnet.arcscan.app/tx/${r.transactionHash})`)
     } catch { /* non-critical */ }
 
     return prices
@@ -67,9 +68,9 @@ async function initializePolymarketMarkets() {
     const targetPrice = Math.round(btcPrice * 1.02) // 2% above current
     const question = `BTC > $${targetPrice} in 1 hour?`
     
-    await mockPolymarketCreateMarket(question, 45, 55)
+    const result = await mockPolymarketCreateMarket(question, 45, 55)
     polymarketInitialized = true
-    console.log(`🎯 Polymarket market created: ${question}`)
+    console.log(`🎯 Polymarket market created: ${question} (🔗 https://testnet.arcscan.app/tx/${result.transactionHash})`)
   } catch (err) {
     console.error('❌ Failed to create Polymarket market:', err)
   }

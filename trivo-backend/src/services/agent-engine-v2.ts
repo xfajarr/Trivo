@@ -73,8 +73,19 @@ function getProviderForAgent(agent: { modelProvider: string | null; modelConfig:
   const provider = agent.modelProvider
   if (!provider || provider === 'byok') return null
 
-  // Default API key — uses env var
-  const apiKey = process.env.OPENAI_API_KEY ?? ''
+  // Read config from agent.modelConfig (JSON) or fallback to env var
+  let apiKey = ''
+  let baseURL = ''
+  let model = ''
+  try {
+    if (agent.modelConfig) {
+      const cfg = JSON.parse(agent.modelConfig)
+      apiKey = cfg.apiKey || ''
+      baseURL = cfg.baseURL || ''
+      model = cfg.model || ''
+    }
+  } catch { /* parse error */ }
+  if (!apiKey) apiKey = process.env.OPENAI_API_KEY ?? ''
   if (!apiKey) return null
 
   const MODEL_CONFIGS: Record<string, { baseURL: string; model: string }> = {
@@ -87,7 +98,7 @@ function getProviderForAgent(agent: { modelProvider: string | null; modelConfig:
   const cfg = MODEL_CONFIGS[provider]
   if (!cfg) return null
 
-  return createOpenAIProvider(cfg.model, apiKey, cfg.baseURL)
+  return createOpenAIProvider(model || cfg.model, apiKey, baseURL || cfg.baseURL)
 }
 
 let _engineRunning = false
@@ -190,6 +201,10 @@ async function processAgent(agent: typeof agentsTable.$inferSelect) {
     createdAt: new Date(),
   })
   broadcastAgentEvent(agentId, { event: 'execution', agentId, result })
+
+  console.log(`📡 Agent ${agentId} → trade executed (🔗 https://testnet.arcscan.app/tx/${result.txHash})`)
+
+  console.log(`📡 Agent ${agentId} → trade executed (🔗 https://testnet.arcscan.app/tx/${result.txHash})`)
 
   // Create feed event
   if (result.txHash) {

@@ -14,6 +14,8 @@ export const agents = pgTable('agents', {
   id: text('id').primaryKey(),
   ownerId: text('owner_id').notNull(),
   erc8004TokenId: text('erc8004_token_id'),
+  erc8004TxHash: text('erc8004_tx_hash'),
+  metadataUri: text('metadata_uri'),
   name: text('name').notNull(),
   handle: text('handle').notNull().unique(),
   avatar: text('avatar'),
@@ -108,6 +110,9 @@ export const feedEvents = pgTable('feed_events', {
   type: text('type'),
   data: text('data'),
   venue: text('venue'),
+  pair: text('pair'),
+  side: text('side'),
+  size: text('size'),
   txHash: text('tx_hash'),
   reasoning: text('reasoning'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -124,7 +129,6 @@ export const skills = pgTable('skills', {
   createdAt: timestamp('created_at').defaultNow(),
 })
 
-// ── Agent Tools ──
 export const agentTools = pgTable('agent_tools', {
   id: text('id').primaryKey(),
   agentId: text('agent_id').notNull(),

@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
@@ -19,6 +20,8 @@ import { strategyRoutes } from './routes/strategy'
 import { memoryRoutes } from './routes/memory'
 import { backtestRoutes } from './routes/backtest'
 import { thinkingRoutes } from './routes/thinking'
+import { modelRoutes } from './routes/models'
+import { chat } from './routes/chat'
 import { setupDocs } from './lib/openapi'
 
 const app = new Hono()
@@ -37,6 +40,8 @@ app.route('/api/strategy', strategyRoutes)
 app.route('/api', memoryRoutes)
 app.route('/api/backtest', backtestRoutes)
 app.route('/api', thinkingRoutes)
+app.route('/api/models', modelRoutes)
+app.route('/api/chat', chat)
 
 // API documentation
 setupDocs(app)
@@ -45,8 +50,8 @@ setTimeout(async () => {
   try {
     const { startAllCrons } = await import('./services/cron')
     startAllCrons()
-    const { startAgentEngineV2 } = await import('./services/agent-engine-v2')
-    startAgentEngineV2()
+    const { startEngine } = await import('./engine/index.js')
+    startEngine()
   } catch {
     console.warn('⏰ Cron not started (DB may not be available yet)')
   }

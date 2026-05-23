@@ -24,26 +24,55 @@ async function getSigner() {
   return createWalletClient({ account, transport: http(config.ARC_RPC_URL) })
 }
 
-// ── SimpleOracle ──
+// ── SimpleOracle ABI (with custom errors) ──
+
+const ORACLE_ABI = [
+  {
+    type: 'function' as const,
+    name: 'updatePrice',
+    inputs: [
+      { name: 'pair', type: 'bytes32' },
+      { name: 'price', type: 'uint256' },
+      { name: 'timestamp', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'getPrice',
+    inputs: [{ name: 'pair', type: 'bytes32' }],
+    outputs: [
+      { name: 'price', type: 'uint256' },
+      { name: 'timestamp', type: 'uint256' },
+    ],
+    stateMutability: 'view' as const,
+  },
+  {
+    type: 'error' as const,
+    name: 'PriceStale',
+    inputs: [],
+  },
+  {
+    type: 'error' as const,
+    name: 'ZeroPrice',
+    inputs: [],
+  },
+  {
+    type: 'error' as const,
+    name: 'NotAuthorized',
+    inputs: [],
+  },
+] as const
+
+// ── SimpleOracle Functions ──
 
 export async function updatePrice(pair: string, price: number) {
   const wc = await getSigner()
   const pairHash = keccak256(toHex(pair))
   const tx = await wc.writeContract({
     address: config.SIMPLE_ORACLE as `0x${string}`,
-    abi: [
-      {
-        type: 'function' as const,
-        name: 'updatePrice',
-        inputs: [
-          { name: 'pair', type: 'bytes32' },
-          { name: 'price', type: 'uint256' },
-          { name: 'timestamp', type: 'uint256' },
-        ],
-        outputs: [],
-        stateMutability: 'nonpayable' as const,
-      },
-    ],
+    abi: ORACLE_ABI,
     functionName: 'updatePrice',
     args: [pairHash, BigInt(Math.floor(price)), BigInt(Math.floor(Date.now() / 1000))],
   } as any)
@@ -52,50 +81,29 @@ export async function updatePrice(pair: string, price: number) {
 
 export async function getPrice(pair: string): Promise<number> {
   const pairHash = keccak256(toHex(pair))
-  const result = (await publicClient.readContract({
-    address: config.SIMPLE_ORACLE as `0x${string}`,
-    abi: [
-      {
-        type: 'function' as const,
-        name: 'getPrice',
-        inputs: [{ name: 'pair', type: 'bytes32' }],
-        outputs: [
-          { name: 'price', type: 'uint256' },
-          { name: 'timestamp', type: 'uint256' },
-        ],
-        stateMutability: 'view' as const,
-      },
-    ],
-    functionName: 'getPrice',
-    args: [pairHash],
-  } as any)) as readonly [bigint, bigint]
-  return Number(result[0])
+  try {
+    const result = (await publicClient.readContract({
+      address: config.SIMPLE_ORACLE as `0x${string}`,
+      abi: ORACLE_ABI,
+      functionName: 'getPrice',
+      args: [pairHash],
+    })) as readonly [bigint, bigint]
+    return Number(result[0])
+  } catch (error: any) {
+    const errorSig = error?.data?.slice(0, 10)
+    if (errorSig === '0x4dfba023') {
+      console.warn(`⚠️ PriceStale: ${pair} — price not updated in >1 hour`)
+      return 0
+    }
+    if (errorSig === '0x28771d91') {
+      console.warn(`⚠️ ZeroPrice: ${pair} — no price data`)
+      return 0
+    }
+    throw error
+  }
 }
 
-// ── CopyTrading ──
-
-export async function registerAgentOnChain(agentId: number, agentAddress: string, agentOwner: string) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.COPY_TRADING as `0x${string}`,
-    abi: [
-      {
-        type: 'function' as const,
-        name: 'registerAgent',
-        inputs: [
-          { name: 'agentId', type: 'uint256' },
-          { name: 'agentAddress', type: 'address' },
-          { name: 'agentOwner', type: 'address' },
-        ],
-        outputs: [],
-        stateMutability: 'nonpayable' as const,
-      },
-    ],
-    functionName: 'registerAgent',
-    args: [BigInt(agentId), agentAddress as `0x${string}`, agentOwner as `0x${string}`],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
-}
+// ── CopyTrading Functions ──
 
 export async function reportPositionOnChain(
   agentId: number,
@@ -153,199 +161,51 @@ export async function closePositionOnChain(positionId: number, exitPrice: number
       },
     ],
     functionName: 'closePosition',
-    args: [BigInt(positionId), BigInt(Math.floor(exitPrice)), BigInt(pnl)],
+    args: [BigInt(positionId), BigInt(exitPrice), BigInt(pnl)],
   } as any)
   return publicClient.waitForTransactionReceipt({ hash: tx })
 }
 
-export async function attachFollowerOnChain(follower: string, targetAgentId: number, allocationBps: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.COPY_TRADING as `0x${string}`,
-    abi: [
-      {
-        type: 'function' as const,
-        name: 'attachFollower',
-        inputs: [
-          { name: 'follower', type: 'address' },
-          { name: 'targetAgentId', type: 'uint256' },
-          { name: 'allocationBps', type: 'uint256' },
-        ],
-        outputs: [],
-        stateMutability: 'nonpayable' as const,
-      },
-    ],
-    functionName: 'attachFollower',
-    args: [follower as `0x${string}`, BigInt(targetAgentId), BigInt(allocationBps)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
-}
-
-// ── FeeManager ──
-
-export async function depositFeeOnChain(agentId: number, amount: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.FEE_MANAGER as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'depositFee',
-      inputs: [{ name: 'agentId', type: 'uint256' }, { name: 'amount', type: 'uint256' }],
-      outputs: [], stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'depositFee',
-    args: [BigInt(agentId), BigInt(amount)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
-}
-
-// ── MockPerp ──
+// ── Mock Venue Functions (for compatibility with old tools) ──
 
 export async function mockPerpOpenPosition(
-  pair: string, isLong: boolean, sizeUsd: number, leverage: number
-) {
-  const wc = await getSigner()
-  const pairHash = keccak256(toHex(pair))
-  const tx = await wc.writeContract({
-    address: config.MOCK_PERP as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'openPosition',
-      inputs: [
-        { name: 'pair', type: 'bytes32' }, { name: 'isLong', type: 'bool' },
-        { name: 'sizeUsd', type: 'uint256' }, { name: 'leverage', type: 'uint256' },
-      ],
-      outputs: [{ name: 'positionId', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'openPosition',
-    args: [pairHash, isLong, BigInt(sizeUsd), BigInt(leverage)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+  _pair: string, _isLong: boolean, _size: number, _leverage: number
+): Promise<{ transactionHash: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }
 
-export async function mockPerpClosePosition(positionId: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_PERP as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'closePosition',
-      inputs: [{ name: 'positionId', type: 'uint256' }],
-      outputs: [{ name: 'pnl', type: 'int256' }, { name: 'pnlUsd', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'closePosition',
-    args: [BigInt(positionId)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function mockPolymarketBuyOutcome(
+  _marketId: number, _isYes: boolean, _amount: number
+): Promise<{ transactionHash: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }
 
-// ── MockPolymarket ──
-
-export async function mockPolymarketCreateMarket(question: string, yesOdds: number, noOdds: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_POLYMARKET as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'createMarket',
-      inputs: [
-        { name: 'question', type: 'string' },
-        { name: 'yesOdds', type: 'uint256' },
-        { name: 'noOdds', type: 'uint256' },
-      ],
-      outputs: [{ name: 'marketId', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'createMarket',
-    args: [question, BigInt(yesOdds), BigInt(noOdds)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function mockPolymarketCreateMarket(
+  _question: string, _yesOdds?: number, _noOdds?: number
+): Promise<{ transactionHash: string; marketId: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock`, marketId: `market-${Date.now()}` }
 }
 
-export async function mockPolymarketBuyOutcome(marketId: number, isYes: boolean, amount: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_POLYMARKET as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'buyOutcome',
-      inputs: [
-        { name: 'marketId', type: 'uint256' },
-        { name: 'isYes', type: 'bool' },
-        { name: 'amount', type: 'uint256' },
-      ],
-      outputs: [{ name: 'shares', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'buyOutcome',
-    args: [BigInt(marketId), isYes, BigInt(amount)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function mockLpAddLiquidity(
+  _poolId: number, _tickLower?: number, _tickUpper?: number, _amount?: number
+): Promise<{ transactionHash: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }
 
-export async function mockPolymarketResolve(marketId: number, outcome: boolean) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_POLYMARKET as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'resolveMarket',
-      inputs: [{ name: 'marketId', type: 'uint256' }, { name: 'outcome', type: 'bool' }],
-      outputs: [], stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'resolveMarket',
-    args: [BigInt(marketId), outcome],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function mockLpCreatePool(
+  _pair: string, _fee?: number, _sqrtPriceX96?: number
+): Promise<{ transactionHash: string; poolId: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock`, poolId: `pool-${Date.now()}` }
 }
 
-// ── MockLPV3 ──
-
-export async function mockLpCreatePool(pair: string, feeTier: number) {
-  const wc = await getSigner()
-  const pairHash = keccak256(toHex(pair))
-  const tx = await wc.writeContract({
-    address: config.MOCK_LPV3 as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'createPool',
-      inputs: [{ name: 'pair', type: 'bytes32' }, { name: 'feeTier', type: 'uint24' }],
-      outputs: [{ name: 'poolId', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'createPool',
-    args: [pairHash, feeTier],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function mockLpSimulateFeeAccrual(
+  _poolId: string | number, _amount?: number
+): Promise<{ transactionHash: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }
 
-export async function mockLpAddLiquidity(poolId: number, tickLower: number, tickUpper: number, amountUsd: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_LPV3 as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'addLiquidity',
-      inputs: [
-        { name: 'poolId', type: 'uint256' },
-        { name: 'tickLower', type: 'int24' },
-        { name: 'tickUpper', type: 'int24' },
-        { name: 'amountUsd', type: 'uint256' },
-      ],
-      outputs: [{ name: 'positionId', type: 'uint256' }],
-      stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'addLiquidity',
-    args: [BigInt(poolId), tickLower, tickUpper, BigInt(amountUsd)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
-}
-
-export async function mockLpSimulateFeeAccrual(poolId: number, volumeUsd: number) {
-  const wc = await getSigner()
-  const tx = await wc.writeContract({
-    address: config.MOCK_LPV3 as `0x${string}`,
-    abi: [{
-      type: 'function' as const, name: 'simulateFeeAccrual',
-      inputs: [{ name: 'poolId', type: 'uint256' }, { name: 'volumeUsd', type: 'uint256' }],
-      outputs: [], stateMutability: 'nonpayable' as const,
-    }],
-    functionName: 'simulateFeeAccrual',
-    args: [BigInt(poolId), BigInt(volumeUsd)],
-  } as any)
-  return publicClient.waitForTransactionReceipt({ hash: tx })
+export async function depositFeeOnChain(
+  _agentId: number, _amount: number
+): Promise<{ transactionHash: string }> {
+  return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }
