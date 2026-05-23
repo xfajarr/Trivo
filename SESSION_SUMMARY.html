@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📋 Trivo — Session Summary</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0d0d12;--surface:#1a1a24;--surface-2:#22222e;--border:#2a2a3a;--text:#ededf2;--muted:#8787a0;--neon:#00ff9d;--violet:#a78bfa;--loss:#f87171;--warn:#fbbf24;--cyan:#22d3ee;--radius:8px;--glow-neon:0 0 20px rgba(0,255,157,0.15)}
+    html{font-size:14px;scroll-behavior:smooth}
+    body{font-family:'Manrope',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+    .ticker{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+    .display{font-family:'Sora',sans-serif;letter-spacing:-0.02em}
+    .container{max-width:960px;margin:0 auto;padding:0 20px}
+
+    header{background:rgba(13,13,18,0.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:50}
+    header .container{display:flex;align-items:center;gap:12px}
+    .logo{font-family:'Sora',sans-serif;font-weight:800;font-size:1rem;display:flex;align-items:center;gap:8px}
+    .logo-icon{width:26px;height:26px;border-radius:5px;background:linear-gradient(135deg,var(--neon),var(--violet));display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:var(--bg);box-shadow:var(--glow-neon)}
+    .badge-deadline{font-size:0.65rem;padding:2px 8px;border-radius:20px;border:1px solid var(--loss);color:var(--loss);background:rgba(248,113,113,0.1);margin-left:auto}
+
+    .hero{padding:32px 0 20px;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(0,255,157,0.05) 0%,transparent 70%)}
+    .hero h1{font-family:'Sora',sans-serif;font-size:1.8rem;font-weight:800}
+    .hero h1 .hl{background:linear-gradient(135deg,var(--neon),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .hero p{color:var(--muted);font-size:0.85rem;margin-top:6px}
+    .hero-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+    .hero-meta span{font-size:0.7rem;color:var(--muted);display:flex;align-items:center;gap:4px}
+    .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+    .dot-n{background:var(--neon)}.dot-v{background:var(--violet)}.dot-c{background:var(--cyan)}.dot-w{background:var(--warn)}
+
+    section{padding:20px 0}section+section{border-top:1px solid var(--border)}
+    .st{font-family:'Sora',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+    .ss{font-size:0.78rem;color:var(--muted);margin-bottom:12px}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px}
+    .card-title{font-family:'Sora',sans-serif;font-weight:600;font-size:0.85rem;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+
+    .grid{display:grid;gap:8px;margin-bottom:10px}
+    .g2{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+    .g3{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+    .g4{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+
+    .badge{display:inline-flex;font-size:0.6rem;font-family:'JetBrains Mono',monospace;padding:1px 6px;border-radius:3px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+    .b-done{background:rgba(0,255,157,0.15);color:var(--neon);border:1px solid rgba(0,255,157,0.3)}
+    .b-part{background:rgba(251,191,36,0.15);color:var(--warn);border:1px solid rgba(251,191,36,0.3)}
+    .b-miss{background:rgba(248,113,113,0.15);color:var(--loss);border:1px solid rgba(248,113,113,0.3)}
+    .b-arc{background:rgba(34,211,238,0.15);color:var(--cyan);border:1px solid rgba(34,211,238,0.3)}
+
+    .block{border-left:2px solid;padding:8px 12px;margin:6px 0;font-size:0.78rem;color:var(--muted);background:var(--surface-2);border-radius:0 var(--radius) var(--radius) 0}
+    .block-n{border-color:var(--neon)}.block-v{border-color:var(--violet)}
+
+    .stat{text-align:center;padding:10px}
+    .stat-n{font-family:'Sora',sans-serif;font-size:1.8rem;font-weight:700}
+    .stat-l{font-size:0.65rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:0.05em}
+
+    .tw{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;font-size:0.75rem}
+    thead{background:var(--surface-2);font-family:'JetBrains Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+    th{padding:6px 10px;text-align:left;font-weight:600}
+    td{padding:6px 10px;border-top:1px solid var(--border)}
+    .mono{font-family:'JetBrains Mono',monospace;font-size:0.7rem}
+
+    .bar{height:5px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin:6px 0}
+    .bar-f{height:100%;border-radius:3px}.b100{width:100%;background:var(--neon)}.b0{width:0%}
+
+    .layer{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:5px;font-size:0.72rem;margin-bottom:4px;background:var(--surface-2)}
+    .layer .s{padding:3px 8px;border-radius:3px;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:0.65rem}
+    .layer .a{color:var(--muted);font-size:1rem}
+    .ld .s{background:rgba(0,255,157,0.1);color:var(--neon);border:1px solid rgba(0,255,157,0.2)}
+    .lm .s{background:rgba(248,113,113,0.1);color:var(--loss);border:1px solid rgba(248,113,113,0.2)}
+
+    footer{border-top:1px solid var(--border);padding:16px 0;text-align:center;font-size:0.7rem;color:var(--muted)}
+
+    .sect{margin-bottom:16px}
+    .sect-title{font-family:'Sora',sans-serif;font-weight:600;font-size:0.95rem;margin-bottom:8px;color:var(--neon)}
+    .sect h4{font-family:'Sora',sans-serif;font-weight:600;font-size:0.85rem;margin:10px 0 4px}
+    .sect ul{list-style:none;padding:0}
+    .sect ul li{padding:2px 0;font-size:0.75rem;color:var(--muted)}
+    .sect ul li::before{content:"•";color:var(--neon);margin-right:6px}
+    .highlight{color:var(--neon)}
+
+    .mono{font-family:'JetBrains Mono',monospace}
+
+    @media(max-width:640px){.hero h1{font-size:1.3rem}.g2,.g3,.g4{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo"><div class="logo-icon">⛭</div> TRIVO</div>
+    <span class="badge-deadline">📅 Hackathon: May 25</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1><span class="hl">Session Summary</span></h1>
+    <p>May 23, 2026 · Agora Agents Hackathon · Canteen × Circle × Arc</p>
+    <div class="hero-meta">
+      <span><span class="dot dot-n"></span> 121 Tests Passing</span>
+      <span><span class="dot dot-v"></span> 0 ESLint Errors</span>
+      <span><span class="dot dot-c"></span> 6 Contracts Deployed</span>
+      <span><span class="dot dot-w"></span> Deadline: May 25</span>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+
+<!-- ═══ STATS ═══ -->
+<section>
+  <h2 class="st">📊 Final Stats</h2>
+  <div class="grid g4">
+    <div class="card stat"><div class="stat-n" style="color:var(--neon)">121</div><div class="stat-l">Tests Passing</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--neon)">89</div><div class="stat-l">Contract Tests</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--neon)">32</div><div class="stat-l">Backend Tests</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--neon)">0</div><div class="stat-l">ESLint / Typecheck</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--violet)">32</div><div class="stat-l">API Endpoints</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--violet)">10</div><div class="stat-l">DB Tables</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--cyan)">6</div><div class="stat-l">Contracts Deployed</div></div>
+    <div class="card stat"><div class="stat-n" style="color:var(--cyan)">.42</div><div class="stat-l">USDC Deploy Cost</div></div>
+  </div>
+</section>
+
+<!-- ═══ PHASES ═══ -->
+<section>
+  <h2 class="st">🗺️ Phase Progress</h2>
+
+  <div class="sect">
+    <div class="sect-title">Phase 1: Smart Contracts <span class="badge b-done">100%</span></div>
+    <div class="bar"><div class="bar-f b100"></div></div>
+    <h4>6 Contracts — All Deployed + Verified on Arcscan</h4>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Contract</th><th>Address</th><th>Arcscan</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge b-done">SimpleOracle</span></td><td class="mono">0xd5c2...f1c1</td><td><a href="https://testnet.arcscan.app/address/0xd5c246c8d79f77b1bd2d5f6c61f48be38027f1c1" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+          <tr><td><span class="badge b-done">MockPerp</span></td><td class="mono">0x5dcc...2c8c</td><td><a href="https://testnet.arcscan.app/address/0x5dcca68b31da8bc22047371b446dcd3a926d12c8" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+          <tr><td><span class="badge b-done">MockPolymarket</span></td><td class="mono">0x066f...c10</td><td><a href="https://testnet.arcscan.app/address/0x066fcba3058343e2e474783157e1189fa231ac10" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+          <tr><td><span class="badge b-done">MockLPV3</span></td><td class="mono">0x7749...c38</td><td><a href="https://testnet.arcscan.app/address/0x77492a3c212772c3cc7048d0c0a33dc4e9e0fc38" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+          <tr><td><span class="badge b-done">CopyTrading</span></td><td class="mono">0x42a2...d77</td><td><a href="https://testnet.arcscan.app/address/0x42a281eac445d2b01fee4137d81d98d31deaed77" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+          <tr><td><span class="badge b-done">FeeManager</span></td><td class="mono">0x226b...415</td><td><a href="https://testnet.arcscan.app/address/0x226b5aa0e730504b956cdde107c15b9bcaa32415" target="_blank" style="color:var(--cyan)">🔗</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ul>
+      <li>All contracts use <span class="highlight">custom errors</span> — no `require`</li>
+      <li>Access control on all critical functions (reportPosition, closePosition, withdrawFees)</li>
+      <li>Agent ownership tracked via `agentOwners` + `agentCreators` mappings</li>
+      <li>Zero custom errors welcome at compile</li>
+    </ul>
+  </div>
+
+  <div class="sect">
+    <div class="sect-title">Phase 2: Backend Core <span class="badge b-done">100%</span></div>
+    <div class="bar"><div class="bar-f b100"></div></div>
+    <h4>Hono API · 32 Endpoints · 10 DB Tables · Circle SDK</h4>
+    <div class="g2">
+      <div class="card"><div class="card-title">🔐 Auth</div><div class="mono" style="font-size:0.7rem">POST /api/auth/verify · Privy SDK</div></div>
+      <div class="card"><div class="card-title">🤖 Agents</div><div class="mono" style="font-size:0.7rem">GET/POST/PUT/PATCH /api/agents</div></div>
+      <div class="card"><div class="card-title">📊 Positions</div><div class="mono" style="font-size:0.7rem">GET /api/positions · filter by agent/venue/status</div></div>
+      <div class="card"><div class="card-title">📡 Feed</div><div class="mono" style="font-size:0.7rem">GET /api/feed · venue filter · pagination</div></div>
+      <div class="card"><div class="card-title">🔄 Copy Trading</div><div class="mono" style="font-size:0.7rem">POST attach|detach · GET relations</div></div>
+      <div class="card"><div class="card-title">👛 Wallet</div><div class="mono" style="font-size:0.7rem">Circle Dev-Controlled Wallets · create/balance/deposit</div></div>
+      <div class="card"><div class="card-title">🧠 Memory</div><div class="mono" style="font-size:0.7rem">Agent + user memory · decision log · thinking traces</div></div>
+      <div class="card"><div class="card-title">🎯 Strategy</div><div class="mono" style="font-size:0.7rem">POST compile · POST train · NL → structured rules</div></div>
+      <div class="card"><div class="card-title">📈 Backtest</div><div class="mono" style="font-size:0.7rem">POST /api/backtest/run · PnL/Sharpe/drawdown</div></div>
+      <div class="card"><div class="card-title">🧪 API Docs</div><div class="mono" style="font-size:0.7rem">GET /api/docs · Scalar UI · OpenAPI 3.1</div></div>
+      <div class="card"><div class="card-title">⚙️ Models</div><div class="mono" style="font-size:0.7rem">GET/PUT /api/models · AI provider config</div></div>
+      <div class="card"><div class="card-title">🏥 Health</div><div class="mono" style="font-size:0.7rem">GET /health · chain status</div></div>
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="sect-title">Phase 3: Mock Trading Engine <span class="badge b-done">100%</span></div>
+    <div class="bar"><div class="bar-f b100"></div></div>
+    <ul>
+      <li><span class="highlight">Market Data Service</span> — CoinGecko → SimpleOracle.updatePrice() every 60s</li>
+      <li><span class="highlight">Agent Scheduler</span> — Process active agents every 30s (rule-based)</li>
+      <li><span class="highlight">PnL Watcher</span> — Auto-close positions when price moves >2%</li>
+      <li><span class="highlight">Tool System</span> — 3 tools: get_price, open_trade, close_trade</li>
+      <li><span class="highlight">Contract Calls</span> — All venues call real contracts on Arc</li>
+      <li><span class="highlight">Arcscan Links</span> — Every log shows clickable tx URL</li>
+    </ul>
+  </div>
+
+  <div class="sect">
+    <div class="sect-title">Phase 5: AI Model Gateway <span class="badge b-done">100%</span></div>
+    <div class="bar"><div class="bar-f b100"></div></div>
+    <ul>
+      <li><span class="highlight">OpenAI-compatible SDK</span> — Works with DeepSeek, Claude, OpenAI, Qwen, OpenRouter, TokenRouter</li>
+      <li><span class="highlight">Agent Engine v2</span> — 10s loop: <span class="highlight">THINK → DECIDE → EXECUTE</span></li>
+      <li><span class="highlight">WebSocket</span> — Real-time agent events: thinking, deciding, execution</li>
+      <li><span class="highlight">Thinking Traces</span> — Reasoning stored for user review</li>
+      <li><span class="highlight">NL Training</span> — Train agents with natural language instructions</li>
+      <li><span class="highlight">Env Config</span> — AI_PROVIDER, AI_BASE_URL, AI_MODEL, AI_API_KEY</li>
+      <li><span class="highlight">BYOK</span> — Bring your own key, any OpenAI-compatible endpoint</li>
+    </ul>
+    <div class="block block-n" style="margin-top:8px">
+      <strong>Agent Loop:</strong> Load market data → Load memory → THINK via LLM → Save reasoning → DECIDE via LLM → EXECUTE via tool → Save result → Broadcast WS
+    </div>
+  </div>
+
+  <div class="sect">
+    <div class="sect-title">Frontend Architecture <span class="badge b-done">Refactored</span></div>
+    <div class="bar"><div class="bar-f b100"></div></div>
+    <ul>
+      <li><span class="highlight">Axios</span> — API client with auth interceptor</li>
+      <li><span class="highlight">TanStack Query</span> — All hooks use useQuery/useMutation with auto-refetch</li>
+      <li><span class="highlight">AuthProvider</span> — Global auth context (Privy-ready)</li>
+      <li><span class="highlight">7 Custom Hooks</span> — useAuth, useAgents, useFeed, usePositions, useWallet, useMemory, useWebSocket</li>
+      <li><span class="highlight">Landing Page</span> — / (trivo.xyz) — hero + features + CTA</li>
+      <li><span class="highlight">App Routes</span> — /feed, /discover, /launch, /my-agents (app.trivo.xyz)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══ FULL FLOW ═══ -->
+<section>
+  <h2 class="st">🔄 Complete Data Flow</h2>
+  <p class="ss">From market data to on-chain — every step produces an Arc transaction</p>
+
+  <div class="card">
+    <div class="layer ld"><span class="s">CoinGecko API</span><span class="a">→</span><span class="s">MarketData Service</span><span class="a">→</span><span class="s">SimpleOracle.updatePrice()</span><span class="badge b-arc">ARC TX</span></div>
+    <div class="layer ld"><span class="s">CoinGecko API</span><span class="a">→</span><span class="s">Polymarket Data</span><span class="a">→</span><span class="s">MockPolymarket.createMarket()</span><span class="badge b-arc">ARC TX</span></div>
+    <div class="layer ld"><span class="s">Fee Simulation</span><span class="a">→</span><span class="s">MockLPV3.simulateFeeAccrual()</span><span class="badge b-arc">ARC TX</span></div>
+    <div style="text-align:center;margin:4px 0;color:var(--muted)">▼</div>
+    <div class="layer ld"><span class="s">Agent Scheduler (10s)</span><span class="a">→</span><span class="s">Load Market Data</span><span class="a">→</span><span class="s">Load Memory</span><span class="a">→</span><span class="s">Load Wallet</span></div>
+    <div class="layer ld"><span class="s" style="background:rgba(167,139,250,0.1);color:var(--violet);border-color:rgba(167,139,250,0.3)">🧠 THINK via LLM</span><span class="a">→</span><span class="s">Save Reasoning</span><span class="a">→</span><span class="s">Broadcast WS</span></div>
+    <div class="layer ld"><span class="s" style="background:rgba(167,139,250,0.1);color:var(--violet);border-color:rgba(167,139,250,0.3)">🎯 DECIDE via LLM</span><span class="a">→</span><span class="s">Structured JSON Decision</span><span class="a">→</span><span class="s">Broadcast WS</span></div>
+    <div style="text-align:center;margin:4px 0;color:var(--muted)">▼</div>
+    <div class="layer ld"><span class="s">Tool: open_trade</span><span class="a">→</span><span class="s">MockPerp.openPosition()</span><span class="badge b-arc">ARC TX</span></div>
+    <div class="layer ld"><span class="s">CopyTrading.reportPosition()</span><span class="badge b-arc">ARC TX</span><span class="a">→</span><span class="s">Save Memory</span><span class="a">→</span><span class="s">Feed Event</span></div>
+    <div style="text-align:center;margin:4px 0;color:var(--muted)">▼</div>
+    <div class="layer ld"><span class="s">PnL Watcher (60s)</span><span class="a">→</span><span class="s">MockPerp.closePosition()</span><span class="badge b-arc">ARC TX</span></div>
+    <div class="layer ld"><span class="s">CopyTrading.closePosition()</span><span class="badge b-arc">ARC TX</span><span class="a">→</span><span class="s">FeeManager.depositFee()</span><span class="badge b-arc">ARC TX</span></div>
+  </div>
+
+  <div class="block block-n" style="margin-top:8px">
+    <strong>Per trade cycle:</strong> 6 on-chain transactions · Total ~$0.036 USDC · Arcscan visible
+  </div>
+</section>
+
+<!-- ═══ DEPLOYED INFRA ═══ -->
+<section>
+  <h2 class="st">🏗️ Deployed Infrastructure</h2>
+  <div class="sect">
+    <h4>Arc Chain (5042002)</h4>
+    <ul>
+      <li>6 Solidity contracts (Foundry) — all verified on Arcscan</li>
+      <li>RPC: arc-node.thecanteenapp.com/v1/ with Canteen key</li>
+      <li>Deployer: 0x66Daf9D7d4436Ca79D643405eEdeD8aD2770b42B</li>
+      <li>Balance remaining: ~19.58 USDC</li>
+    </ul>
+  </div>
+  <div class="sect">
+    <h4>Circle Integration</h4>
+    <ul>
+      <li>API Key + Entity Secret registered</li>
+      <li>Recovery file saved</li>
+      <li>SDK: @circle-fin/developer-controlled-wallets</li>
+      <li>Ready for agent wallet creation</li>
+    </ul>
+  </div>
+  <div class="sect">
+    <h4>AI Model Config</h4>
+    <ul>
+      <li>OpenAI-compatible — supports any provider</li>
+      <li>Env vars: AI_PROVIDER, AI_BASE_URL, AI_MODEL, AI_API_KEY</li>
+      <li>Per-agent override: PUT /api/models/agents/:id</li>
+      <li>Fallback: OPENAI_API_KEY env var</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ═══ WHAT'S LEFT ═══ -->
+<section>
+  <h2 class="st">❌ What's Left</h2>
+  <div class="grid g2">
+    <div class="card" style="border-color:rgba(248,113,113,0.3)">
+      <div class="card-title" style="color:var(--loss)">🖥️ Phase 4: Frontend Integration</div>
+      <ul style="font-size:0.75rem;color:var(--muted);list-style:none;padding:0">
+        <li style="padding:2px 0">• ❌ Connect API to all routes (replace mock-data)</li>
+        <li style="padding:2px 0">• ❌ Privy wallet connect UI</li>
+        <li style="padding:2px 0">• ❌ Launch Wizard → real agent creation</li>
+        <li style="padding:2px 0">• ❌ Agent Settings page</li>
+        <li style="padding:2px 0">• ❌ Wallet page (deposit/withdraw)</li>
+        <li style="padding:2px 0">• ❌ Backtest Lab page</li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:rgba(248,113,113,0.3)">
+      <div class="card-title" style="color:var(--loss)">🏠 Phase 6: Self-Hosted</div>
+      <ul style="font-size:0.75rem;color:var(--muted);list-style:none;padding:0">
+        <li style="padding:2px 0">• ❌ Self-hosted agent registration</li>
+        <li style="padding:2px 0">• ❌ REST/WS proxy to external agents</li>
+        <li style="padding:2px 0">• ❌ Skill Marketplace</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ QUICK START ═══ -->
+<section>
+  <h2 class="st">🚀 Quick Start</h2>
+  <div class="block block-v" style="margin-top:8px">
+    <pre class="mono" style="font-size:0.7rem;line-height:1.8">
+# 1. Start backend
+cd trivo-backend && pnpm run dev
+
+# 2. Start frontend (separate terminal)
+cd trivo-frontend && bun run dev
+
+# 3. Open in browser
+Backend:  http://localhost:3000
+API Docs: http://localhost:3000/api/docs
+Frontend: http://localhost:5173
+
+# 4. Check database
+psql -d trivo -c "SELECT COUNT(*) FROM feed_events;"
+psql -d trivo -c "SELECT COUNT(*) FROM agents;"</pre>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>TRIVO · AGORA HACKATHON · CANTEEN × CIRCLE × ARC · MAY 2026</p>
+</footer>
+
+</body>
+</html>

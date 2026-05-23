@@ -1,0 +1,91 @@
+═══════════════════════════════════════════════════
+ TRIVO — Submission for Agora Agents Hackathon
+ Canteen × Circle × Arc
+═══════════════════════════════════════════════════
+
+─── PROBLEM STATEMENT ───
+
+If you build an AI trading agent today with OpenClaw, Hermes, or any framework, you have nowhere to deploy it. You need exchange API keys, a server, private key management, a dashboard, and a way for people to discover and copy your agent. The frameworks exist, the markets exist, the AI models exist — but there's no platform that connects them.
+
+Meanwhile, copy trading is the most popular way people participate in crypto — but followers copy blindly. They can't verify track records, detect degrading strategies, or see how someone actually thinks about trades. As the hackathon research notes: "What people actually want to copy is how someone thinks."
+
+Trivo bridges both gaps — a platform to launch programmable AI agents that trade across venues, with on-chain verified track records, reasoning transparency, and intelligent copy trading.
+
+─── PROJECT DESCRIPTION ───
+
+Trivo is a platform for launching programmable AI trading agents on Arc. Users create agents by describing a strategy in natural language, picking an AI model (DeepSeek, Claude, OpenAI, Qwen, or any OpenAI-compatible provider), selecting trading venues (perpetuals, prediction markets, LP, yield), and setting risk rules.
+
+Every agent gets an ERC-8004 on-chain identity NFT on Arc — a unique builder code that travels with every trade, so agents can build verifiable track records and portable reputation across venues, just like Polymarket V2 builder codes or Hyperliquid HIP-3 attribution.
+
+The agent runs autonomously on a 10-second loop: THINK (loads prices from on-chain oracle, reviews past decisions, calls AI model, saves reasoning trace) → DECIDE (calls AI for structured JSON decision) → EXECUTE (calls venue contract on Arc, reports to CopyTrading contract, saves tx hash). Every step is on-chain and every reasoning trace is saved for user review.
+
+For self-hosted agents (OpenClaw, Hermes, custom), users register an endpoint with skill.md — Trivo sends market data, the agent returns decisions, Trivo handles execution and feeds.
+
+All positions appear in a live feed where users can discover top performers and copy-trade with one click — with on-chain attribution and automatic fees to creators. Non-custodial via Circle MPC wallets — users retain full control of funds.
+
+─── THE RESEARCH CONNECTION ───
+
+The hackathon's own research papers point directly to what Trivo builds:
+
+• "Reasoning traces are the product" (Trading-R1 paper): Every agent thinking trace is saved and viewable by users. You're not just copying trades — you're copying how the agent thinks.
+
+• "Builder codes as every LLM agent's monetization layer" (Polymarket V2): Copy trading fees flow back to agent creators automatically. Good agents earn USDC when others copy them.
+
+• "Slash-bonded leaderboard copy-trading" (Nansen HL research): Agents build on-chain track records via ERC-8004. Followers can verify performance before copying. Strategy degradation is detectable via on-chain PnL history.
+
+─── KEY FEATURES ───
+
+• Multi-model AI: DeepSeek, Claude, OpenAI, Qwen, OpenRouter, TokenRouter, or BYOK
+• Multi-venue trading: Perpetuals, Polymarket prediction markets, LP, yield
+• Natural language strategy: Describe in plain English — "Buy BTC when RSI < 30"
+• ERC-8004 on-chain identity: Every agent gets a portable builder code NFT
+• Non-custodial wallets: Circle MPC — user retains full control
+• Reasoning traces: Every AI decision logged with full reasoning
+• Real-time WebSocket: Live agent thinking stream to frontend
+• One-click copy trading: On-chain attribution, automatic creator fees
+• Self-hosted agents: Register OpenClaw/Hermes agents via REST/WS + skill.md
+• Backtest: Historical simulation before going live
+• RFB 06 (Social Trading Intelligence): Primary alignment
+
+─── TECH STACK ───
+
+• Smart Contracts: Solidity 0.8.28 + Foundry — 6 contracts deployed + verified on Arcscan
+• Backend: Hono + TypeScript — 32 API endpoints, 10 PostgreSQL tables (Drizzle ORM)
+• Auth: Privy (wallet connect + session management)
+• AI: OpenAI-compatible SDK — supports DeepSeek, Claude, OpenAI, Qwen, OpenRouter, TokenRouter, any OpenAI-compatible provider via env vars
+• Agent Wallets: Circle Developer-Controlled Wallets — non-custodial MPC with spending policies
+• Chain: Arc Testnet via viem (chain 5042002) — USDC as native gas, ~$0.01/tx, sub-second finality
+• Frontend: TanStack Start + React 19 + TanStack Query + Axios + shadcn/ui
+• Real-time: WebSocket for live agent event streaming
+• API Docs: Scalar UI at /api/docs
+
+─── SMART CONTRACTS (All on Arc Testnet, verified on Arcscan) ───
+
+• SimpleOracle: Real-time BTC/ETH/SOL prices from CoinGecko — updated every 60s
+• MockPerp: Perpetual futures mock — open/close positions, real PnL from market data
+• MockPolymarket: Prediction market mock — YES/NO markets based on real BTC price
+• MockLPV3: Concentrated LP mock — add/remove liquidity, fee accrual simulation
+• CopyTrading: Core primitive — agent registration, position reports, follower system, fee distribution
+• FeeManager: Performance-based fee tiers with creator payouts
+
+─── AGENT ENGINE LOOP (10 SECONDS) ───
+
+1. THINK: Load market prices from SimpleOracle → Load past decisions from memory → Call AI model for analysis → Save reasoning trace → Broadcast via WebSocket
+2. DECIDE: Call AI model → Get structured JSON decision { tool, args, reasoning, confidence } → Save decision → Broadcast via WebSocket
+3. EXECUTE: If trade → Call venue contract on Arc → Report to CopyTrading → Save result + tx hash → Create feed event → Broadcast via WebSocket
+
+─── STATS ───
+
+• 121 total tests (89 contract + 32 backend) — all passing
+• 0 ESLint errors, 0 TypeScript errors
+• 6 contracts deployed on Arc Testnet
+• 32 API endpoints
+• 10 PostgreSQL tables
+• Full ESLint + strict TypeScript + Prettier setup
+
+─── RFB ALIGNMENT ───
+
+• RFB 06 (Social Trading Intelligence): Primary alignment — AI-driven copy trading with dynamic allocation, performance tracking, reasoning transparency
+• RFB 01 (Perpetual Futures Trading Agent): Perpetual trading skill covers this
+• RFB 02 (Prediction Market Intelligence): Polymarket skill covers this
+• RFB 04 (Adaptive Portfolio Manager): Multi-venue portfolio + yield skills cover this

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📋 PRD: Trivo — The Identity Layer for AI Trading Agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d0d12;
+      --surface: #1a1a24;
+      --surface-2: #22222e;
+      --border: #2a2a3a;
+      --text: #ededf2;
+      --muted: #8787a0;
+      --neon: #00ff9d;
+      --violet: #a78bfa;
+      --loss: #f87171;
+      --warn: #fbbf24;
+      --cyan: #22d3ee;
+      --radius: 8px;
+      --glow-neon: 0 0 20px rgba(0,255,157,0.15);
+    }
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Manrope', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    .ticker { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+    .display { font-family: 'Sora', system-ui, sans-serif; letter-spacing: -0.02em; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+    header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(13,13,18,0.85); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    header .container { display: flex; align-items: center; gap: 12px; }
+    .logo { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .logo-icon {
+      width: 28px; height: 28px; border-radius: 5px;
+      background: linear-gradient(135deg, var(--neon), var(--violet));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; color: var(--bg);
+      box-shadow: var(--glow-neon);
+    }
+    .tag {
+      font-size: 0.65rem; font-family: 'JetBrains Mono', monospace;
+      padding: 2px 8px; border-radius: 3px;
+      background: var(--surface-2); color: var(--muted);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .badge-green { background: rgba(0,255,157,0.15); color: var(--neon); border: 1px solid rgba(0,255,157,0.3); }
+    .badge-violet { background: rgba(167,139,250,0.15); color: var(--violet); border: 1px solid rgba(167,139,250,0.3); }
+    .badge-cyan { background: rgba(34,211,238,0.15); color: var(--cyan); border: 1px solid rgba(34,211,238,0.3); }
+    .badge-gray { background: rgba(135,135,160,0.15); color: var(--muted); border: 1px solid rgba(135,135,160,0.3); }
+    .badge-yellow { background: rgba(251,191,36,0.15); color: var(--warn); border: 1px solid rgba(251,191,36,0.3); }
+
+    .hero {
+      padding: 48px 0 32px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,255,157,0.05) 0%, transparent 70%);
+    }
+    .hero h1 { font-family: 'Sora', sans-serif; font-size: 2.4rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; }
+    .hero h1 .highlight { background: linear-gradient(135deg, var(--neon), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { margin-top: 12px; color: var(--muted); font-size: 1rem; max-width: 650px; }
+
+    section { padding: 32px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    .section-title {
+      font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 700;
+      margin-bottom: 4px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .card-neon { border-left: 2px solid var(--neon); }
+    .card-violet { border-left: 2px solid var(--violet); }
+    .card-loss { border-left: 2px solid var(--loss); }
+    .card-grid { display: grid; gap: 12px; }
+    .card-grid-2 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+    .card-grid-3 { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    .card-title { font-family: 'Sora', sans-serif; font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead { background: var(--surface-2); font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+    th { padding: 10px 14px; text-align: left; font-weight: 600; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .arch { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+    .arch-layer { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; background: var(--surface); }
+    .arch-layer-title { font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+    .arch-items { display: flex; flex-wrap: wrap; gap: 6px; }
+    .arch-item { padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-family: 'JetBrains Mono', monospace; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+    .arch-item-neon { background: rgba(0,255,157,0.08); color: var(--neon); border: 1px solid rgba(0,255,157,0.25); }
+    .arch-item-violet { background: rgba(167,139,250,0.08); color: var(--violet); border: 1px solid rgba(167,139,250,0.25); }
+
+    h2 { font-family: 'Sora', sans-serif; font-size: 1.2rem; font-weight: 700; margin: 24px 0 12px; }
+    h3 { font-family: 'Sora', sans-serif; font-size: 1rem; font-weight: 600; margin: 20px 0 8px; }
+    h4 { font-family: 'Sora', sans-serif; font-size: 0.9rem; font-weight: 600; margin: 16px 0 6px; }
+    p { margin-bottom: 10px; font-size: 0.88rem; color: var(--muted); line-height: 1.7; }
+    ul, ol { padding-left: 20px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; font-size: 0.85rem; color: var(--muted); }
+    li strong { color: var(--text); }
+    .highlight-neon { color: var(--neon); }
+    .highlight-violet { color: var(--violet); }
+
+    .user-story { padding: 5px 0; border-bottom: 1px solid rgba(42,42,58,0.4); font-size: 0.85rem; color: var(--muted); }
+    .user-story:last-child { border-bottom: none; }
+    .user-story .num { color: var(--violet); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-right: 6px; }
+    .user-story strong { color: var(--text); }
+
+    .flow { display: flex; flex-direction: column; gap: 4px; }
+    .flow-step { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 5px; background: var(--surface-2); font-size: 0.8rem; }
+
+    .code-block {
+      background: var(--surface-2); border-radius: var(--radius);
+      padding: 14px 16px; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; line-height: 1.6; overflow-x: auto;
+      color: var(--muted);
+    }
+
+    .problem-grid { display: grid; gap: 16px; margin: 16px 0; }
+    .problem-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      position: relative;
+    }
+    .problem-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; border-radius: var(--radius) var(--radius) 0 0;
+    }
+    .problem-card.agents::before { background: var(--neon); }
+    .problem-card.capital::before { background: var(--violet); }
+    .problem-card.venues::before { background: var(--loss); }
+    .problem-card h4 { margin-top: 0; }
+    .problem-card p { margin-bottom: 0; }
+
+    .nav-links { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .nav-links a {
+      font-size: 0.65rem; text-decoration: none; color: var(--muted);
+      padding: 3px 8px; border-radius: 3px; font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .nav-links a:hover { color: var(--neon); background: rgba(0,255,157,0.06); }
+
+    blockquote {
+      border-left: 2px solid var(--violet);
+      padding: 12px 20px; margin: 16px 0;
+      background: rgba(167,139,250,0.04);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-style: italic; color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    footer { border-top: 1px solid var(--border); padding: 24px 0; text-align: center; font-size: 0.8rem; color: var(--muted); }
+
+    .glow-text { text-shadow: 0 0 20px rgba(0,255,157,0.2); }
+
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 1.6rem; }
+      .card-grid-2, .card-grid-3 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">⛭</div>
+      TRIVO
+    </div>
+    <span class="tag">PRD v1.0</span>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#solution">Solution</a>
+      <a href="#stories">Stories</a>
+      <a href="#architecture">Arch</a>
+      <a href="#contracts">Contracts</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>
+      <span class="highlight">Trivo</span><br/>
+      PRD — Product Requirements Document
+    </h1>
+    <p>The Identity Layer for AI Trading Agents on Arc — a builder code registry + copy trading primitive that lets any agent prove its track record, any capital allocator trade on verified alpha, and every trade settle with on-chain attribution.</p>
+  </div>
+</section>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PROBLEM -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="problem">
+  <h2 class="section-title">❓ Problem Statement</h2>
+  <p class="section-sub">The three markets that don't know each other</p>
+
+  <div class="card card-neon" style="margin-bottom:16px;">
+    <p><strong>The Agora thesis</strong> is that prediction market infrastructure is unbundling into three layers — Agent, Identity, and Venue — and that the identity layer is where the next primitive gets built. Polymarket V2 shipped <code class="ticker">builder codes</code> (a <code class="ticker">bytes32</code> field in every signed order that attributes the trade to its originator). Hyperliquid HIP-3 shipped per-fill builder fees. Pump.fun shipped <code class="ticker">BREAKING_FEE_RECIPIENT</code>. All three venues converged on the same architectural answer in a six-month window — a <code class="ticker">bytes32</code> attribution slot that travels with every trade, can't be stripped, and determines who gets paid.</p>
+    <p><strong class="highlight-violet">But these attribution primitives are siloed.</strong> An agent that generates winning Polymarket predictions can't prove its track record on Hyperliquid. A trader who copies a strategy on one venue can't port that relationship to another. Builder codes exist but there's no registry that issues them, no standard that bridges them, no platform that connects the agents who produce alpha with the capital that wants to deploy it.</p>
+  </div>
+
+  <div class="problem-grid">
+    <div class="problem-card agents">
+      <h4>🤖 For AI Agents</h4>
+      <p>Every trading framework (TradingAgents, AlpacaTradingAgent, crypto variants) produces structured trade decisions backed by reasoning traces. But those traces live in a log file, not on a chain. The agent has <strong>no portable identity</strong>, no verifiable PnL, no way to say <em>"I generated +12% on Polymarket last month — here's the on-chain proof."</em> Its reputation resets to zero every time it switches venues.</p>
+    </div>
+    <div class="problem-card capital">
+      <h4>💰 For Capital Allocators (Copy Traders)</h4>
+      <p>Copy trading today is <strong>blind</strong>. You follow a wallet address, not a strategy. You can't tell whether the trader got lucky or has edge. You can't detect when their strategy degrades. You can't diversify across multiple alpha sources with automated rebalancing. The only signal you have is <em>"they made money"</em> — and by the time you see it, the alpha is gone.</p>
+    </div>
+    <div class="problem-card venues">
+      <h4>🏛️ For the Venues</h4>
+      <p>Polymarket, Hyperliquid, and Uniswap all want AI agents trading on their books. But every integration is <strong>bespoke</strong> — different SDKs, different attribution schemes, different fee models. There's no identity layer that abstracts the venue plumbing so an agent can deploy across all of them with a single on-chain identity.</p>
+    </div>
+  </div>
+
+  <div class="card card-violet">
+    <h4 style="margin-top:0;">⚡ The Infrastructure Gap</h4>
+    <p><strong>Arc makes the economics viable for the first time.</strong> Sub-second deterministic finality means a copy trade can settle in the same block as the original. ~$0.01 transaction fees in USDC mean that per-trade platform fees, builder fees, and copy-fee splits don't erode PnL. USDC as native gas means every cost is denominated in dollars — no volatile token to budget around.</p>
+    <p style="margin-bottom:0;"><strong>But the platform that connects AI agents to capital allocators on Arc doesn't exist yet.</strong> The unbundling has happened at the protocol level, but there's no consumer surface that lets a user:</p>
+    <ol style="margin-top:8px;">
+      <li>Launch an AI trading agent with one click — no infra setup</li>
+      <li>Configure it with natural language — no code required</li>
+      <li>Fund it with USDC — same asset as gas, no swap needed</li>
+      <li>Watch it trade on Polymarket, Hyperliquid, and Uniswap — all attributed to a single on-chain identity</li>
+      <li>Let others discover, follow, and copy that agent — with fees flowing back to the creator automatically</li>
+    </ol>
+    <p style="margin-top:8px;margin-bottom:0;"><strong class="highlight-neon">That's Trivo.</strong></p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- SOLUTION -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="solution">
+  <h2 class="section-title">💡 Solution</h2>
+  <p class="section-sub"><strong>Trivo is the Identity Layer for AI Trading Agents on Arc</strong> — a platform where users launch programmable AI agents with persistent on-chain identity (ERC-8004), configure trading skills and models, and participate in a copy trading network with on-chain attribution and automatic fee distribution.</p>
+
+  <h3>Key Differentiators</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Dimension</th><th>Trivo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Agent Identity</strong></td><td>ERC-8004 on-chain identity NFT + builder code — portable across Polymarket, Hyperliquid, Uniswap</td></tr>
+        <tr><td><strong>Agent Wallets</strong></td><td>Circle Agent Wallets — MPC, user-custody, configurable spending policies</td></tr>
+        <tr><td><strong>Copy Trading</strong></td><td>On-chain smart contract with dynamic fee split — performance-aware, not blind</td></tr>
+        <tr><td><strong>AI Models</strong></td><td>Multi-model (DeepSeek, Claude, OpenAI, Qwen) + BYOK for custom models</td></tr>
+        <tr><td><strong>Hosting</strong></td><td>Trivo-hosted (decision engine) + Self-hosted (Hermes, OpenClaw, custom)</td></tr>
+        <tr><td><strong>Settlement</strong></td><td>Arc chain — USDC native, ~$0.01/tx, sub-second finality</td></tr>
+        <tr><td><strong>Attribution</strong></td><td>Builder code per agent — same <code class="ticker">bytes32</code> primitive as Polymarket V2 / HIP-3</td></tr>
+        <tr><td><strong>Venues</strong></td><td>Polymarket · Hyperliquid · Uniswap (expandable)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>User Flow: Launch Agent → Live</h3>
+  <div class="card">
+    <div class="flow">
+      <div class="flow-step">👤 User inputs name, model, skills, natural language strategy</div>
+      <div class="flow-step">⚙️ Backend compiles strategy → rules · creates Circle Agent Wallet</div>
+      <div class="flow-step" style="border-left:2px solid var(--violet);">📜 Register ERC-8004 identity on Arc → agent gets unique builder code</div>
+      <div class="flow-step">💰 User funds agent wallet (direct on Arc or via App Kit Bridge)</div>
+      <div class="flow-step">🤖 Agent goes live — appears in Feed + Discover with on-chain identity</div>
+      <div class="flow-step" style="border-left:2px solid var(--neon);">🔄 Agent decision loop: observe → decide → validate → execute → log on-chain</div>
+    </div>
+  </div>
+
+  <h3>Agent Decision Loop</h3>
+  <div class="card">
+    <div class="flow">
+      <div class="flow-step">1️⃣ 📡 <strong>Market Observation</strong> — price feeds, order books, news, sentiment</div>
+      <div class="flow-step">2️⃣ 🔬 <strong>Research</strong> — analyze data against configured strategy</div>
+      <div class="flow-step">3️⃣ 🧠 <strong>Decision</strong> — AI produces structured trade decision with reasoning trace</div>
+      <div class="flow-step">4️⃣ ✅ <strong>Validation</strong> — checked against AgentRules (spend limit, leverage, stop loss)</div>
+      <div class="flow-step">5️⃣ ⚡ <strong>Execution</strong> — trade submitted through venue SDK (Polymarket / Hyperliquid / Uniswap)</div>
+      <div class="flow-step">6️⃣ 📝 <strong>Recording</strong> — position on-chain + decision hash → ERC-8004 ReputationRegistry</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- USER STORIES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="stories">
+  <h2 class="section-title">📖 User Stories</h2>
+  <p class="section-sub">32 stories covering agent launch, self-hosted, models, copy trading, feed, and wallet</p>
+
+  <h4>Agent Launch & Management</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">1.</span> As a user, I want to create an AI trading agent with a name and username, so that it has a unique identity on the platform.</div>
+    <div class="user-story"><span class="num">2.</span> As a user, I want to choose between Trivo-hosted and self-hosted agent deployment, so that I can control my infrastructure or use Trivo's runtime.</div>
+    <div class="user-story"><span class="num">3.</span> As a user, I want to configure my agent's AI model (DeepSeek, Claude, OpenAI, Qwen) or bring my own API key (BYOK).</div>
+    <div class="user-story"><span class="num">4.</span> As a user, I want to select trading skills for my agent (perpetual, LP, Polymarket, funding rate, arbitrage, DeFi yield).</div>
+    <div class="user-story"><span class="num">5.</span> As a user, I want to define my agent's strategy using natural language, so that AI interprets intent and generates structured trading rules.</div>
+    <div class="user-story"><span class="num">6.</span> As a user, I want to set risk parameters (spend limit, max leverage, stop loss) for my agent.</div>
+    <div class="user-story"><span class="num">7.</span> As a user, I want my agent to have its own wallet with spending policies.</div>
+    <div class="user-story"><span class="num">8.</span> As a user, I want to register my agent on-chain via ERC-8004 IdentityRegistry, so that it has a verifiable, portable on-chain identity NFT with a unique builder code.</div>
+    <div class="user-story"><span class="num">9.</span> As a user, I want to pause or reactivate my agent at any time.</div>
+    <div class="user-story"><span class="num">10.</span> As a user, I want to update my agent's configuration after deployment.</div>
+  </div>
+
+  <h4>Self-Hosted Agents</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">11.</span> As a developer, I want to register my self-hosted agent (Hermes, OpenClaw) with Trivo by providing an endpoint URL and skill.md.</div>
+    <div class="user-story"><span class="num">12.</span> As a self-hosted agent operator, I want Trivo to send market data and context via REST or WebSocket.</div>
+    <div class="user-story"><span class="num">13.</span> As a self-hosted agent operator, I want to return structured trade decisions to Trivo for validation and execution.</div>
+  </div>
+
+  <h4>AI Model & Skill Configuration</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">14.</span> As a user, I want to configure individual skill parameters per venue.</div>
+    <div class="user-story"><span class="num">15.</span> As a user, I want to browse available skills in the Skill Marketplace.</div>
+    <div class="user-story"><span class="num">16.</span> As a developer, I want to publish my own skill definition (skill.md) to the Marketplace.</div>
+  </div>
+
+  <h4>Copy Trading <span class="badge badge-green">RFB 06</span></h4>
+  <div class="card card-neon">
+    <div class="user-story"><span class="num">17.</span> As a user, I want to see every position opened by every agent in real-time with on-chain verified track records.</div>
+    <div class="user-story"><span class="num">18.</span> As a user, I want to copy-trade any agent's position with one click — attributed on-chain via builder code.</div>
+    <div class="user-story"><span class="num">19.</span> As a user, I want to set allocation size when copy-trading an agent.</div>
+    <div class="user-story"><span class="num">20.</span> As a user, I want to stop copy-trading at any time — detect degradation via on-chain PnL.</div>
+    <div class="user-story"><span class="num">21.</span> As an agent creator, I want to earn copy trading fees automatically when others copy my trades.</div>
+    <div class="user-story"><span class="num">22.</span> As a user, I want copy trading fees to be dynamic based on agent performance tier.</div>
+  </div>
+
+  <h4>Feed & Social</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">23.</span> As a user, I want to filter the feed by venue.</div>
+    <div class="user-story"><span class="num">24.</span> As a user, I want to see top agents ranked by on-chain verified AUM, PnL, and win rate.</div>
+    <div class="user-story"><span class="num">25.</span> As a user, I want to view an agent's detailed profile with all open positions and stats — all verifiable on Arc.</div>
+    <div class="user-story"><span class="num">26.</span> As a user, I want to follow agents without copy-trading.</div>
+  </div>
+
+  <h4>Backtesting</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">27.</span> As a user, I want to run backtests on historical data before deploying live.</div>
+    <div class="user-story"><span class="num">28.</span> As a user, I want to see backtest results including Sharpe, drawdown, and win rate.</div>
+  </div>
+
+  <h4>Wallet & Funding</h4>
+  <div class="card">
+    <div class="user-story"><span class="num">29.</span> As a user, I want to connect my wallet (Rabby, MetaMask) to Trivo.</div>
+    <div class="user-story"><span class="num">30.</span> As a user, I want to fund my agent wallet via direct USDC deposit on Arc — same asset as gas.</div>
+    <div class="user-story"><span class="num">31.</span> As a user, I want to fund via Circle App Kit Bridge from Ethereum/Solana/Base.</div>
+    <div class="user-story"><span class="num">32.</span> As a user, I want to withdraw funds from my agent wallet at any time.</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="architecture">
+  <h2 class="section-title">🏗️ Architecture</h2>
+  <p class="section-sub">4-layer architecture: Agent Hosting → Shared Platform → Circle Infra → Arc Settlement</p>
+
+  <div class="card">
+    <div class="arch">
+      <div class="arch-layer" style="border-color:rgba(0,255,157,0.2);">
+        <div class="arch-layer-title" style="color:var(--neon);">1. Agent Hosting Layer</div>
+        <div class="arch-items">
+          <div class="arch-item arch-item-neon">Trivo-Hosted Runtime</div>
+          <div class="arch-item arch-item-neon">Model Gateway (DS/Claude/OA/Qwen/BYOK)</div>
+          <div class="arch-item arch-item-neon">Skills Engine + Rules Engine</div>
+          <div class="arch-item" style="border-color:rgba(167,139,250,0.3);color:var(--violet);background:rgba(167,139,250,0.06);">Self-Hosted (Hermes/OpenClaw)</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--neon);font-size:1rem;">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-title">2. Shared Platform Layer</div>
+        <div class="arch-items">
+          <div class="arch-item">Feed Service</div>
+          <div class="arch-item">Copy Trading Relay</div>
+          <div class="arch-item">Backtest Engine</div>
+          <div class="arch-item">Strategy Compiler</div>
+          <div class="arch-item">Skill Registry</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--violet);font-size:1rem;">↓</div>
+      <div class="arch-layer" style="border-color:rgba(167,139,250,0.2);">
+        <div class="arch-layer-title" style="color:var(--violet);">3. Circle Infrastructure</div>
+        <div class="arch-items">
+          <div class="arch-item arch-item-violet">Agent Wallets (MPC + Policies)</div>
+          <div class="arch-item arch-item-violet">App Kit (Bridge / Swap / Send)</div>
+          <div class="arch-item arch-item-violet">CCTP / Gateway / Paymaster</div>
+        </div>
+      </div>
+      <div style="text-align:center;color:var(--neon);font-size:1rem;">↓</div>
+      <div class="arch-layer" style="border-color:rgba(0,255,157,0.3);background:rgba(0,255,157,0.03);">
+        <div class="arch-layer-title" style="color:var(--neon);">4. Settlement Layer — Arc</div>
+        <div class="arch-items">
+          <div class="arch-item arch-item-neon">ERC-8004 IdentityRegistry</div>
+          <div class="arch-item arch-item-neon">ERC-8004 ReputationRegistry</div>
+          <div class="arch-item arch-item-neon">CopyTrading Contract</div>
+          <div class="arch-item arch-item-neon">FeeManager Contract</div>
+          <div class="arch-item arch-item-neon">USDC (Native Gas)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- CONTRACTS -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section id="contracts">
+  <h2 class="section-title">📜 Smart Contracts</h2>
+  <p class="section-sub">ARC-8004 existing on Arc + new Trivo contracts</p>
+
+  <h4>Existing: ERC-8004 (Already Deployed on Arc)</h4>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Contract</th><th>Address</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">IdentityRegistry</span></td><td class="ticker" style="font-size:0.7rem;">0x8004A818BFB912233c491871b3d84c89A494BD9e</td><td>Register agent identity NFT, store metadata URI, issue builder code</td></tr>
+        <tr><td><span class="badge badge-green">ReputationRegistry</span></td><td class="ticker" style="font-size:0.7rem;">0x8004B663056A597Dffe9eCcC1965A193B7388713</td><td>Record reputation events — on-chain PnL, trade count, win rate</td></tr>
+        <tr><td><span class="badge badge-green">ValidationRegistry</span></td><td class="ticker" style="font-size:0.7rem;">0x8004Cb1BF31DAf7788923b405b754f57acEB4272</td><td>Request/respond validation credentials</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:0.8rem;">Every agent on Trivo gets an ERC-8004 identity NFT. The <code class="ticker">tokenId</code> becomes the agent's <strong>builder code</strong> — the same <code class="ticker">bytes32</code> primitive Polymarket V2, HIP-3, and Pump.fun use.</p>
+
+  <h4>New: Trivo Contracts</h4>
+  <div class="card-grid card-grid-2">
+    <div class="card card-violet">
+      <div class="card-title"><span class="badge badge-violet">CopyTrading</span></div>
+      <p style="font-size:0.82rem;">On-chain copy trading primitive. Attach followers, mirror positions, distribute fees based on performance tier.</p>
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:0;">
+        <code>attachFollower()</code> · <code>detachFollower()</code> · <code>reportPosition()</code> · <code>distributeCopyFees()</code>
+      </p>
+    </div>
+    <div class="card card-violet">
+      <div class="card-title"><span class="badge badge-violet">FeeManager</span></div>
+      <p style="font-size:0.82rem;">Platform fee collection, creator fee distribution, performance tier management.</p>
+      <p style="font-size:0.75rem;color:var(--muted);margin-bottom:0;">
+        <code>collectPlatformFee()</code> · <code>distributeCreatorFee()</code> · <code>setFeeTier()</code>
+      </p>
+    </div>
+  </div>
+
+  <h4>Circle Agent Wallet Integration</h4>
+  <div class="card">
+    <ol style="font-size:0.82rem;">
+      <li><strong>Agent creation:</strong> Trivo backend creates a Circle Agent Wallet via API</li>
+      <li><strong>Spending policies:</strong> Daily USDC limit, contract allowlist, max per-tx value</li>
+      <li><strong>Funding:</strong> User deposits USDC directly on Arc or via App Kit Bridge</li>
+      <li><strong>Execution:</strong> Agent submits trades via Agent Wallet or direct tx</li>
+      <li><strong>Gas:</strong> Transactions are gas-sponsored by Circle (capped)</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- BACKEND MODULES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section>
+  <h2 class="section-title">🧩 Backend Modules</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Module</th><th>Responsibility</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-green">Agent Service</span></td><td>CRUD agents, ERC-8004 registration sync</td></tr>
+        <tr><td><span class="badge badge-cyan">Wallet Service</span></td><td>Circle Agent Wallet creation, funding, withdrawal</td></tr>
+        <tr><td><span class="badge badge-violet">Model Gateway</span></td><td>Proxy AI model requests (DeepSeek/Claude/OpenAI/Qwen)</td></tr>
+        <tr><td><span class="badge badge-yellow">Strategy Compiler</span></td><td>Natural language → structured agent rules</td></tr>
+        <tr><td><span class="badge badge-green">Position Service</span></td><td>Track positions from contract + off-chain</td></tr>
+        <tr><td><span class="badge badge-green">Feed Service</span></td><td>Real-time agent activity feed</td></tr>
+        <tr><td><span class="badge badge-violet">Copy Trade Service</span></td><td>Manage copy relationships</td></tr>
+        <tr><td><span class="badge badge-gray">Backtest Engine</span></td><td>Historical simulation</td></tr>
+        <tr><td><span class="badge badge-gray">User Service</span></td><td>Auth, wallet connect</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- FURTHER NOTES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<section>
+  <h2 class="section-title">📌 Further Notes</h2>
+
+  <h4>Hackathon Alignment</h4>
+  <div class="card-grid card-grid-2" style="margin-bottom:16px;">
+    <div class="card card-neon">
+      <div class="card-title"><span class="badge badge-green">🎯 RFB 06</span> Social Trading Intelligence</div>
+      <p style="font-size:0.82rem;margin-bottom:0;"><strong>Perfect match.</strong> Copy trading with AI allocation, on-chain attribution, performance-based fees.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge badge-cyan">RFB 01</span> Perpetual Futures</div>
+      <p style="font-size:0.82rem;margin-bottom:0;">⚡ Perpetual skill covers this.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge badge-cyan">RFB 02</span> Prediction Markets</div>
+      <p style="font-size:0.82rem;margin-bottom:0;">🎯 Polymarket skill covers this.</p>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge badge-cyan">RFB 04</span> Adaptive Portfolio</div>
+      <p style="font-size:0.82rem;margin-bottom:0;">🌾 Yield + portfolio skills cover this.</p>
+    </div>
+  </div>
+
+  <h4>Judging Criteria</h4>
+  <div class="table-wrap" style="margin-bottom:16px;">
+    <table>
+      <thead><tr><th>Criteria</th><th>Weight</th><th>Trivo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Agentic Sophistication</strong></td><td>30%</td><td>AI decides <strong>what</strong> and <strong>when</strong> — NL strategy → structured decisions → reasoning traces</td></tr>
+        <tr><td><strong>Traction</strong></td><td>30%</td><td>Users launch real agents → feed populated → copy trading volume</td></tr>
+        <tr><td><strong>Circle/Arc Tooling</strong></td><td>20%</td><td>ERC-8004 (existing on Arc!) + Agent Wallets + App Kit + CCTP</td></tr>
+        <tr><td><strong>Innovation</strong></td><td>20%</td><td>Builder code registry + copy trading — "the missing piece" per unbundling thesis</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Arc-Specific Advantages</h4>
+  <div class="card-grid card-grid-2" style="margin-bottom:16px;">
+    <div class="card"><div class="card-title">💵 USDC as gas</div><p style="font-size:0.82rem;margin-bottom:0;">User funds agent wallet → same USDC pays gas → no swap needed</p></div>
+    <div class="card"><div class="card-title">💰 ~$0.01/tx</div><p style="font-size:0.82rem;margin-bottom:0;">Per-trade platform fee, copy fee split — doesn't erode PnL</p></div>
+    <div class="card"><div class="card-title">⚡ Sub-second finality</div><p style="font-size:0.82rem;margin-bottom:0;">Copy trade settles in same block as original — true real-time mirroring</p></div>
+    <div class="card"><div class="card-title">📜 ERC-8004 pre-deployed</div><p style="font-size:0.82rem;margin-bottom:0;">Agent identity infra already on Arc — no custom deploy needed</p></div>
+  </div>
+
+  <h4>Revenue Model</h4>
+  <div class="table-wrap" style="margin-bottom:16px;">
+    <table>
+      <thead><tr><th>Fee Type</th><th>Rate</th><th>Payer</th><th>Recipient</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Platform fee</strong></td><td>0.5% per trade</td><td>Agent owner</td><td>Trivo</td></tr>
+        <tr><td><strong>Copy trading fee</strong></td><td>1–5% dynamic (by performance tier)</td><td>Copy trader</td><td>Creator (70%) + Trivo (30%)</td></tr>
+        <tr><td><strong>BYOK surcharge</strong></td><td>Free</td><td>BYOK user</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h4>Out of Scope</h4>
+  <div class="card">
+    <ul style="font-size:0.82rem;">
+      <li><strong>Custom venues</strong> beyond Polymarket, Hyperliquid, Uniswap</li>
+      <li><strong>Mobile native app</strong> — mobile web sufficient for v1</li>
+      <li><strong>Token launch</strong> — revenue comes from fees, not a platform token</li>
+      <li><strong>DAO/governance</strong> — v1 is platform-operated</li>
+      <li><strong>Formal KYC</strong> — Circle's compliance handles sanctions screening</li>
+      <li><strong>On-chain order book</strong> — uses venue operators' matching engines</li>
+    </ul>
+  </div>
+
+  <blockquote>
+    <strong>"Trivo is the Identity Layer for AI Trading Agents on Arc</strong> — a builder code registry + copy-trading primitive that gives every AI agent persistent on-chain identity, verifiable reputation, and automatic monetization. The missing piece of the unbundled stack."
+  </blockquote>
+</section>
+
+</div>
+
+<footer>
+  <p style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:4px;">
+    TRIVO · PRD v1.0 · AGORA AGENTS HACKATHON · CANTEEN × CIRCLE × ARC · MAY 2026
+  </p>
+  <p>Foundry · Hono · TanStack Start · Circle Agent Wallets · Arc</p>
+</footer>
+
+</body>
+</html>
