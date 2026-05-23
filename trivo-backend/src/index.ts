@@ -21,6 +21,7 @@ import { memoryRoutes } from './routes/memory'
 import { backtestRoutes } from './routes/backtest'
 import { thinkingRoutes } from './routes/thinking'
 import { modelRoutes } from './routes/models'
+import { pnlRoutes } from './routes/pnl'
 import { chat } from './routes/chat'
 import { setupDocs } from './lib/openapi'
 
@@ -41,6 +42,7 @@ app.route('/api', memoryRoutes)
 app.route('/api/backtest', backtestRoutes)
 app.route('/api', thinkingRoutes)
 app.route('/api/models', modelRoutes)
+app.route('/api/pnl', pnlRoutes)
 app.route('/api/chat', chat)
 
 // API documentation
