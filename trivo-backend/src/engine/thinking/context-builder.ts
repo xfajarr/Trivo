@@ -125,10 +125,18 @@ ${ta.patterns.length > 0
     : 'No recent trades'
 
   const positionLines = context.openPositions.length > 0
-    ? context.openPositions.map(p =>
-        `- ${p.venue} ${p.side} $${p.size} @ $${p.entryPrice}`
-      ).join('\n')
-    : 'No open positions'
+    ? context.openPositions.map(p => {
+        const entry = p.entryPrice || 0;
+        const current = context.prices[p.venue === `perp` ? `BTC/USD` : p.venue] || 0;
+        const isLong = (p.side || `long`).toLowerCase() === `long`;
+        let upnl = 0;
+        if (entry > 0 && current > 0) {
+          upnl = isLong ? ((current - entry) / entry) * (p.size || 0) : ((entry - current) / entry) * (p.size || 0);
+        }
+        const upnlStr = upnl >= 0 ? `+$${upnl.toFixed(2)}` : `-$${Math.abs(upnl).toFixed(2)}`;
+        return `- ID: ${(p as unknown as { id?: string }).id || `?`} | ${p.venue} ${p.side} $${p.size} @ $${entry} | Unrealized: ${upnlStr}`;
+      }).join(`\n`)
+    : `No open positions`
 
   // Determine market condition from enhanced analysis
   const btcTA = context.technicalAnalysis?.['BTC/USD']
