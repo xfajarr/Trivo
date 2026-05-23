@@ -15,7 +15,10 @@ export const Route = createFileRoute("/launch")({
   head: () => ({
     meta: [
       { title: "Launch Agent · Agentpit" },
-      { name: "description", content: "Configure a programmable AI trading agent. Perps, prediction markets, LP, yield." },
+      {
+        name: "description",
+        content: "Configure a programmable AI trading agent. Perps, prediction markets, LP, yield.",
+      },
     ],
   }),
   component: LaunchPage,
@@ -30,9 +33,27 @@ const VENUES: { v: Venue; emoji: string; desc: string }[] = [
 ];
 
 const STYLES = [
-  { id: "conservative", label: "Conservative", desc: "Low leverage, tight stops, capital preservation.", levMul: 0.5, freq: "low" },
-  { id: "balanced", label: "Balanced", desc: "Moderate sizing, mix of yield and directional.", levMul: 1, freq: "med" },
-  { id: "aggressive", label: "Aggressive", desc: "High leverage, momentum, max upside.", levMul: 1.8, freq: "high" },
+  {
+    id: "conservative",
+    label: "Conservative",
+    desc: "Low leverage, tight stops, capital preservation.",
+    levMul: 0.5,
+    freq: "low",
+  },
+  {
+    id: "balanced",
+    label: "Balanced",
+    desc: "Moderate sizing, mix of yield and directional.",
+    levMul: 1,
+    freq: "med",
+  },
+  {
+    id: "aggressive",
+    label: "Aggressive",
+    desc: "High leverage, momentum, max upside.",
+    levMul: 1.8,
+    freq: "high",
+  },
 ];
 
 const SIGNALS = [
@@ -102,9 +123,17 @@ function LaunchPage() {
         const size = (budget / slots) * (0.7 + (i % 3) * 0.15);
         const lev = v === "PERP" ? Math.max(1, Math.round(maxLev[0] * styleObj.levMul)) : undefined;
         const drift = ((i * 37) % 11) - 4; // -4..6
-        const pct = drift * (styleObj.levMul) * (v === "PERP" ? 1.2 : 0.4);
+        const pct = drift * styleObj.levMul * (v === "PERP" ? 1.2 : 0.4);
         const pnl = size * (pct / 100) * (lev ?? 1);
-        out.push({ venue: v, market: m.market, side: m.side, size, leverage: lev, estPnl: pnl, estPct: pct });
+        out.push({
+          venue: v,
+          market: m.market,
+          side: m.side,
+          size,
+          leverage: lev,
+          estPnl: pnl,
+          estPct: pct,
+        });
         i++;
       }
     }
@@ -133,8 +162,12 @@ function LaunchPage() {
     step === 4;
 
   return (
-    <div className="bg-grid bg-grid-fade">
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+    <div className="relative">
+      <div
+        className="absolute inset-0 bg-grid bg-grid-fade pointer-events-none"
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <div className="mb-6 flex items-center gap-2">
           <Rocket className="h-5 w-5 text-neon" />
           <h1 className="font-display text-2xl font-bold">Launch a new agent</h1>
@@ -150,13 +183,15 @@ function LaunchPage() {
                   i < step
                     ? "border-neon bg-neon/10 text-neon"
                     : i === step
-                    ? "border-neon bg-neon text-primary-foreground glow-neon"
-                    : "border-border text-muted-foreground"
+                      ? "border-neon bg-neon text-primary-foreground glow-neon"
+                      : "border-border text-muted-foreground"
                 }`}
               >
                 {i < step ? <Check className="h-3.5 w-3.5" /> : i + 1}
               </button>
-              <span className={`ticker text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap ${i === step ? "text-foreground" : "text-muted-foreground"}`}>
+              <span
+                className={`ticker text-[10px] sm:text-xs uppercase tracking-widest whitespace-nowrap ${i === step ? "text-foreground" : "text-muted-foreground"}`}
+              >
                 {s}
               </span>
               {i < steps.length - 1 && <div className="ml-1 h-px flex-1 bg-border" />}
@@ -168,7 +203,9 @@ function LaunchPage() {
           {step === 0 && (
             <div className="space-y-5">
               <div>
-                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">Agent name</Label>
+                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
+                  Agent name
+                </Label>
                 <Input
                   className="mt-2 bg-surface-2"
                   placeholder="e.g. Nightowl"
@@ -177,7 +214,9 @@ function LaunchPage() {
                 />
               </div>
               <div>
-                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">Strategy description</Label>
+                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
+                  Strategy description
+                </Label>
                 <Textarea
                   className="mt-2 min-h-[120px] bg-surface-2"
                   placeholder="Describe what this agent should do, when to enter, when to exit."
@@ -203,7 +242,9 @@ function LaunchPage() {
                     key={v.v}
                     onClick={() => toggleVenue(v.v)}
                     className={`flex w-full items-center gap-4 rounded-lg border p-4 text-left transition-colors ${
-                      on ? "border-neon bg-neon/5" : "border-border bg-surface-2/40 hover:border-muted-foreground"
+                      on
+                        ? "border-neon bg-neon/5"
+                        : "border-border bg-surface-2/40 hover:border-muted-foreground"
                     }`}
                   >
                     <span className="text-2xl">{v.emoji}</span>
@@ -211,7 +252,9 @@ function LaunchPage() {
                       <div className="font-display font-semibold">{VENUE_LABEL[v.v]}</div>
                       <div className="text-xs text-muted-foreground">{v.desc}</div>
                     </div>
-                    <div className={`flex h-5 w-5 items-center justify-center rounded border ${on ? "border-neon bg-neon text-primary-foreground" : "border-border"}`}>
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded border ${on ? "border-neon bg-neon text-primary-foreground" : "border-border"}`}
+                    >
                       {on && <Check className="h-3 w-3" />}
                     </div>
                   </button>
@@ -226,7 +269,9 @@ function LaunchPage() {
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
                   Signal sources
                 </Label>
-                <p className="mt-1 text-[11px] text-muted-foreground">Pick what the agent listens to.</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Pick what the agent listens to.
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {SIGNALS.map((s) => {
                     const on = signals.includes(s.id);
@@ -252,14 +297,28 @@ function LaunchPage() {
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
                   Max open positions · <span className="text-neon">{maxOpen[0]}</span>
                 </Label>
-                <Slider value={maxOpen} onValueChange={setMaxOpen} min={1} max={10} step={1} className="mt-3" />
+                <Slider
+                  value={maxOpen}
+                  onValueChange={setMaxOpen}
+                  min={1}
+                  max={10}
+                  step={1}
+                  className="mt-3"
+                />
               </div>
 
               <div>
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
                   Take profit per position · <span className="text-neon">+{takeProfit[0]}%</span>
                 </Label>
-                <Slider value={takeProfit} onValueChange={setTakeProfit} min={2} max={100} step={1} className="mt-3" />
+                <Slider
+                  value={takeProfit}
+                  onValueChange={setTakeProfit}
+                  min={2}
+                  max={100}
+                  step={1}
+                  className="mt-3"
+                />
               </div>
             </div>
           )}
@@ -267,7 +326,9 @@ function LaunchPage() {
           {step === 3 && (
             <div className="space-y-6">
               <div>
-                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">Risk style</Label>
+                <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
+                  Risk style
+                </Label>
                 <div className="mt-2 grid gap-2 sm:grid-cols-3">
                   {STYLES.map((s) => (
                     <button
@@ -286,7 +347,8 @@ function LaunchPage() {
 
               <div>
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
-                  Starting budget · <span className="text-neon">{budget.toLocaleString()} USDC</span>
+                  Starting budget ·{" "}
+                  <span className="text-neon">{budget.toLocaleString()} USDC</span>
                 </Label>
                 <Input
                   type="range"
@@ -303,28 +365,46 @@ function LaunchPage() {
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
                   Max leverage · <span className="text-violet">{maxLev[0]}×</span>
                 </Label>
-                <Slider value={maxLev} onValueChange={setMaxLev} min={1} max={20} step={1} className="mt-3" />
+                <Slider
+                  value={maxLev}
+                  onValueChange={setMaxLev}
+                  min={1}
+                  max={20}
+                  step={1}
+                  className="mt-3"
+                />
               </div>
 
               <div>
                 <Label className="ticker text-xs uppercase tracking-widest text-muted-foreground">
                   Stop loss · <span className="text-loss">-{stopLoss[0]}%</span> per position
                 </Label>
-                <Slider value={stopLoss} onValueChange={setStopLoss} min={1} max={25} step={1} className="mt-3" />
+                <Slider
+                  value={stopLoss}
+                  onValueChange={setStopLoss}
+                  min={1}
+                  max={25}
+                  step={1}
+                  className="mt-3"
+                />
               </div>
 
               <div className="space-y-3 rounded-md border border-border bg-surface-2/50 p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-display text-sm">Post to global feed</div>
-                    <div className="text-[11px] text-muted-foreground">Show every position to the network.</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Show every position to the network.
+                    </div>
                   </div>
                   <Switch checked={autopost} onCheckedChange={setAutopost} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-display text-sm">Allow copy trading</div>
-                    <div className="text-[11px] text-muted-foreground">Other agents can mirror your positions.</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      Other agents can mirror your positions.
+                    </div>
                   </div>
                   <Switch checked={copyable} onCheckedChange={setCopyable} />
                 </div>
@@ -337,7 +417,9 @@ function LaunchPage() {
               <div className="rounded-lg border border-neon/30 bg-neon/5 p-4 glow-neon">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-neon" />
-                  <div className="font-display text-lg font-semibold">{name || "Untitled agent"}</div>
+                  <div className="font-display text-lg font-semibold">
+                    {name || "Untitled agent"}
+                  </div>
                 </div>
                 <div className="ticker mt-1 text-xs text-muted-foreground">
                   ready to deploy · testnet · {signals.length} signals · {venues.length} venues
@@ -434,7 +516,9 @@ function LaunchPage() {
 function Review({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 rounded-md border border-border bg-surface-2/30 p-3">
-      <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </span>
       <span className="ticker text-sm text-right">{value}</span>
     </div>
   );

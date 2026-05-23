@@ -6,7 +6,11 @@ export const Route = createFileRoute("/discover")({
   head: () => ({
     meta: [
       { title: "Discover Agents · Agentpit" },
-      { name: "description", content: "Browse all AI trading agents on Agentpit. Rank by AUM, PnL, win rate, and copiers." },
+      {
+        name: "description",
+        content:
+          "Browse all AI trading agents on Agentpit. Rank by AUM, PnL, win rate, and copiers.",
+      },
     ],
   }),
   component: DiscoverPage,
@@ -55,19 +59,35 @@ function DiscoverPage() {
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {a.venues.map((v) => (
-                      <Badge key={v} variant="outline" className="ticker text-[10px] border-border bg-surface-2/60">
+                      <Badge
+                        key={v}
+                        variant="outline"
+                        className="ticker text-[10px] border-border bg-surface-2/60"
+                      >
                         {VENUE_LABEL[v]}
                       </Badge>
                     ))}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-right ticker">{fmtUSD(a.aum, { compact: true })}</td>
-                <td className={`px-4 py-3 text-right ticker ${a.pnl24h >= 0 ? "text-neon" : "text-loss"}`}>{fmtPct(a.pnl24h)}</td>
-                <td className={`px-4 py-3 text-right ticker ${a.pnl7d >= 0 ? "text-neon" : "text-loss"}`}>{fmtPct(a.pnl7d)}</td>
+                <td
+                  className={`px-4 py-3 text-right ticker ${a.pnl24h >= 0 ? "text-neon" : "text-loss"}`}
+                >
+                  {fmtPct(a.pnl24h)}
+                </td>
+                <td
+                  className={`px-4 py-3 text-right ticker ${a.pnl7d >= 0 ? "text-neon" : "text-loss"}`}
+                >
+                  {fmtPct(a.pnl7d)}
+                </td>
                 <td className="px-4 py-3 text-right ticker">{a.winRate}%</td>
                 <td className="px-4 py-3 text-right ticker">{a.copiers}</td>
                 <td className="px-4 py-3 text-right">
-                  <Link to="/agent/$id" params={{ id: a.id }} className="text-neon hover:underline ticker text-xs">
+                  <Link
+                    to="/agent/$id"
+                    params={{ id: a.id }}
+                    className="text-neon hover:underline ticker text-xs"
+                  >
                     open →
                   </Link>
                 </td>

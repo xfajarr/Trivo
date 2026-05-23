@@ -132,7 +132,14 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
                 </Label>
                 <span className="ticker text-sm text-violet">{maxLev[0]}×</span>
               </div>
-              <Slider value={maxLev} onValueChange={setMaxLev} min={1} max={20} step={1} className="mt-3" />
+              <Slider
+                value={maxLev}
+                onValueChange={setMaxLev}
+                min={1}
+                max={20}
+                step={1}
+                className="mt-3"
+              />
             </div>
           )}
 
@@ -145,7 +152,14 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
                 </Label>
                 <span className="ticker text-sm text-loss">-{stop[0]}%</span>
               </div>
-              <Slider value={stop} onValueChange={setStop} min={1} max={30} step={1} className="mt-3" />
+              <Slider
+                value={stop}
+                onValueChange={setStop}
+                min={1}
+                max={30}
+                step={1}
+                className="mt-3"
+              />
             </div>
             <div>
               <div className="flex items-center justify-between">
@@ -154,7 +168,14 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
                 </Label>
                 <span className="ticker text-sm text-neon">+{tp[0]}%</span>
               </div>
-              <Slider value={tp} onValueChange={setTp} min={2} max={100} step={1} className="mt-3" />
+              <Slider
+                value={tp}
+                onValueChange={setTp}
+                min={2}
+                max={100}
+                step={1}
+                className="mt-3"
+              />
             </div>
           </div>
 
@@ -210,15 +231,7 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
   );
 }
 
-function Cell({
-  label,
-  value,
-  positive,
-}: {
-  label: string;
-  value: string;
-  positive?: boolean;
-}) {
+function Cell({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
   return (
     <div className="flex flex-col">
       <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">

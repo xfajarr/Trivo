@@ -223,3 +223,78 @@
   background-size: 200% 100%;
   animation: shimmer 2.4s linear infinite;
 }
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+  25% { opacity: 1; transform: scale(1) translateY(-4px); }
+  50% { opacity: 0.5; transform: scale(0.8) translateY(-8px); }
+  75% { opacity: 0; transform: scale(0) translateY(-12px); }
+}
+
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes animate-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient {
+  animation: animate-gradient 4s ease infinite;
+}
+
+@keyframes beam-flow {
+  0% { stroke-dashoffset: 1000; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes shiny-text-sweep {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes shimmer-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes shimmer-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes orbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes retro-grid-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(60px); }
+}
+
+.retro-grid-animate {
+  animation: retro-grid-scroll 8s linear infinite;
+}
+
+@keyframes shine-border-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.shine-border-rotate {
+  animation: shine-border-rotate 3s linear infinite;
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; box-shadow: 0 0 20px rgba(171,255,79,0.2); }
+  50% { opacity: 0.8; box-shadow: 0 0 40px rgba(171,255,79,0.5); }
+}

@@ -1,123 +1,136 @@
 import { Link } from "@tanstack/react-router";
 import { Copy, TrendingUp } from "lucide-react";
 import { useState } from "react";
-import { Position, fmtPct, fmtUSD, getAgent, timeAgo, VENUE_LABEL } from "@/lib/mock-data";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CopyTradeModal } from "@/components/CopyTradeModal";
+import { fmtUSD, timeAgo } from "@/lib/utils";
+import { VENUE_LABEL } from "@/lib/constants";
+import { useAgents } from "@/hooks/useAgents";
+import type { FeedEvent } from "@/lib/types";
 
 const venueClass: Record<string, string> = {
-  PERP: "bg-neon/10 text-neon border-neon/30",
-  PREDICTION: "bg-violet/10 text-violet border-violet/30",
-  LP: "bg-cyber/10 text-cyber border-cyber/30",
-  YIELD: "bg-amber-400/10 text-amber-300 border-amber-400/30",
-  SPOT: "bg-signal/10 text-signal border-signal/30",
+  perp: "bg-neon/10 text-neon border-neon/30",
+  prediction: "bg-violet/10 text-violet border-violet/30",
+  lp: "bg-cyan-400/10 text-cyan-300 border-cyan-400/30",
+  yield: "bg-amber-400/10 text-amber-300 border-amber-400/30",
+  spot: "bg-emerald-400/10 text-emerald-300 border-emerald-400/30",
 };
 
-export function FeedItem({ pos }: { pos: Position }) {
-  const agent = getAgent(pos.agentId)!;
-  const [copies, setCopies] = useState(pos.copies);
+export function FeedItem({ event }: { event?: FeedEvent }) {
+  const { agents } = useAgents();
+  const agent = event ? agents.find((a) => a.id === event.agentId) : undefined;
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
-  const positive = pos.pnl >= 0;
+
+  if (!event) return null;
+
+  let decision: Record<string, unknown> | null = null;
+  try {
+    decision = event.data ? JSON.parse(event.data) : null;
+  } catch {
+    // ignore parse errors
+  }
+
+  const side = decision?.decision?.args?.side || event?.type || "trade";
+  const market = decision?.decision?.args?.market || "-";
+  const size = decision?.decision?.args?.size || 0;
+  const venue = event?.venue || "perp";
+
+  function copyTrade() {
+    if (copied) return;
+    setCopied(true);
+    toast.success(`Copied ${agent?.name || "Agent"}`, {
+      description: `Mirrored position into your agent.`,
+    });
+  }
 
   return (
-    <>
-      <article className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-neon/40 hover:glow-soft">
-        <div className="flex items-start gap-3">
-          <Link
-            to="/agent/$id"
-            params={{ id: agent.id }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border font-display text-lg"
-            style={{ color: agent.color, boxShadow: `inset 0 0 0 1px ${agent.color}33` }}
-          >
-            {agent.avatar}
-          </Link>
+    <article className="group relative rounded-lg border border-border bg-card p-4 transition-colors hover:border-neon/40">
+      <div className="flex items-start gap-3">
+        <Link
+          to="/agent/$id"
+          params={{ id: event.agentId }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border font-display text-lg"
+        >
+          {agent?.name?.[0] || "?"}
+        </Link>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-              <Link to="/agent/$id" params={{ id: agent.id }} className="font-display font-semibold hover:text-neon">
-                {agent.name}
-              </Link>
-              <span className="ticker text-xs text-muted-foreground">@{agent.handle}</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="ticker text-xs text-muted-foreground">{timeAgo(pos.openedAt)} ago</span>
-              <Badge variant="outline" className={`ml-1 border ${venueClass[pos.venue]} ticker text-[10px]`}>
-                {VENUE_LABEL[pos.venue]}
-              </Badge>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            <Link
+              to="/agent/$id"
+              params={{ id: event.agentId }}
+              className="font-display font-semibold hover:text-neon"
+            >
+              {agent?.name || "Agent"}
+            </Link>
+            <span className="ticker text-xs text-muted-foreground">
+              @{agent?.handle || "agent"}
+            </span>
+            <span className="text-muted-foreground">·</span>
+            <span className="ticker text-xs text-muted-foreground">
+              {timeAgo(event.createdAt)} ago
+            </span>
+            <Badge
+              variant="outline"
+              className={`ml-1 border ${venueClass[venue] || ""} ticker text-[10px]`}
+            >
+              {VENUE_LABEL[venue] || venue}
+            </Badge>
+          </div>
+
+          {event.reasoning && (
+            <div className="mt-2 text-xs text-muted-foreground italic line-clamp-2">
+              {event.reasoning}
             </div>
+          )}
 
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span
-                className={`ticker text-xs font-semibold px-2 py-0.5 rounded ${
-                  ["LONG", "YES", "BUY", "ADD", "STAKE"].includes(pos.side)
-                    ? "bg-neon/15 text-neon"
-                    : "bg-loss/15 text-loss"
-                }`}
-              >
-                {pos.side}
-              </span>
-              <span className="font-display text-base">{pos.market}</span>
-              {pos.leverage && (
-                <span className="ticker text-xs text-violet">{pos.leverage}×</span>
-              )}
+          <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className={`ticker text-xs font-semibold px-2 py-0.5 rounded ${
+                ["LONG", "YES", "BUY", "ADD", "STAKE"].includes(side)
+                  ? "bg-neon/15 text-neon"
+                  : "bg-loss/15 text-loss"
+              }`}
+            >
+              {side}
+            </span>
+            <span className="font-display text-base">{market}</span>
+            {size > 0 && (
               <span className="ticker text-xs text-muted-foreground">
-                size {fmtUSD(pos.size, { compact: true })}
+                size {fmtUSD(size, { compact: true })}
               </span>
-            </div>
+            )}
+          </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border bg-surface-2/60 p-2 text-xs">
-              <Stat label="Entry" value={pos.entry.toLocaleString()} />
-              <Stat label="Mark" value={pos.mark.toLocaleString()} />
-              <Stat
-                label="PnL"
-                value={
-                  <span className={positive ? "text-neon" : "text-loss"}>
-                    {fmtUSD(pos.pnl)} <span className="opacity-70">({fmtPct(pos.pnlPct)})</span>
-                  </span>
-                }
-              />
-            </div>
+          {event.txHash && (
+            <a
+              href={`https://testnet.arcscan.app/tx/${event.txHash}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-block ticker text-[10px] text-violet hover:underline"
+            >
+              🔗 {event.txHash.slice(0, 10)}…{event.txHash.slice(-6)}
+            </a>
+          )}
 
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1 ticker text-[11px] text-muted-foreground">
-                <TrendingUp className="h-3 w-3" />
-                {copies} agents copied
-              </div>
-              <Button
-                size="sm"
-                onClick={() => setOpen(true)}
-                disabled={copied}
-                className="h-8 gap-1.5 bg-neon text-primary-foreground hover:bg-neon/90 disabled:bg-muted disabled:text-muted-foreground"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                {copied ? "Copied" : "Copy trade"}
-              </Button>
+          <div className="mt-3 flex items-center justify-between">
+            <div className="flex items-center gap-1 ticker text-[11px] text-muted-foreground">
+              <TrendingUp className="h-3 w-3" />
+              Copy
             </div>
+            <Button
+              size="sm"
+              onClick={copyTrade}
+              disabled={copied}
+              className="h-8 gap-1.5 bg-neon text-primary-foreground hover:bg-neon/90 disabled:bg-muted disabled:text-muted-foreground"
+            >
+              <Copy className="h-3.5 w-3.5" />
+              {copied ? "Copied" : "Copy trade"}
+            </Button>
           </div>
         </div>
-      </article>
-
-      <CopyTradeModal
-        pos={pos}
-        open={open}
-        onOpenChange={setOpen}
-        onConfirmed={() => {
-          setCopied(true);
-          setCopies((c) => c + 1);
-        }}
-      />
-    </>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="flex flex-col">
-      <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">
-        {label}
-      </span>
-      <span className="ticker mt-0.5">{value}</span>
-    </div>
+      </div>
+    </article>
   );
 }

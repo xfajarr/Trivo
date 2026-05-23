@@ -40,10 +40,15 @@ function AgentDetail() {
       <div className="relative border-b border-border bg-grid bg-hero">
         <div
           className="absolute inset-0 opacity-40"
-          style={{ background: `radial-gradient(ellipse 60% 80% at 20% 0%, ${agent.color}33, transparent 70%)` }}
+          style={{
+            background: `radial-gradient(ellipse 60% 80% at 20% 0%, ${agent.color}33, transparent 70%)`,
+          }}
         />
         <div className="relative mx-auto max-w-6xl px-4 py-8">
-          <Link to="/feed" className="ticker mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+          <Link
+            to="/feed"
+            className="ticker mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-3 w-3" /> back to feed
           </Link>
 
@@ -61,7 +66,10 @@ function AgentDetail() {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl sm:text-3xl font-bold">{agent.name}</h1>
-                <Badge variant="outline" className={`ticker text-[10px] ${agent.status === "LIVE" ? "border-neon/40 text-neon" : "border-muted text-muted-foreground"}`}>
+                <Badge
+                  variant="outline"
+                  className={`ticker text-[10px] ${agent.status === "LIVE" ? "border-neon/40 text-neon" : "border-muted text-muted-foreground"}`}
+                >
                   ● {agent.status}
                 </Badge>
               </div>
@@ -71,7 +79,11 @@ function AgentDetail() {
               <p className="mt-3 max-w-2xl text-sm text-foreground/90">{agent.strategy}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {agent.venues.map((v) => (
-                  <Badge key={v} variant="outline" className="ticker text-[10px] border-border bg-surface-2/60">
+                  <Badge
+                    key={v}
+                    variant="outline"
+                    className="ticker text-[10px] border-border bg-surface-2/60"
+                  >
                     {VENUE_LABEL[v]}
                   </Badge>
                 ))}
@@ -80,7 +92,12 @@ function AgentDetail() {
 
             <div className="flex w-full flex-row gap-2 sm:w-auto sm:flex-col">
               <Button
-                onClick={() => { setCopyAll(true); toast.success(`Copy-trading ${agent.name}`, { description: "All future positions will mirror into your agent." }); }}
+                onClick={() => {
+                  setCopyAll(true);
+                  toast.success(`Copy-trading ${agent.name}`, {
+                    description: "All future positions will mirror into your agent.",
+                  });
+                }}
                 disabled={copyAll}
                 className="flex-1 bg-neon text-primary-foreground hover:bg-neon/90 glow-neon disabled:bg-muted disabled:text-muted-foreground"
               >
@@ -115,7 +132,8 @@ function AgentDetail() {
         <div className="mb-4 flex items-center gap-2">
           <Activity className="h-4 w-4 text-neon" />
           <h2 className="font-display text-xl font-semibold">
-            Activity <span className="ticker text-sm text-muted-foreground">· {positions.length} open</span>
+            Activity{" "}
+            <span className="ticker text-sm text-muted-foreground">· {positions.length} open</span>
           </h2>
         </div>
 
@@ -148,7 +166,9 @@ function AgentDetail() {
 function Stat({ label, value, positive }: { label: string; value: string; positive?: boolean }) {
   return (
     <div className="bg-card p-4">
-      <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
+      <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">
+        {label}
+      </div>
       <div
         className={`ticker mt-1 text-lg font-semibold ${
           positive === undefined ? "" : positive ? "text-neon" : "text-loss"
