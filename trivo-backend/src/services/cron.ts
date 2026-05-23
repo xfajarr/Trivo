@@ -108,8 +108,14 @@ async function pnlWatcherJob() {
 
   for (const pos of openPositions) {
     try {
-      const pair = `${pos.market?.split('-')[0] ?? 'BTC'}/USD`
+      const KNOWN_TOKENS = ["BTC", "ETH", "SOL"]
+      const baseToken = KNOWN_TOKENS.find(t => pos.market?.toUpperCase().includes(t)) ?? "BTC"
+      const pair = `${baseToken}/USD`
       const currentPrice = await getPrice(pair)
+      if (currentPrice === 0) {
+        console.warn(`⚠️ Skipping position ${pos.id}: no price data for ${pair}`)
+        continue
+      }
       const entryPrice = Number(pos.entryPrice)
       if (entryPrice === 0) continue
 

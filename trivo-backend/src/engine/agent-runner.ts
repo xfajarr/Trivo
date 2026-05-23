@@ -100,7 +100,9 @@ export class AgentRunner {
       await this.recordERC8004(agent, result)
 
       // 8. Update circuit breaker
-      this.circuitBreaker.recordTradeResult(((result as unknown as { pnlUsd?: number }).pnlUsd ?? 0))
+      const tradePnl = parseFloat((result as Record<string,unknown>).pnl as string) || 0
+      this.circuitBreaker.recordTradeResult(tradePnl)
+      console.log(`   📈 PnL: $${tradePnl >= 0 ? "+" : ""}${tradePnl.toFixed(2)}`)
 
       broadcastAgentEvent(this.agentId, {
         event: 'execution', agentId: this.agentId,

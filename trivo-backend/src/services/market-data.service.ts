@@ -31,8 +31,8 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
         // Initialize LP pools on first run
         if (!lpPoolInitialized && pair === 'ETH/USD') {
           try {
-            const r1 = await mockLpCreatePool('ETH/USDC', 500)
-          await mockLpCreatePool('WBTC/ETH', 3000)
+            const r1 = await mockLpCreatePool('0x0000000000000000000000000000000000000001', '0x0000000000000000000000000000000000000002', 500, 79228162514264337593543950336)
+          await mockLpCreatePool('0x0000000000000000000000000000000000000003', '0x0000000000000000000000000000000000000001', 3000, 79228162514264337593543950336)
           lpPoolInitialized = true
           console.log(`💧 LP pools created (🔗 https://testnet.arcscan.app/tx/${r1.transactionHash})`)
           } catch { /* pool may already exist */ }
@@ -68,7 +68,7 @@ async function initializePolymarketMarkets() {
     const targetPrice = Math.round(btcPrice * 1.02) // 2% above current
     const question = `BTC > $${targetPrice} in 1 hour?`
     
-    const result = await mockPolymarketCreateMarket(question, 45, 55)
+    const result = await mockPolymarketCreateMarket(question)
     polymarketInitialized = true
     console.log(`🎯 Polymarket market created: ${question} (🔗 https://testnet.arcscan.app/tx/${result.transactionHash})`)
   } catch (err) {

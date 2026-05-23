@@ -1,0 +1,108 @@
+export const CopyTradingABI = [
+  {
+    type: 'function' as const,
+    name: 'registerAgent',
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'agentAddress', type: 'address' },
+      { name: 'agentOwner', type: 'address' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'reportPosition',
+    inputs: [
+      { name: 'agentId', type: 'uint256' },
+      { name: 'venue', type: 'string' },
+      { name: 'market', type: 'string' },
+      { name: 'side', type: 'string' },
+      { name: 'size', type: 'uint256' },
+      { name: 'entryPrice', type: 'uint256' },
+      { name: 'leverage', type: 'uint256' },
+      { name: 'refId', type: 'bytes32' },
+    ],
+    outputs: [{ name: 'positionId', type: 'uint256' }],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'closePosition',
+    inputs: [
+      { name: 'positionId', type: 'uint256' },
+      { name: 'exitPrice', type: 'uint256' },
+      { name: 'pnl', type: 'int256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'attachFollower',
+    inputs: [
+      { name: 'follower', type: 'address' },
+      { name: 'targetAgentId', type: 'uint256' },
+      { name: 'allocationBps', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'detachFollower',
+    inputs: [
+      { name: 'follower', type: 'address' },
+      { name: 'targetAgentId', type: 'uint256' },
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable' as const,
+  },
+  {
+    type: 'function' as const,
+    name: 'getPosition',
+    inputs: [{ name: 'positionId', type: 'uint256' }],
+    outputs: [
+      {
+        type: 'tuple',
+        components: [
+          { name: 'agentId', type: 'uint256' },
+          { name: 'agentAddress', type: 'address' },
+          { name: 'venue', type: 'string' },
+          { name: 'market', type: 'string' },
+          { name: 'side', type: 'string' },
+          { name: 'size', type: 'uint256' },
+          { name: 'entryPrice', type: 'uint256' },
+          { name: 'leverage', type: 'uint256' },
+          { name: 'refId', type: 'bytes32' },
+          { name: 'exitPrice', type: 'uint256' },
+          { name: 'pnl', type: 'int256' },
+          { name: 'open', type: 'bool' },
+          { name: 'openedAt', type: 'uint256' },
+          { name: 'closedAt', type: 'uint256' },
+        ],
+      },
+    ],
+    stateMutability: 'view' as const,
+  },
+  {
+    type: 'error' as const,
+    name: 'NotAuthorized',
+    inputs: [],
+  },
+  {
+    type: 'error' as const,
+    name: 'AgentNotFound',
+    inputs: [],
+  },
+  {
+    type: 'error' as const,
+    name: 'PositionNotFound',
+    inputs: [],
+  },
+  {
+    type: 'error' as const,
+    name: 'AlreadyClosed',
+    inputs: [],
+  },
+] as const
