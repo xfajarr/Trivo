@@ -1,6 +1,6 @@
 import { db } from '../lib/db.js'
 import { agents, agentMemory, feedEvents, positions } from '../lib/schema.js'
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import type { ThinkingEngine } from './thinking/thinking-engine.js'
 import { DecisionEngine } from './decision/decision-engine.js'
 import { CircuitBreaker } from './decision/circuit-breaker.js'
@@ -15,11 +15,10 @@ const DEFAULT_RISK_CONFIG: RiskConfig = {
   confidenceThresholds: { low: 30, medium: 50, high: 70 },
 }
 
-// 💰 Money Management Limits
-const MAX_CONCURRENT_POSITIONS = 2       // Max open positions at once
-const MIN_TRADE_INTERVAL_MS = 30_000     // 30s cooldown between trades
-const MAX_LOSS_STREAK_PAUSE = 3          // Pause after N consecutive losses
-const MAX_DAILY_TRADES = 50              // Max trades per day
+const MAX_CONCURRENT_POSITIONS = 2
+const MIN_TRADE_INTERVAL_MS = 30_000
+const MAX_LOSS_STREAK_PAUSE = 3
+const MAX_DAILY_TRADES = 50
 
 export class AgentRunner {
   private decision: DecisionEngine
@@ -50,40 +49,64 @@ export class AgentRunner {
       this.dailyResetTime.setUTCHours(0, 0, 0, 0)
     }
 
-    // Circuit breaker check
     const { canTrade, reason } = this.circuitBreaker.canTrade()
-    if (!canTrade) {
-      console.log(`⏸️  [${this.agentName}] Paused: ${reason}`)
-      return
-    }
+    if (!canTrade) { console.log(`⏸️  [${this.agentName}] Paused: ${reason}`); return }
 
     const agent = await db.query.agents.findFirst({ where: eq(agents.id, this.agentId) })
     if (!agent || agent.status !== 'active') return
 
-    // 💰 MONEY MANAGEMENT: Check concurrent positions
-    const openPositions = await db.select()
-      .from(positions)
+    // Check open positions
+    const openPositions = await db.select().from(positions)
+      .where(and(eq(positions.agentId, this.agentId), eq(positions.status, 'open')))
     const currentPositions = openPositions.length
 
-    // 💰 MONEY MANAGEMENT: Cooldown between trades
-    const timeSinceLastTrade = Date.now() - this.lastTradeTime
-    if (this.lastTradeTime > 0 && timeSinceLastTrade < MIN_TRADE_INTERVAL_MS) {
-      return // Skip — still in cooldown
+    // 💰 If we have open positions, try to close them first
+    if (currentPositions > 0 && this.dailyTradeCount > 0) {
+      // Every few cycles, check if we should close
+      const shouldClose = Math.random() > 0.5
+      if (shouldClose) {
+        // Close oldest position
+        const pos = openPositions[0]
+        if (pos) {
+          console.log(`   🔄 [${this.agentName}] Trying to close position ${pos.id}`)
+          try {
+            const result = await this.tools.execute('close_trade', { 
+              positionId: pos.id, 
+              reason: 'Taking profit or cutting loss' 
+            })
+            const tradePnl = parseFloat((result as Record<string, unknown>).pnl as string) || 0
+            await this.updateAgentPnL(tradePnl)
+            this.dailyTradeCount++
+            console.log(`   📈 PnL: $${tradePnl >= 0 ? '+' : ''}${tradePnl.toFixed(2)}`)
+            this.lastTradeTime = Date.now()
+            return
+          } catch (err) {
+            console.error(`   ❌ Close failed:`, (err as Error).message)
+          }
+        }
+      }
     }
 
-    // 💰 MONEY MANAGEMENT: Daily trade limit
+    // 💰 Money management checks
+    if (currentPositions >= MAX_CONCURRENT_POSITIONS) {
+      console.log(`💰 [${this.agentName}] Max positions (${MAX_CONCURRENT_POSITIONS}) reached`)
+      return
+    }
+
+    const timeSinceLastTrade = Date.now() - this.lastTradeTime
+    if (this.lastTradeTime > 0 && timeSinceLastTrade < MIN_TRADE_INTERVAL_MS) return
+
     if (this.dailyTradeCount >= MAX_DAILY_TRADES) {
-      console.log(`💰 [${this.agentName}] Daily trade limit (${MAX_DAILY_TRADES}) reached`)
+      console.log(`💰 [${this.agentName}] Daily limit (${MAX_DAILY_TRADES}) reached`)
       return
     }
 
     console.log(`\n${'─'.repeat(40)}`)
-    console.log(`🔄 [${this.agentName}] Cycle (trades today: ${this.dailyTradeCount}, positions: ${currentPositions}/${MAX_CONCURRENT_POSITIONS})`)
+    console.log(`🔄 [${this.agentName}] Cycle (#${this.dailyTradeCount + 1}, positions: ${currentPositions}/${MAX_CONCURRENT_POSITIONS})`)
 
     broadcastAgentEvent(this.agentId, { event: 'thinking', agentId: this.agentId })
 
     try {
-      // 1. Think
       const output = await this.thinking.run({
         id: agent.id, name: agent.name, strategy: agent.strategy, skills: agent.skills,
         riskConfig: {
@@ -93,7 +116,6 @@ export class AgentRunner {
         },
       })
 
-      // 2. Save reasoning
       await this.saveMemory('reasoning', output.reasoning, `${output.observation}\n\n${output.analysis}`, {
         confidence: output.confidence, riskLevel: output.riskLevel,
       })
@@ -105,7 +127,6 @@ export class AgentRunner {
 
       console.log(`   🧠 ${output.confidence}% | ${output.riskLevel}`)
 
-      // 3. Evaluate
       const decision = this.decision.evaluate(output, {
         maxLeverageX: Number(agent.maxLeverage ?? 5),
         spendLimitUsd: Number(agent.spendLimit ?? 100),
@@ -116,11 +137,9 @@ export class AgentRunner {
         return
       }
 
-      // 4. Execute
       console.log(`   ⚡ ${decision.tool}`)
       const result = await this.tools.execute(decision.tool, decision.args)
 
-      // 5. Save execution + update money management
       await this.saveMemory('execution', `${decision.tool}: ${JSON.stringify(result)}`, decision.reasoning, {
         tool: decision.tool, args: decision.args,
       })
@@ -128,14 +147,15 @@ export class AgentRunner {
       this.lastTradeTime = Date.now()
       this.dailyTradeCount++
 
-      // 6. Track PnL
       const tradePnl = parseFloat((result as Record<string, unknown>).pnl as string) || 0
+
+      // UPDATE agent's totalPnl in DB
+      await this.updateAgentPnL(tradePnl)
 
       if (tradePnl < 0) {
         this.consecutiveLosses++
         if (this.consecutiveLosses >= MAX_LOSS_STREAK_PAUSE) {
-          console.log(`💰 [${this.agentName}] ${MAX_LOSS_STREAK_PAUSE} consecutive losses — pausing agent`)
-          // Auto-pause agent
+          console.log(`💰 [${this.agentName}] ${MAX_LOSS_STREAK_PAUSE} consecutive losses — pausing`)
           await db.update(agents).set({ status: 'paused' }).where(eq(agents.id, this.agentId)).execute()
           return
         }
@@ -145,13 +165,8 @@ export class AgentRunner {
 
       console.log(`   📈 PnL: $${tradePnl >= 0 ? '+' : ''}${tradePnl.toFixed(2)} | Streak: ${this.consecutiveLosses}/${MAX_LOSS_STREAK_PAUSE} losses`)
 
-      // 7. Feed event
       await this.createFeedEvent(decision.tool, decision.args, decision.confidence, decision.reasoning)
-
-      // 8. ERC-8004
       await this.recordERC8004(agent, result)
-
-      // 9. Update circuit breaker
       this.circuitBreaker.recordTradeResult(tradePnl)
 
       broadcastAgentEvent(this.agentId, {
@@ -166,12 +181,27 @@ export class AgentRunner {
     }
   }
 
+  private async updateAgentPnL(pnl: number) {
+    try {
+      const agent = await db.query.agents.findFirst({ where: eq(agents.id, this.agentId) })
+      if (agent) {
+        const currentPnl = Number(agent.totalPnl || 0)
+        const newPnl = currentPnl + pnl
+        const currentTrades = Number(agent.tradeCount || 0) + 1
+        await db.update(agents)
+          .set({ totalPnl: newPnl.toFixed(2), tradeCount: String(currentTrades) })
+          .where(eq(agents.id, this.agentId))
+          .execute()
+      }
+    } catch (err) {
+      console.error('Failed to update agent PnL:', (err as Error).message)
+    }
+  }
+
   getStatus() {
     return {
-      agentId: this.agentId,
-      agentName: this.agentName,
-      dailyTradeCount: this.dailyTradeCount,
-      consecutiveLosses: this.consecutiveLosses,
+      agentId: this.agentId, agentName: this.agentName,
+      dailyTradeCount: this.dailyTradeCount, consecutiveLosses: this.consecutiveLosses,
       lastTradeTime: this.lastTradeTime ? new Date(this.lastTradeTime).toISOString() : null,
       circuitBreaker: this.circuitBreaker.getStatus(),
     }

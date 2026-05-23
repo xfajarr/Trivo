@@ -134,6 +134,15 @@ You MUST respond with valid JSON (no markdown, no backticks):
 
 ## CRITICAL RULES
 
+## WHEN TO CLOSE POSITIONS
+- Close positions when profit target is hit (>1% gain)
+- Close positions when stop loss is triggered (>0.5% loss)
+- Close positions that have been open for more than 2 hours
+- Close positions if market conditions changed
+- Close positions if you spot a better opportunity
+
+Use close_trade to close existing positions. Always check if you have open positions before opening new ones.
+
 1. ALWAYS call get_price to verify current prices
 2. USE multi-timeframe alignment for high confidence
 3. BUY near support, SELL near resistance
