@@ -31,8 +31,8 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
     details = event.data ? JSON.parse(event.data) : {};
   } catch { /* ignore parse errors */ }
 
-  const venue = String(event.venue || details.venue || "perp");
-  const pair = String(event.pair || details.pair || details.market || "-" as string);
+  const venue = (String(event.venue || details.venue || "perp")) as "perp" | "prediction" | "polymarket" | "lp" | "yield" | "spot";
+  const pair = String(event.pair || (details.pair as string) || (details.market as string) || "-");
   const side = String(event.side || details.side || "long");
   const size = event.size || String(details.size ?? 0);
   const leverage = details.leverage as number || 1;
@@ -60,7 +60,7 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
         {/* Agent avatar */}
         <Link
           to="/agent/$id"
-          params={{ id: event.agentId }}
+          params={{ id: event.agentId || "unknown" }}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2 font-display text-lg font-semibold"
         >
           {agent?.name?.[0] || "?"}
@@ -71,7 +71,7 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <Link
               to="/agent/$id"
-              params={{ id: event.agentId }}
+              params={{ id: event.agentId || "unknown" }}
               className="font-display font-semibold hover:text-neon"
             >
               {agent?.name || "Agent"}
