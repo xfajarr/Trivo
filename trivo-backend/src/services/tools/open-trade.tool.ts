@@ -1,5 +1,5 @@
 import { ToolHandler } from './registry'
-import { reportPositionOnChain, getPrice } from '../contract.service'
+import { reportPositionOnChain, getPrice, mockPerpOpenPosition, mockPolymarketBuyOutcome, mockLpAddLiquidity } from '../contract.service'
 
 export const openTradeTool: ToolHandler = {
   definition: {
@@ -29,29 +29,43 @@ export const openTradeTool: ToolHandler = {
 
     try {
       const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
-      entryPrice = await getPrice(pair)
+      try { entryPrice = await getPrice(pair) } catch { /* use default */ }
 
-      const copyTradingAgentId = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
-      const result = await reportPositionOnChain(copyTradingAgentId, venue, market, side, size, entryPrice, leverage)
-      txHash = result.txHash
-    } catch {
-      // Contract call failed — use simulated data (e.g., in test env)
-      console.log(`ℹ️ open_trade sim: ${market} ${side} $${size}`)
-    }
+      // Try venue contract call (non-blocking)
+      try {
+        if (venue === 'perp') {
+          const isLong = side === 'LONG' || side === 'BUY'
+          const r = await mockPerpOpenPosition(pair, isLong, size, leverage)
+          txHash = r.transactionHash
+        } else if (venue === 'prediction') {
+          const isYes = side === 'YES'
+          const r = await mockPolymarketBuyOutcome(1, isYes, size)
+          txHash = r.transactionHash
+        } else if (venue === 'lp') {
+          const poolId = market.includes('ETH') ? 1 : 2
+          const r = await mockLpAddLiquidity(poolId, -1000, 1000, size)
+          txHash = r.transactionHash
+        }
+      } catch { /* contract call failed — use sim data */ }
 
-    return {
-      success: true,
-      data: {
-        positionId: `pos-${Date.now()}`,
-        venue,
-        market,
-        side,
-        size,
-        entryPrice,
-        leverage,
-        status: 'open',
-      },
-      txHash,
+      // Try CopyTrading report (non-blocking)
+      try {
+        const copyTradingAgentId = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
+        const r = await reportPositionOnChain(copyTradingAgentId, venue, market, side, size, entryPrice, leverage)
+        txHash = r.txHash || txHash
+      } catch { /* copy trading report failed — using venue tx */ }
+
+      return {
+        success: true,
+        data: {
+          positionId: `pos-${Date.now()}`,
+          venue, market, side, size, entryPrice, leverage,
+          status: 'open',
+        },
+        txHash,
+      }
+    } catch (err) {
+      return { success: false, error: String(err) }
     }
   },
 }

@@ -180,3 +180,172 @@ export async function attachFollowerOnChain(follower: string, targetAgentId: num
   } as any)
   return publicClient.waitForTransactionReceipt({ hash: tx })
 }
+
+// ── FeeManager ──
+
+export async function depositFeeOnChain(agentId: number, amount: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.FEE_MANAGER as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'depositFee',
+      inputs: [{ name: 'agentId', type: 'uint256' }, { name: 'amount', type: 'uint256' }],
+      outputs: [], stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'depositFee',
+    args: [BigInt(agentId), BigInt(amount)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+// ── MockPerp ──
+
+export async function mockPerpOpenPosition(
+  pair: string, isLong: boolean, sizeUsd: number, leverage: number
+) {
+  const wc = await getSigner()
+  const pairHash = keccak256(toHex(pair))
+  const tx = await wc.writeContract({
+    address: config.MOCK_PERP as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'openPosition',
+      inputs: [
+        { name: 'pair', type: 'bytes32' }, { name: 'isLong', type: 'bool' },
+        { name: 'sizeUsd', type: 'uint256' }, { name: 'leverage', type: 'uint256' },
+      ],
+      outputs: [{ name: 'positionId', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'openPosition',
+    args: [pairHash, isLong, BigInt(sizeUsd), BigInt(leverage)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+export async function mockPerpClosePosition(positionId: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_PERP as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'closePosition',
+      inputs: [{ name: 'positionId', type: 'uint256' }],
+      outputs: [{ name: 'pnl', type: 'int256' }, { name: 'pnlUsd', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'closePosition',
+    args: [BigInt(positionId)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+// ── MockPolymarket ──
+
+export async function mockPolymarketCreateMarket(question: string, yesOdds: number, noOdds: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_POLYMARKET as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'createMarket',
+      inputs: [
+        { name: 'question', type: 'string' },
+        { name: 'yesOdds', type: 'uint256' },
+        { name: 'noOdds', type: 'uint256' },
+      ],
+      outputs: [{ name: 'marketId', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'createMarket',
+    args: [question, BigInt(yesOdds), BigInt(noOdds)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+export async function mockPolymarketBuyOutcome(marketId: number, isYes: boolean, amount: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_POLYMARKET as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'buyOutcome',
+      inputs: [
+        { name: 'marketId', type: 'uint256' },
+        { name: 'isYes', type: 'bool' },
+        { name: 'amount', type: 'uint256' },
+      ],
+      outputs: [{ name: 'shares', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'buyOutcome',
+    args: [BigInt(marketId), isYes, BigInt(amount)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+export async function mockPolymarketResolve(marketId: number, outcome: boolean) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_POLYMARKET as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'resolveMarket',
+      inputs: [{ name: 'marketId', type: 'uint256' }, { name: 'outcome', type: 'bool' }],
+      outputs: [], stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'resolveMarket',
+    args: [BigInt(marketId), outcome],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+// ── MockLPV3 ──
+
+export async function mockLpCreatePool(pair: string, feeTier: number) {
+  const wc = await getSigner()
+  const pairHash = keccak256(toHex(pair))
+  const tx = await wc.writeContract({
+    address: config.MOCK_LPV3 as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'createPool',
+      inputs: [{ name: 'pair', type: 'bytes32' }, { name: 'feeTier', type: 'uint24' }],
+      outputs: [{ name: 'poolId', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'createPool',
+    args: [pairHash, feeTier],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+export async function mockLpAddLiquidity(poolId: number, tickLower: number, tickUpper: number, amountUsd: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_LPV3 as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'addLiquidity',
+      inputs: [
+        { name: 'poolId', type: 'uint256' },
+        { name: 'tickLower', type: 'int24' },
+        { name: 'tickUpper', type: 'int24' },
+        { name: 'amountUsd', type: 'uint256' },
+      ],
+      outputs: [{ name: 'positionId', type: 'uint256' }],
+      stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'addLiquidity',
+    args: [BigInt(poolId), tickLower, tickUpper, BigInt(amountUsd)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}
+
+export async function mockLpSimulateFeeAccrual(poolId: number, volumeUsd: number) {
+  const wc = await getSigner()
+  const tx = await wc.writeContract({
+    address: config.MOCK_LPV3 as `0x${string}`,
+    abi: [{
+      type: 'function' as const, name: 'simulateFeeAccrual',
+      inputs: [{ name: 'poolId', type: 'uint256' }, { name: 'volumeUsd', type: 'uint256' }],
+      outputs: [], stateMutability: 'nonpayable' as const,
+    }],
+    functionName: 'simulateFeeAccrual',
+    args: [BigInt(poolId), BigInt(volumeUsd)],
+  } as any)
+  return publicClient.waitForTransactionReceipt({ hash: tx })
+}

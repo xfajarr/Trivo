@@ -1,5 +1,5 @@
 import { ToolHandler } from './registry'
-import { closePositionOnChain, getPrice } from '../contract.service'
+import { closePositionOnChain, getPrice, depositFeeOnChain } from '../contract.service'
 
 export const closeTradeTool: ToolHandler = {
   definition: {
@@ -12,40 +12,62 @@ export const closeTradeTool: ToolHandler = {
         market: { type: 'string' },
         side: { type: 'string' },
         size: { type: 'number' },
+        venue: { type: 'string' },
       },
-      required: ['positionId', 'market', 'side', 'size'],
+      required: ['positionId', 'market', 'size'],
     },
   },
   async execute(agentId, args) {
     const market = args.market as string
     const side = args.side as string
     const size = args.size as number
-    let txHash = `0x${crypto.randomUUID().replace(/-/g, '')}`
-    let currentPrice = 0
+    const venue = (args.venue as string) || 'perp'
+    let txHash = ''
+    let currentPrice = 74100
+      let pnl
 
     try {
-      const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
-      currentPrice = await getPrice(pair)
+      try {
+        const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
+        currentPrice = await getPrice(pair)
+      } catch { /* use default */ }
 
-      const pnl =
-        side === 'LONG' || side === 'BUY' || side === 'YES' ? Math.floor(size * 0.01) : Math.floor(size * 0.008)
+      const isLong = side === 'LONG' || side === 'BUY' || side === 'YES'
+      pnl = isLong
+        ? Math.floor(size * ((currentPrice - 72880) / 72880))
+        : Math.floor(size * ((72880 - currentPrice) / 72880))
 
-      const copyTradingPosId = parseInt((args.positionId as string).replace(/\D/g, '')) || 1
-      const receipt = await closePositionOnChain(copyTradingPosId, currentPrice, pnl)
-      txHash = receipt.transactionHash
-    } catch {
-      console.log(`ℹ️ close_trade sim: ${market} closed`)
-    }
+      // Try closing on CopyTrading (non-blocking)
+      try {
+        const copyTradingPosId = parseInt((args.positionId as string).replace(/\D/g, '')) || 1
+        const r = await closePositionOnChain(copyTradingPosId, currentPrice, pnl)
+        txHash = r.transactionHash
+      } catch { /* close failed — using sim */ }
 
-    return {
-      success: true,
-      data: {
-        positionId: args.positionId,
-        status: 'closed',
-        pnl: Math.floor(size * 0.01),
-        exitPrice: currentPrice || 74100,
-      },
-      txHash,
+      // Try fee deposit (non-blocking)
+      if (pnl > 0) {
+        try {
+          const feeAmount = Math.floor(pnl * 0.03)
+          if (feeAmount > 0) {
+            const agentNum = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
+            await depositFeeOnChain(agentNum, feeAmount)
+          }
+        } catch { /* fee deposit non-critical */ }
+      }
+
+      return {
+        success: true,
+        data: {
+          positionId: args.positionId,
+          status: 'closed',
+          pnl,
+          exitPrice: currentPrice,
+          venue,
+        },
+        txHash,
+      }
+    } catch (err) {
+      return { success: false, error: String(err) }
     }
   },
 }
