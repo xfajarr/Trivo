@@ -1,0 +1,22 @@
+# Project docs (keep local, don't push)
+AGENTS.md
+ENGINE_PLAN.md
+PRD.html
+PRD.md
+PROJECT_STATUS.md
+README.md
+SESSION_SUMMARY.html
+SESSION_SUMMARY.md
+trivo-current-state.html
+trivo-feature-map.html
+trivo-feature-map.md
+onchain-ai-agent-guide-ts.md
+
+# Dev tools
+.superstack/
+trivo-frontend/.understand-anything/
+
+# OS files
+.DS_Store
+*.bak
+docs/plans/*.bak
