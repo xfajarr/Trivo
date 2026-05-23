@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { useAgents } from "@/hooks/useAgents";
 import { usePortfolioPnl } from "@/hooks/usePortfolioPnl";
 import { CreateAgentModal } from "@/components/CreateAgentModal";
+import { useTimeAgo } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 

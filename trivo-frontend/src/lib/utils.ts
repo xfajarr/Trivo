@@ -1,32 +1,58 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { useState, useEffect } from "react";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function fmtUSD(n: number, opts: { compact?: boolean } = {}) {
-  if (opts.compact && Math.abs(n) >= 1000) {
-    return (
-      "$" + Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n)
-    );
-  }
-  return "$" + Intl.NumberFormat("en", { maximumFractionDigits: 2 }).format(n);
+// Live-updating relative time (re-renders every second)
+export function useTimeAgo(ts: number | string | undefined) {
+  const [text, setText] = useState(() => formatTimeAgo(ts));
+
+  useEffect(() => {
+    const update = () => setText(formatTimeAgo(ts));
+    update();
+    const id = setInterval(update, 5000); // Update every 5s
+    return () => clearInterval(id);
+  }, [ts]);
+
+  return text;
 }
 
-export function fmtPct(n: number) {
-  const s = n >= 0 ? "+" : "";
-  return `${s}${n.toFixed(2)}%`;
-}
-
-export function timeAgo(ts: number | string | undefined) {
+function formatTimeAgo(ts: number | string | undefined) {
   if (!ts) return "just now";
   const t = typeof ts === "string" ? new Date(ts).getTime() : ts;
+  if (isNaN(t)) return "just now";
   const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
-  if (s < 60) return `${s}s`;
+  if (s < 60) return `${s}s ago`;
   const mi = Math.floor(s / 60);
-  if (mi < 60) return `${mi}m`;
+  if (mi < 60) return `${mi}m ago`;
   const h = Math.floor(mi / 60);
-  if (h < 24) return `${h}h`;
-  return `${Math.floor(h / 24)}d`;
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+// Legacy: non-reactive (for non-component usage)
+export function timeAgo(ts: number | string | undefined) {
+  return formatTimeAgo(ts);
+}
+
+// ── Number formatting ──
+
+export function fmtUSD(
+  value: number,
+  opts?: { compact?: boolean; decimals?: number }
+) {
+  const d = opts?.decimals ?? 2;
+  if (opts?.compact) {
+    if (Math.abs(value) >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+    if (Math.abs(value) >= 1_000) return `$${(value / 1_000).toFixed(1)}K`;
+    return `$${value.toFixed(0)}`;
+  }
+  return `$${value.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d })}`;
+}
+
+export function fmtPct(value: number) {
+  return `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
 }
