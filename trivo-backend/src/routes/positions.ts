@@ -29,3 +29,27 @@ positionRoutes.get('/:id', async (c) => {
   if (position.length === 0) return c.json({ error: 'Position not found' }, 404)
   return c.json({ position: position[0] })
 })
+
+// Trade history for an agent (all closed positions with PnL)
+positionRoutes.get('/history/:agentId', async (c) => {
+  const agentId = c.req.param('agentId')
+  const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100)
+  
+  const history = await db.select().from(positionsTable)
+    .where(eq(positionsTable.agentId, agentId))
+    .orderBy(desc(positionsTable.closedAt))
+    .limit(limit)
+
+  const closed = history.filter(p => p.status === 'closed')
+  
+  const summary = {
+    totalTrades: closed.length,
+    totalPnl: closed.reduce((s, p) => s + Number(p.pnl || 0), 0),
+    winRate: closed.length > 0 
+      ? Math.round((closed.filter(p => Number(p.pnl || 0) > 0).length / closed.length) * 100) 
+      : 0,
+    trades: closed,
+  }
+
+  return c.json(summary)
+})
