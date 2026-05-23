@@ -140,7 +140,7 @@ export class AgentRunner {
         const tr = Number(agent.tradeCount || 0) + 1
         await db.update(agents).set({ totalPnl: np.toFixed(2), tradeCount: String(tr) }).where(eq(agents.id, this.agentId)).execute()
       }
-    } catch (_e) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 
   getStatus() { return { agentId: this.agentId, agentName: this.agentName, dailyTradeCount: this.dailyTradeCount, circuitBreaker: this.circuitBreaker.getStatus() } }
@@ -168,6 +168,6 @@ export class AgentRunner {
     try {
       const ercId = agent.erc8004TokenId as string | undefined
       if (ercId) { const won = !!(result as Record<string, unknown>)?.success; await erc8004Service.recordTradeOutcome(ercId, won) }
-    } catch (_e) { /* ignore */ }
+    } catch { /* ignore */ }
   }
 }

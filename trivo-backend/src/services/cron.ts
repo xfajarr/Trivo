@@ -1,8 +1,7 @@
-import { eq, desc } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
-import { agents as agentsTable, agentMemory, feedEvents, positions } from '../lib/schema'
+import { positions, feedEvents } from '../lib/schema'
 import { fetchAndPushPrices, getSimulatedPrices } from './market-data.service'
-import { decide, executeDecision } from './decision-engine.service'
 import { getPrice } from './contract.service'
 
 function startCron(name: string, intervalMs: number, fn: () => Promise<void>) {
@@ -35,73 +34,8 @@ async function marketDataJob() {
   }
 }
 
-async function agentProcessingJob() {
-  const activeAgents = await db.select().from(agentsTable).where(eq(agentsTable.status, 'active')).limit(10)
 
-  if (activeAgents.length === 0) return
-
-  let prices: Record<string, number> = {}
-  try {
-    prices['BTC/USD'] = await getPrice('BTC/USD')
-    prices['ETH/USD'] = await getPrice('ETH/USD')
-    prices['SOL/USD'] = await getPrice('SOL/USD')
-  } catch {
-    prices = await getSimulatedPrices()
-  }
-
-  for (const agent of activeAgents) {
-    try {
-      const recentMemory = await db
-        .select()
-        .from(agentMemory)
-        .where(eq(agentMemory.agentId, agent.id))
-        .orderBy(desc(agentMemory.createdAt))
-        .limit(5)
-
-      const decision = await decide(
-        {
-          id: agent.id,
-          name: agent.name,
-          strategy: agent.strategy,
-          modelProvider: agent.modelProvider,
-          memory: recentMemory.map((m) => ({
-            type: m.type,
-            content: m.content,
-            reasoning: m.reasoning,
-          })),
-        },
-        { prices },
-      )
-
-      await db.insert(agentMemory).values({
-        id: crypto.randomUUID(),
-        agentId: agent.id,
-        type: decision.shouldTrade ? 'decision' : 'observation',
-        content: decision.reasoning,
-        reasoning: decision.reasoning,
-        metadata: JSON.stringify({ tool: decision.tool, confidence: decision.confidence }),
-      })
-
-      if (!decision.shouldTrade || !decision.tool) continue
-
-      const result = await executeDecision(agent.id, decision)
-
-      await db.insert(feedEvents).values({
-        id: crypto.randomUUID(),
-        agentId: agent.id,
-        type: 'position_open',
-        data: JSON.stringify({ decision, result }),
-        venue: ((decision.args ?? {}) as Record<string, string>)?.venue ?? 'perp',
-        txHash: result?.txHash ?? null,
-        reasoning: decision.reasoning,
-      })
-
-      console.log(`🤖 ${agent.name}: ${decision.tool} → ${result?.success ? '✅' : '❌'}`)
-    } catch (err) {
-      console.error(`❌ Agent ${agent.id} processing error:`, err)
-    }
-  }
-}
+// agentProcessingJob DISABLED — replaced by new engine/agent-runner.ts
 
 async function pnlWatcherJob() {
   const openPositions = await db.select().from(positions).where(eq(positions.status, 'open'))
@@ -169,7 +103,8 @@ export async function startAllCrons() {
   registerAllTools()
 
   startCron('market-data', 60_000, marketDataJob)
-  startCron('agent-processing', 30_000, agentProcessingJob)
+  // startCron("agent-processing", 30_000, agentProcessingJob) // DISABLED — using new engine
+  // startCron("agent-processing", 30_000, agentProcessingJob)
   startCron('pnl-watcher', 60_000, pnlWatcherJob)
 
   console.log('✅ All cron jobs running')
