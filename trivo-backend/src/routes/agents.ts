@@ -5,7 +5,6 @@ import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { agents as agentsTable, agentSessions, agentMemory } from '../lib/schema'
 import { authMiddleware } from '../middleware/auth'
-import { createAgentWallet } from '../services/wallet.service'
 
 export const agentRoutes = new Hono()
 
@@ -62,7 +61,6 @@ agentRoutes.post('/', authMiddleware, zValidator('json', createAgentSchema), asy
 
   const systemPrompt = `You are ${data.name}, an AI trading agent on Trivo.
 Strategy: ${data.strategy || 'No specific strategy'}
-You trade on venues you have skills for.
 Always return structured trade decisions with reasoning.`
 
   await db.insert(agentSessions).values({
@@ -93,7 +91,7 @@ agentRoutes.put('/:id', authMiddleware, async (c) => {
 
   const existing = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
-  if (existing[0].ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
+  if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
   await db.update(agentsTable).set({ ...body, updatedAt: new Date() }).where(eq(agentsTable.id, id))
   const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
@@ -107,7 +105,7 @@ agentRoutes.patch('/:id/status', authMiddleware, async (c) => {
 
   const existing = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
-  if (existing[0].ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
+  if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
   await db.update(agentsTable).set({ status, updatedAt: new Date() }).where(eq(agentsTable.id, id))
   return c.json({ status })

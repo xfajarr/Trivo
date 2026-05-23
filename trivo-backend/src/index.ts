@@ -38,8 +38,8 @@ setTimeout(async () => {
   try {
     const { startAllCrons } = await import('./services/cron')
     startAllCrons()
-  } catch (err) {
-    console.log('⏰ Cron not started (DB may not be available yet)')
+  } catch {
+    console.warn('⏰ Cron not started (DB may not be available yet)')
   }
 }, 1000)
 

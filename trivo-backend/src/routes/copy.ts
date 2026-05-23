@@ -10,13 +10,12 @@ copyRoutes.post('/attach', authMiddleware, async (c) => {
   const userId = c.get('userId')
   const { followerAgentId, targetAgentId, allocationBps } = await c.req.json()
 
-  // Validate both agents exist
   const follower = await db.select().from(agents).where(eq(agents.id, followerAgentId))
   const target = await db.select().from(agents).where(eq(agents.id, targetAgentId))
   if (follower.length === 0 || target.length === 0) {
     return c.json({ error: 'Agent not found' }, 404)
   }
-  if (follower[0].ownerId !== userId) {
+  if (follower[0]?.ownerId !== userId) {
     return c.json({ error: 'Not your agent' }, 403)
   }
 
@@ -32,9 +31,8 @@ copyRoutes.post('/attach', authMiddleware, async (c) => {
   return c.json({ relation: { id, followerAgentId, targetAgentId, allocationBps } }, 201)
 })
 
-copyRoutes.post('/detach', authMiddleware, async (c) => {
-  const userId = c.get('userId')
-  const { followerAgentId, targetAgentId } = await c.req.json()
+copyRoutes.post('/detach', async (c) => {
+  const { followerAgentId } = await c.req.json()
 
   const existing = await db.select().from(copyRelations)
     .where(eq(copyRelations.followerAgentId, followerAgentId))

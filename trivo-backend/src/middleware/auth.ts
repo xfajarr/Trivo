@@ -13,7 +13,8 @@ declare module 'hono' {
 export const authMiddleware = createMiddleware(async (c, next) => {
   const authHeader = c.req.header('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
-    return c.json({ error: 'Missing authorization token' }, 401)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return c.json({ error: 'Missing authorization token' }, 401) as any
   }
 
   const token = authHeader.slice(7)
@@ -22,6 +23,7 @@ export const authMiddleware = createMiddleware(async (c, next) => {
     c.set('userId', verified.userId)
     await next()
   } catch {
-    return c.json({ error: 'Invalid or expired token' }, 401)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return c.json({ error: 'Invalid or expired token' }, 401) as any
   }
 })

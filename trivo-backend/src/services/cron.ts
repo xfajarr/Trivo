@@ -1,6 +1,6 @@
 import { eq, desc } from 'drizzle-orm'
 import { db } from '../lib/db'
-import { agents as agentsTable, agentMemory, agentSessions, feedEvents, positions } from '../lib/schema'
+import { agents as agentsTable, agentMemory, feedEvents, positions } from '../lib/schema'
 import { fetchAndPushPrices, getSimulatedPrices } from './market-data.service'
 import { decide, executeDecision } from './decision-engine.service'
 import { getPrice } from './contract.service'
@@ -28,7 +28,9 @@ async function marketDataJob() {
       try {
         const mod = await import('./contract.service')
         await mod.updatePrice(pair, price)
-      } catch {}
+      } catch {
+      console.warn("Non-critical error")
+    }
     }
   }
 }
@@ -87,7 +89,7 @@ async function agentProcessingJob() {
         agentId: agent.id,
         type: 'position_open',
         data: JSON.stringify({ decision, result }),
-        venue: ((decision.args ?? {}) as any)?.venue ?? 'perp',
+        venue: ((decision.args ?? {}) as Record<string, string>)?.venue ?? 'perp',
         txHash: result?.txHash ?? null,
         reasoning: decision.reasoning,
       })

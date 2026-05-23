@@ -7,7 +7,11 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test"
   },
   "dependencies": {
     "@circle-fin/developer-controlled-wallets": "^10.3.1",
@@ -21,9 +25,14 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^20.11.17",
+    "eslint": "^10.4.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.3",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.59.4",
     "vitest": "^4.1.7"
   }
 }

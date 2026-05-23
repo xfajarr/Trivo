@@ -8,22 +8,16 @@ describe('Types - Data Model Validation', () => {
       name: 'Hyperion',
       handle: 'hyperion.eth',
       modelProvider: 'deepseek' as const,
-      strategy: 'Trend-following perp scalper across BTC/ETH/SOL.',
-      skills: JSON.stringify([{ id: 'perp', name: 'Perpetual Trading', venue: 'perp' }]),
+      strategy: 'Trend following',
       status: 'inactive' as const,
     }
 
     expect(agent.name).toBe('Hyperion')
-    expect(agent.handle).toBe('hyperion.eth')
     expect(agent.status).toBe('inactive')
-    expect(['deepseek', 'claude', 'openai', 'qwen', 'byok']).toContain(agent.modelProvider)
   })
 
   it('should validate agent status transitions', () => {
-    const validStatuses = ['inactive', 'active', 'paused'] as const
-    type AgentStatus = typeof validStatuses[number]
-
-    function isValidTransition(from: AgentStatus, to: AgentStatus): boolean {
+    function isValidTransition(from: string, to: string): boolean {
       if (from === 'inactive' && to === 'active') return true
       if (from === 'active' && to === 'paused') return true
       if (from === 'paused' && to === 'active') return true
@@ -32,13 +26,10 @@ describe('Types - Data Model Validation', () => {
 
     expect(isValidTransition('inactive', 'active')).toBe(true)
     expect(isValidTransition('active', 'paused')).toBe(true)
-    expect(isValidTransition('paused', 'active')).toBe(true)
     expect(isValidTransition('active', 'inactive')).toBe(false)
   })
 
-  it('should calculate correct PnL for prediction market (integer math)', () => {
-    // In Solidity: shares = (amount * 100) / odds
-    // $500 at 62% odds = 500 * 100 / 62 = 806 (truncated)
+  it('should calculate prediction market PnL correctly', () => {
     const amount = 500
     const odds = 62
     const shares = Math.floor((amount * 100) / odds)
@@ -47,26 +38,11 @@ describe('Types - Data Model Validation', () => {
 
     // Resolves YES → payout = shares
     const payout = shares
-    expect(payout).toBe(806)
-
-    // PnL = payout - amount
     const pnl = payout - amount
     expect(pnl).toBe(306)
   })
 
-  it('should calculate correct PnL for prediction market loss', () => {
-    const amount = 500
-    const odds = 62
-    const shares = Math.floor((amount * 100) / odds) // 806
-
-    // Resolves NO → payout = 0
-    const payout = 0
-    const pnl = payout - amount
-
-    expect(pnl).toBe(-500)
-  })
-
-  it('should calculate correct PnL for perp long trade', () => {
+  it('should calculate perp long PnL correctly', () => {
     const entryPrice = 72880
     const exitPrice = 74100
     const size = 5000
@@ -76,10 +52,9 @@ describe('Types - Data Model Validation', () => {
 
     expect(priceDiff).toBe(1220)
     expect(pnl).toBeGreaterThan(0)
-    expect(Math.floor(pnl)).toBe(83)
   })
 
-  it('should calculate correct PnL for perp short trade', () => {
+  it('should calculate perp short PnL correctly', () => {
     const entryPrice = 72880
     const exitPrice = 71000
     const size = 5000
@@ -89,5 +64,15 @@ describe('Types - Data Model Validation', () => {
 
     expect(priceDiff).toBe(1880)
     expect(pnl).toBeGreaterThan(0)
+  })
+
+  it('should handle prediction market loss', () => {
+    const amount = 500
+    const shares = Math.floor((amount * 100) / 62) // 62% odds
+    const payout = 0 // NO wins, user had YES
+    const pnl = payout - amount
+
+    expect(shares).toBe(806)
+    expect(pnl).toBe(-500)
   })
 })

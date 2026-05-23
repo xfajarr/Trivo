@@ -1,7 +1,5 @@
-import { getTool, getToolNames, buildToolsSystemPrompt } from './tools'
+import { getTool } from './tools'
 import type { ToolResult } from './tools'
-import { getPrice } from './contract.service'
-
 export interface TradeDecision {
   shouldTrade: boolean
   tool?: string

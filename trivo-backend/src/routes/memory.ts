@@ -7,7 +7,6 @@ import { authMiddleware } from '../middleware/auth'
 export const memoryRoutes = new Hono()
 
 memoryRoutes.post('/agents/:id/memory', authMiddleware, async (c) => {
-  const userId = c.get('userId')
   const agentId = c.req.param('id')
   const { type, content, reasoning, metadata } = await c.req.json()
 

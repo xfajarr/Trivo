@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createPublicClient, http, keccak256, toHex } from 'viem'
 import { config } from '../config'
 

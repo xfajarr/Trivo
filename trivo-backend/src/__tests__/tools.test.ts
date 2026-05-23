@@ -56,7 +56,7 @@ describe('Tool Handlers', () => {
 
     expect(result.success).toBe(true)
     expect(result.data).toBeDefined()
-    expect((result.data as any).positionId).toContain('pos-')
+    expect((result.data as Record<string, unknown>).positionId).toContain('pos-')
   })
 
   it('close_trade should return success', async () => {
@@ -64,6 +64,6 @@ describe('Tool Handlers', () => {
     const result = await tool.execute('agent-1', { positionId: 'pos-123' })
 
     expect(result.success).toBe(true)
-    expect((result.data as any).status).toBe('closed')
+    expect((result.data as Record<string, unknown>).status).toBe('closed')
   })
 })

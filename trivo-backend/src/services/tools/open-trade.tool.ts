@@ -36,7 +36,7 @@ export const openTradeTool: ToolHandler = {
         copyTradingAgentId, venue, market, side, size, entryPrice, leverage
       )
       txHash = result.txHash
-    } catch (err) {
+    } catch {
       // Contract call failed — use simulated data (e.g., in test env)
       console.log(`ℹ️ open_trade sim: ${market} ${side} $${size}`)
     }
