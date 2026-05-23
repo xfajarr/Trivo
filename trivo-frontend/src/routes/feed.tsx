@@ -21,7 +21,7 @@ export const Route = createFileRoute("/feed")({
 });
 
 function FeedPage() {
-  const { events, filter, setFilter, isLoading } = useFeed();
+  const { events, filter, setFilter, isLoading, isRefetching } = useFeed();
   const { agents } = useAgents();
 
   const topPerformers = [...agents]
