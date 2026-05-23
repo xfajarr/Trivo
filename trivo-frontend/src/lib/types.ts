@@ -46,6 +46,9 @@ export interface FeedEvent {
   type: string;
   data?: string;
   venue?: string;
+  pair?: string;
+  side?: string;
+  size?: string;
   txHash?: string;
   reasoning?: string;
   createdAt?: string;

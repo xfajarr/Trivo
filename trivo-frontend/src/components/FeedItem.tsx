@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Copy, TrendingUp } from "lucide-react";
+import { Copy, TrendingUp, ArrowUpRight, ArrowDownRight, Target } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import type { FeedEvent } from "@/lib/types";
 const venueClass: Record<string, string> = {
   perp: "bg-neon/10 text-neon border-neon/30",
   prediction: "bg-violet/10 text-violet border-violet/30",
+  polymarket: "bg-violet/10 text-violet border-violet/30",
   lp: "bg-cyan-400/10 text-cyan-300 border-cyan-400/30",
   yield: "bg-amber-400/10 text-amber-300 border-amber-400/30",
   spot: "bg-emerald-400/10 text-emerald-300 border-emerald-400/30",
@@ -24,17 +25,26 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
 
   if (!event) return null;
 
-  let decision: Record<string, unknown> | null = null;
+  // Parse the data JSON from backend (flat structure)
+  let details: Record<string, unknown> = {};
   try {
-    decision = event.data ? JSON.parse(event.data) : null;
-  } catch {
-    // ignore parse errors
-  }
+    details = event.data ? JSON.parse(event.data) : {};
+  } catch { /* ignore parse errors */ }
 
-  const side = decision?.decision?.args?.side || event?.type || "trade";
-  const market = decision?.decision?.args?.market || "-";
-  const size = decision?.decision?.args?.size || 0;
-  const venue = event?.venue || "perp";
+  const venue = String(event.venue || details.venue || "perp");
+  const pair = String(event.pair || details.pair || details.market || "-" as string);
+  const side = String(event.side || details.side || "long");
+  const size = event.size || String(details.size ?? 0);
+  const leverage = details.leverage as number || 1;
+  const entryPrice = details.entryPrice as number || 0;
+  const exitPrice = details.exitPrice as number || 0;
+  const pnl = parseFloat(String(details.pnl ?? "0")) || 0;
+  const pnlPct = parseFloat(String(details.pnlPct ?? "0")) || 0;
+  const confidence = details.confidence as number || 0;
+  const reasoning = (details.reasoning as string) || event.reasoning || "";
+  const isOpened = event.type === "position_opened";
+  const isClosed = event.type === "position_closed";
+  const isLong = side.toLowerCase() === "long" || side.toLowerCase() === "buy";
 
   function copyTrade() {
     if (copied) return;
@@ -47,15 +57,17 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
   return (
     <article className="group relative rounded-lg border border-border bg-card p-4 transition-colors hover:border-neon/40">
       <div className="flex items-start gap-3">
+        {/* Agent avatar */}
         <Link
           to="/agent/$id"
           params={{ id: event.agentId }}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border font-display text-lg"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-surface-2 font-display text-lg font-semibold"
         >
           {agent?.name?.[0] || "?"}
         </Link>
 
         <div className="min-w-0 flex-1">
+          {/* Header row */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
             <Link
               to="/agent/$id"
@@ -75,34 +87,74 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
               variant="outline"
               className={`ml-1 border ${venueClass[venue] || ""} ticker text-[10px]`}
             >
-              {VENUE_LABEL[venue] || venue}
+              {VENUE_LABEL[venue] || venue.toUpperCase()}
             </Badge>
+            {isOpened && (
+              <Badge variant="outline" className="ml-1 border border-neon/40 bg-neon/5 text-neon ticker text-[10px]">
+                OPENED
+              </Badge>
+            )}
+            {isClosed && (
+              <Badge variant="outline" className={`ml-1 border ${pnl >= 0 ? "border-neon/40 bg-neon/5 text-neon" : "border-loss/40 bg-loss/5 text-loss"} ticker text-[10px]`}>
+                CLOSED
+              </Badge>
+            )}
           </div>
 
-          {event.reasoning && (
+          {/* Reasoning / Description */}
+          {reasoning && (
             <div className="mt-2 text-xs text-muted-foreground italic line-clamp-2">
-              {event.reasoning}
+              💭 {reasoning}
             </div>
           )}
 
+          {/* Trade details */}
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            {/* Side badge */}
             <span
               className={`ticker text-xs font-semibold px-2 py-0.5 rounded ${
-                ["LONG", "YES", "BUY", "ADD", "STAKE"].includes(side)
-                  ? "bg-neon/15 text-neon"
-                  : "bg-loss/15 text-loss"
+                isLong ? "bg-neon/15 text-neon" : "bg-loss/15 text-loss"
               }`}
             >
-              {side}
+              {isLong ? <ArrowUpRight className="inline h-3 w-3 -mt-0.5" /> : <ArrowDownRight className="inline h-3 w-3 -mt-0.5" />}
+              {" "}{side.toUpperCase()}
             </span>
-            <span className="font-display text-base">{market}</span>
-            {size > 0 && (
-              <span className="ticker text-xs text-muted-foreground">
-                size {fmtUSD(size, { compact: true })}
+
+            {/* Pair */}
+            <span className="font-display text-base">{pair}</span>
+
+            {/* Size + Leverage */}
+            <span className="ticker text-xs text-muted-foreground">
+              ${fmtUSD(Number(size), { compact: true })}
+              {leverage > 1 && ` · ${leverage}x`}
+            </span>
+
+            {/* Confidence (if opened) */}
+            {confidence > 0 && isOpened && (
+              <span className="ticker text-[11px] text-amber-400">
+                🎯 {confidence}% confidence
               </span>
             )}
           </div>
 
+          {/* PnL (if closed) */}
+          {isClosed && (
+            <div className={`mt-2 flex items-center gap-2 text-sm ${pnl >= 0 ? "text-neon" : "text-loss"}`}>
+              <span className="font-display font-semibold">
+                {pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}
+              </span>
+              <span className="ticker text-xs">
+                ({pnlPct >= 0 ? "+" : ""}{pnlPct.toFixed(2)}%)
+              </span>
+              {entryPrice > 0 && exitPrice > 0 && (
+                <span className="ticker text-xs text-muted-foreground">
+                  ${entryPrice.toLocaleString()} → ${exitPrice.toLocaleString()}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Arcscan link */}
           {event.txHash && (
             <a
               href={`https://testnet.arcscan.app/tx/${event.txHash}`}
@@ -114,10 +166,13 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
             </a>
           )}
 
+          {/* Bottom row: Copy + Stats */}
           <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-1 ticker text-[11px] text-muted-foreground">
               <TrendingUp className="h-3 w-3" />
-              Copy
+              <span>
+                {agent?.copiers || "0"} copiers · {agent?.totalPnl ? `${Number(agent.totalPnl) >= 0 ? "+" : ""}$${Math.abs(Number(agent.totalPnl)).toLocaleString()} PnL` : "New agent"}
+              </span>
             </div>
             <Button
               size="sm"
