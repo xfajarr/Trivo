@@ -1,29 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useRef } from "react";
-import {
-  Zap,
-  Activity,
-  Compass,
-  Rocket,
-  Sparkles,
-  TrendingUp,
-  Shield,
-  Users,
-  ArrowRight,
-  Brain,
-  Globe,
-  Lock,
-  Wallet,
-  BarChart3,
-  Terminal as TerminalIcon,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BlurFade } from "@/components/magic/blur-fade";
 import { BentoGrid, BentoItem } from "@/components/magic/bento-grid";
 import { Marquee } from "@/components/magic/marquee";
-import { SparklesText } from "@/components/magic/sparkles-text";
 import { WordRotate } from "@/components/magic/word-rotate";
 import { FlickeringGrid } from "@/components/magic/flickering-grid";
 import { AnimatedBeam } from "@/components/magic/animated-beam";
@@ -54,7 +36,6 @@ const AGENTS = [
   {
     name: "Hyperion",
     handle: "hyperion.eth",
-    emoji: "◤",
     color: "#00ff9d",
     pnl24: 4.21,
     pnl7d: 12.8,
@@ -66,7 +47,6 @@ const AGENTS = [
   {
     name: "Oracle-7",
     handle: "oracle7",
-    emoji: "▣",
     color: "#a78bfa",
     pnl24: -1.18,
     pnl7d: 8.4,
@@ -78,7 +58,6 @@ const AGENTS = [
   {
     name: "Lattice",
     handle: "lattice.lp",
-    emoji: "✦",
     color: "#22d3ee",
     pnl24: 0.62,
     pnl7d: 3.1,
@@ -90,7 +69,6 @@ const AGENTS = [
   {
     name: "Nightowl",
     handle: "nightowl",
-    emoji: "◉",
     color: "#f472b6",
     pnl24: 6.92,
     pnl7d: -2.4,
@@ -102,7 +80,6 @@ const AGENTS = [
   {
     name: "Mosaic",
     handle: "mosaic.ai",
-    emoji: "❖",
     color: "#fbbf24",
     pnl24: 1.94,
     pnl7d: 9.7,
@@ -114,7 +91,6 @@ const AGENTS = [
   {
     name: "Drift-Δ",
     handle: "drift-delta",
-    emoji: "Δ",
     color: "#34d399",
     pnl24: -2.41,
     pnl7d: 4.2,
@@ -144,7 +120,6 @@ const FEATURES = [
   {
     title: "Multi-Venue Engine",
     desc: "Trade across perps, prediction markets, LP, yield, and spot — all from one programmable agent.",
-    icon: Globe,
     colSpan: 2,
     rowSpan: 2,
     tags: ["PERP", "PREDICTION", "LP", "YIELD", "SPOT"],
@@ -152,41 +127,40 @@ const FEATURES = [
   {
     title: "AI Model Choice",
     desc: "DeepSeek, Claude, OpenAI, Qwen, or BYOK. Your agent, your model.",
-    icon: Brain,
     color: "violet",
   },
   {
     title: "Copy Trading",
     desc: "Mirror top agents with one click. Earn fees from your followers.",
-    icon: TrendingUp,
     color: "amber",
   },
   {
     title: "On-Chain Identity",
     desc: "ERC-8004 identity NFTs. Verified, transparent, immutable.",
-    icon: Lock,
     color: "lime",
   },
   {
     title: "Circle Wallets",
     desc: "Developer-controlled MPC wallets. USDC gas, programmable policies.",
-    icon: Wallet,
     color: "lime",
   },
   {
     title: "10-Second Loop",
     desc: "THINK → DECIDE → EXECUTE. Every 10 seconds, fully autonomous.",
-    icon: TerminalIcon,
     colSpan: 3,
     color: "neon",
   },
 ];
 
 const HOW_STEPS = [
-  { num: "01", title: "Configure", desc: "Pick venues, risk rules, signal sources", icon: Compass },
-  { num: "02", title: "Fund", desc: "Deposit USDC into your agent wallet", icon: Wallet },
-  { num: "03", title: "Deploy", desc: "Agent runs 24/7 with your chosen AI model", icon: Activity },
-  { num: "04", title: "Copy", desc: "Others mirror your trades, you earn fees", icon: Users },
+  {
+    num: "01",
+    title: "Configure",
+    desc: "Pick venues, risk rules, signal sources. No coding required.",
+  },
+  { num: "02", title: "Fund", desc: "Deposit USDC into your agent's Circle wallet." },
+  { num: "03", title: "Deploy", desc: "Agent runs 24/7 with your chosen AI model." },
+  { num: "04", title: "Copy", desc: "Others mirror your trades, you earn fees." },
 ];
 
 function BorderBeam({ className }: { className?: string }) {
@@ -239,7 +213,7 @@ function LandingPage() {
         />
         <Particles className="opacity-50" quantity={40} color="#ABFF4F" />
 
-        {/* Nav with logo image */}
+        {/* Nav */}
         <header className="relative z-20 flex items-center justify-between px-6 py-5 max-w-7xl mx-auto w-full">
           <Link to="/" className="flex items-center gap-3 group">
             <img
@@ -281,8 +255,17 @@ function LandingPage() {
           </div>
         </header>
 
-        {/* Hero Content - NO TRIVO text */}
+        {/* Hero Content */}
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-24 max-w-6xl mx-auto text-center">
+          <BlurFade delay={0}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-neon/20 bg-neon/5 px-4 py-1.5 mb-8">
+              <span className="pulse-dot h-2 w-2 rounded-full bg-neon" />
+              <AnimatedShinyText className="text-[11px] text-neon font-mono tracking-wider uppercase">
+                Built on Arc · USDC Native Gas
+              </AnimatedShinyText>
+            </div>
+          </BlurFade>
+
           <BlurFade delay={0.2}>
             <h1 className="font-display text-4xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6">
               <span className="text-neon">AI Agents</span>
@@ -306,10 +289,7 @@ function LandingPage() {
           <BlurFade delay={0.5}>
             <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
               <Link to="/launch">
-                <ShimmerButton className="px-8 h-13 text-base flex items-center gap-2">
-                  <Rocket className="h-5 w-5" />
-                  Launch Your Agent
-                </ShimmerButton>
+                <ShimmerButton className="px-8 h-13 text-base">Launch Your Agent</ShimmerButton>
               </Link>
               <Link to="/feed">
                 <Button
@@ -317,7 +297,7 @@ function LandingPage() {
                   size="lg"
                   className="h-13 px-6 text-base border-border hover:bg-neon/10 hover:text-neon hover:border-neon/30 transition-colors"
                 >
-                  Explore Live Feed <ArrowRight className="ml-2 h-4 w-4" />
+                  Explore Live Feed
                 </Button>
               </Link>
             </div>
@@ -346,7 +326,7 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* === VENUE MARQUEE — NO EMOJI === */}
+      {/* === VENUE MARQUEE === */}
       <section className="relative z-10 border-y border-border py-5 overflow-hidden bg-card/50">
         <Marquee pauseOnHover className="py-2">
           {[...VENUES, ...VENUES, ...VENUES, ...VENUES].map((v, i) => (
@@ -391,7 +371,7 @@ function LandingPage() {
               <div className="relative z-10">
                 <div
                   className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-xl mb-5",
+                    "flex h-10 w-10 items-center justify-center rounded-lg mb-5 text-xs font-bold font-display",
                     f.color === "violet" && "bg-violet/10 text-violet",
                     f.color === "amber" && "bg-amber-400/10 text-amber-300",
                     f.color === "lime" && "bg-neon/10 text-neon",
@@ -399,7 +379,7 @@ function LandingPage() {
                     !f.color && "bg-neon/10 text-neon",
                   )}
                 >
-                  <f.icon className={cn("h-6 w-6", f.colSpan && "h-7 w-7")} />
+                  {f.title[0]}
                 </div>
                 <h3
                   className={cn(
@@ -445,7 +425,7 @@ function LandingPage() {
         </BentoGrid>
       </section>
 
-      {/* === HOW IT WORKS — Fixed Beam Layout === */}
+      {/* === HOW IT WORKS === */}
       <section id="how-it-works" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
         <BlurFade>
           <div className="text-center mb-16">
@@ -458,7 +438,6 @@ function LandingPage() {
           </div>
         </BlurFade>
 
-        {/* Beam Layout — 2 top, center AI, 2 bottom */}
         <div className="relative max-w-4xl mx-auto" ref={beamContainerRef}>
           <svg
             className="absolute inset-0 size-full pointer-events-none"
@@ -496,18 +475,14 @@ function LandingPage() {
           </svg>
 
           <div className="grid grid-cols-2 gap-x-8 gap-y-12">
-            {/* Top row */}
             <BlurFade delay={0}>
               <div
                 ref={stepRefs[0]}
                 className="relative rounded-xl border border-border bg-card p-6 hover:border-neon/30 transition-colors"
                 style={{ zIndex: 2 }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4">
-                  <Compass className="h-6 w-6" />
-                </div>
-                <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                  Step 01
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4 font-display text-lg font-bold">
+                  01
                 </div>
                 <h3 className="font-display text-lg font-bold mb-2">Configure</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -522,11 +497,8 @@ function LandingPage() {
                 className="relative rounded-xl border border-border bg-card p-6 hover:border-neon/30 transition-colors"
                 style={{ zIndex: 2 }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4">
-                  <Wallet className="h-6 w-6" />
-                </div>
-                <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                  Step 02
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4 font-display text-lg font-bold">
+                  02
                 </div>
                 <h3 className="font-display text-lg font-bold mb-2">Fund</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -535,12 +507,11 @@ function LandingPage() {
               </div>
             </BlurFade>
 
-            {/* Center AI Node */}
             <div className="col-span-2 flex justify-center py-4">
               <BlurFade delay={0.2}>
                 <div ref={aiRef} className="relative" style={{ zIndex: 3 }}>
                   <div className="flex h-28 w-28 items-center justify-center rounded-3xl border-2 border-neon/40 bg-neon/10 backdrop-blur">
-                    <Sparkles className="h-12 w-12 text-neon" />
+                    <span className="font-display text-2xl font-bold text-neon">AI</span>
                   </div>
                   <div
                     className="absolute inset-0 rounded-3xl"
@@ -565,18 +536,14 @@ function LandingPage() {
               </BlurFade>
             </div>
 
-            {/* Bottom row */}
             <BlurFade delay={0.3}>
               <div
                 ref={stepRefs[2]}
                 className="relative rounded-xl border border-border bg-card p-6 hover:border-neon/30 transition-colors"
                 style={{ zIndex: 2 }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4">
-                  <Activity className="h-6 w-6" />
-                </div>
-                <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                  Step 03
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4 font-display text-lg font-bold">
+                  03
                 </div>
                 <h3 className="font-display text-lg font-bold mb-2">Deploy</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -591,11 +558,8 @@ function LandingPage() {
                 className="relative rounded-xl border border-border bg-card p-6 hover:border-neon/30 transition-colors"
                 style={{ zIndex: 2 }}
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                  Step 04
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-neon/10 text-neon mb-4 font-display text-lg font-bold">
+                  04
                 </div>
                 <h3 className="font-display text-lg font-bold mb-2">Copy</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -633,14 +597,14 @@ function LandingPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-display text-xl"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-display text-lg font-bold"
                       style={{
                         color: a.color,
                         boxShadow: `inset 0 0 0 1px ${a.color}44`,
                         background: `${a.color}11`,
                       }}
                     >
-                      {a.emoji}
+                      {a.name[0]}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
@@ -687,7 +651,7 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* === CTA — FlickeringGrid Background === */}
+      {/* === CTA === */}
       <section className="relative z-10 max-w-4xl mx-auto px-6 py-24">
         <BlurFade>
           <div className="relative rounded-3xl border border-neon/20 overflow-hidden min-h-[400px] flex items-center justify-center">
@@ -704,20 +668,16 @@ function LandingPage() {
             <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background/60" />
 
             <div className="relative z-10 px-8 py-16 text-center max-w-lg mx-auto">
-              <SparklesText
-                text="Ready to trade?"
-                className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4"
-              />
+              <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4 text-foreground">
+                Ready to trade?
+              </h2>
               <p className="text-muted-foreground text-lg mb-8">
                 Deploy your first AI trading agent on Arc Testnet. No real funds — just USDC for
                 gas.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link to="/launch">
-                  <ShimmerButton className="px-8 h-12 text-base flex items-center gap-2">
-                    <Rocket className="h-5 w-5" />
-                    Launch Agent
-                  </ShimmerButton>
+                  <ShimmerButton className="px-8 h-12 text-base">Launch Agent</ShimmerButton>
                 </Link>
                 <Link to="/feed">
                   <Button
@@ -746,7 +706,7 @@ function LandingPage() {
             <span className="font-display text-sm font-bold">TRIVO</span>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Agora Agents Hackathon · Canteen × Circle × Arc · 2026
+            Agora Agents Hackathon · Canteen × Circle · Arc · 2026
           </p>
           <div className="flex items-center gap-4">
             <span className="ticker text-[10px] text-muted-foreground">Powered by USDC on Arc</span>
