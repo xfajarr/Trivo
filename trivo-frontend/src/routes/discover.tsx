@@ -1,13 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Search, TrendingUp, Users, Target, FlaskConical, Activity } from "lucide-react";
+import { Search, Users, FlaskConical, Activity, Zap } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { fmtUSD, fmtPct } from "@/lib/utils";
 
-type ModeFilter = "all" | "live" | "backtest";
-type SortKey = "aum" | "pnl" | "winRate" | "copiers";
+type ModeFilter = "all" | "testnet" | "mainnet";
+type SortKey = "pnl" | "aum" | "winRate" | "copiers";
 
 export const Route = createFileRoute("/discover")({
   head: () => ({
@@ -30,8 +29,10 @@ function DiscoverPage() {
   // Filter by mode
   const filtered = useMemo(() => {
     if (mode === "all") return agents;
-    if (mode === "live") return agents.filter(a => a.status === "active");
-    if (mode === "backtest") return agents.filter(a => a.status === "paused" || a.status === "inactive");
+    // Testnet = all agents currently (Arc Testnet)
+    if (mode === "testnet") return agents.filter(a => a.status === "active" || a.status === "paused");
+    // Mainnet = coming soon
+    if (mode === "mainnet") return []; // Live mainnet agents will go here
     return agents;
   }, [agents, mode]);
 
@@ -71,20 +72,22 @@ function DiscoverPage() {
           <Activity className="h-3 w-3" /> ALL
         </button>
         <button
-          onClick={() => setMode("live")}
+          onClick={() => setMode("testnet")}
           className={`inline-flex items-center gap-1.5 h-8 px-3 rounded border ticker text-[11px] tracking-wider transition-colors ${
-            mode === "live" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+            mode === "testnet" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse" /> LIVE
+          <FlaskConical className="h-3 w-3" /> TESTNET
         </button>
         <button
-          onClick={() => setMode("backtest")}
+          onClick={() => setMode("mainnet")}
           className={`inline-flex items-center gap-1.5 h-8 px-3 rounded border ticker text-[11px] tracking-wider transition-colors ${
-            mode === "backtest" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground"
+            mode === "mainnet" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground opacity-50 cursor-not-allowed"
           }`}
+          title="Coming soon"
         >
-          <FlaskConical className="h-3 w-3" /> BACKTEST
+          <Zap className="h-3 w-3" /> MAINNET
+          <span className="text-[9px] text-amber-400 ml-0.5">SOON</span>
         </button>
       </div>
 
@@ -111,10 +114,19 @@ function DiscoverPage() {
             <div key={i} className="animate-pulse rounded-lg border border-border bg-card h-16" />
           ))}
         </div>
+      ) : mode === "mainnet" ? (
+        <div className="rounded-lg border border-border bg-card p-12 text-center">
+          <Zap className="mx-auto h-10 w-10 text-amber-400 mb-3" />
+          <h3 className="font-display text-lg font-semibold mb-2">Mainnet — Coming Soon</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            Live mainnet agents with real USDC trading will be available soon.
+            For now, explore agents on Arc Testnet.
+          </p>
+        </div>
       ) : sorted.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-12 text-center">
           <Search className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
-          <p className="text-sm text-muted-foreground">No agents found for this filter. Try another mode.</p>
+          <p className="text-sm text-muted-foreground">No agents found for this filter.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -127,7 +139,7 @@ function DiscoverPage() {
                 <th className="px-4 py-3 text-right">Trades</th>
                 <th className="px-4 py-3 text-right">Win</th>
                 <th className="px-4 py-3 text-right">Copiers</th>
-                <th className="px-4 py-3 text-right">Status</th>
+                <th className="px-4 py-3 text-right">Network</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -138,6 +150,7 @@ function DiscoverPage() {
                 const copiers = Number(a.copiers || 0);
                 const trades = Number(a.tradeCount || 0);
                 const skills = (a.skills || "perp").split(",").map(s => s.trim());
+                const isActive = a.status === "active";
 
                 return (
                   <tr key={a.id} className="border-b border-border last:border-0 hover:bg-surface-2/30 transition-colors">
@@ -195,15 +208,15 @@ function DiscoverPage() {
                       </div>
                     </td>
 
-                    {/* Status */}
+                    {/* Network */}
                     <td className="px-4 py-3 text-right">
                       <span className={`inline-flex items-center gap-1 ticker text-[10px] px-2 py-0.5 rounded border ${
-                        a.status === "active" 
+                        isActive 
                           ? "border-neon/30 bg-neon/5 text-neon" 
                           : "border-amber-400/30 bg-amber-400/5 text-amber-400"
                       }`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-neon animate-pulse" : "bg-amber-400"}`} />
-                        {a.status?.toUpperCase() || "INACTIVE"}
+                        <span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-neon animate-pulse" : "bg-amber-400"}`} />
+                        ARC TESTNET
                       </span>
                     </td>
 
@@ -228,7 +241,7 @@ function DiscoverPage() {
       {/* Bottom info */}
       {!isLoading && sorted.length > 0 && (
         <p className="mt-3 text-xs text-muted-foreground text-right">
-          Auto-refreshing every 60s · Data from <span className="text-neon">Trivo API</span> · <span className="text-violet">Arc Testnet</span>
+          PnL auto-refreshes every 60s · <span className="text-violet">Arc Testnet</span> · Mock execution with real prices
         </p>
       )}
     </div>
