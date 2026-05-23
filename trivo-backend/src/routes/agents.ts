@@ -4,6 +4,7 @@ import { zValidator } from '@hono/zod-validator'
 import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { agents as agentsTable, agentSessions, agentMemory } from '../lib/schema'
+import { erc8004Service } from '../engine/services/erc8004.service.js'
 import { authMiddleware } from '../middleware/auth'
 
 export const agentRoutes = new Hono()
@@ -59,6 +60,29 @@ agentRoutes.post('/', authMiddleware, zValidator('json', createAgentSchema), asy
     status: 'inactive',
   })
 
+  // 🆔 ERC-8004: Register agent identity on-chain
+  try {
+    const metadata = erc8004Service.createAgentMetadata({
+      name: data.name,
+      description: data.strategy ?? 'AI trading agent on Trivo',
+      strategy: data.strategy ?? '',
+      skills: (data.skills ?? 'perp').split(','),
+      riskParams: {
+        maxLeverage: data.maxLeverage ?? '5',
+        stopLossPct: data.stopLossPct ?? '10',
+        spendLimit: data.spendLimit ?? '100',
+      },
+    })
+    const metadataURI = erc8004Service.uploadMetadata(metadata)
+    const { agentId: erc8004Id, txHash } = await erc8004Service.registerAgent(metadataURI)
+    await db.update(agentsTable)
+      .set({ erc8004TokenId: erc8004Id, erc8004TxHash: txHash, metadataUri: metadataURI })
+      .where(eq(agentsTable.id, agentId))
+    console.log(`🆔 ERC-8004 agent #${erc8004Id} registered: https://testnet.arcscan.app/tx/${txHash}`)
+  } catch (err) {
+    console.warn('⚠️ ERC-8004 registration failed (non-blocking):', (err as Error).message)
+  }
+
   const systemPrompt = `You are ${data.name}, an AI trading agent on Trivo.
 Strategy: ${data.strategy || 'No specific strategy'}
 Always return structured trade decisions with reasoning.`
@@ -93,10 +117,7 @@ agentRoutes.put('/:id', authMiddleware, async (c) => {
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
   if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
-  await db
-    .update(agentsTable)
-    .set({ ...body, updatedAt: new Date() })
-    .where(eq(agentsTable.id, id))
+  await db.update(agentsTable).set({ ...body, updatedAt: new Date() }).where(eq(agentsTable.id, id))
   const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
   return c.json({ agent: agent[0] })
 })
