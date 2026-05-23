@@ -11,9 +11,14 @@ export interface Agent {
   handle: string;
   avatar?: string;
   hostingType?: HostingType;
-  modelProvider?: ModelProvider;
+  endpoint?: string;
+  modelProvider?: string;
+  modelConfig?: string;
   skills?: string;
   strategy?: string;
+  spendLimit?: string;
+  maxLeverage?: string;
+  stopLossPct?: string;
   status: AgentStatus;
   totalPnl?: string;
   aum?: string;
@@ -21,6 +26,8 @@ export interface Agent {
   winRate?: string;
   copiers?: string;
   circleWalletAddress?: string;
+  erc8004TokenId?: string;
+  erc8004TxHash?: string;
   createdAt?: string;
 }
 

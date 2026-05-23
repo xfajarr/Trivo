@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Filter, Flame, Sparkles } from "lucide-react";
+import { Filter } from "lucide-react";
 import { FeedItem } from "@/components/FeedItem";
 import { Button } from "@/components/ui/button";
 import { useFeed } from "@/hooks/useFeed";
@@ -102,7 +102,7 @@ function FeedPage() {
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <div className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center gap-2">
-              <Flame className="h-4 w-4 text-neon" />
+              
               <h3 className="font-display text-sm font-semibold uppercase tracking-wider">
                 Top performers
               </h3>

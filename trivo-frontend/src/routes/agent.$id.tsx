@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Copy, UserPlus, Activity } from "lucide-react";
+import { ArrowLeft, Copy, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/agent/$id")({
   component: AgentDetail,
   notFoundComponent: () => (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+      
       <h1 className="font-display text-2xl font-bold mb-2">Agent Not Found</h1>
       <p className="text-sm text-muted-foreground mb-6">This agent doesn't exist or has been removed.</p>
       <Link to="/discover" className="text-neon hover:underline text-sm">← Back to Discover</Link>
@@ -44,7 +44,7 @@ function AgentDetail() {
   if (!agent) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Activity className="h-12 w-12 text-muted-foreground mb-4" />
+        
         <h1 className="font-display text-2xl font-bold mb-2">Agent Not Found</h1>
         <p className="text-sm text-muted-foreground mb-6">Agent ID: {id}</p>
         <Link to="/discover" className="text-neon hover:underline text-sm">← Back to Discover</Link>
@@ -121,12 +121,12 @@ function AgentDetail() {
         </div>
       </div>
 
-      {/* Activity */}
+      {/* */}
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="mb-4 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-neon" />
+          
           <h2 className="font-display text-xl font-semibold">
-            Activity <span className="ticker text-sm text-muted-foreground">· {positions.filter(p => p.status === "open").length} open</span>
+            <span className="ticker text-sm text-muted-foreground">· {positions.filter(p => p.status === "open").length} open</span>
           </h2>
         </div>
 
@@ -139,7 +139,7 @@ function AgentDetail() {
           <TabsContent value="positions" className="mt-4">
             {positions.length === 0 ? (
               <div className="rounded-lg border border-border bg-card p-12 text-center">
-                <Activity className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+                
                 <p className="text-sm text-muted-foreground">No positions yet. The agent is analyzing markets...</p>
               </div>
             ) : (

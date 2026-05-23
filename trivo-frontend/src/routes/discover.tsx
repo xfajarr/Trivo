@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Search, Users, FlaskConical, Activity, Zap, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useAgents } from "@/hooks/useAgents";
 import { CreateAgentModal } from "@/components/CreateAgentModal";
 import { Badge } from "@/components/ui/badge";
@@ -56,20 +56,20 @@ function DiscoverPage() {
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)} className="bg-neon text-primary-foreground hover:bg-neon/90 glow-neon">
-          <Sparkles className="mr-2 h-4 w-4" /> Create Agent
+          Create Agent
         </Button>
       </div>
 
       {/* Mode Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
         <button onClick={() => setMode("all")} className={`inline-flex items-center gap-1.5 h-8 px-3 rounded border ticker text-[11px] tracking-wider transition-colors ${mode === "all" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground"}`}>
-          <Activity className="h-3 w-3" /> ALL
+          ALL
         </button>
         <button onClick={() => setMode("testnet")} className={`inline-flex items-center gap-1.5 h-8 px-3 rounded border ticker text-[11px] tracking-wider transition-colors ${mode === "testnet" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground"}`}>
-          <FlaskConical className="h-3 w-3" /> TESTNET
+          TESTNET
         </button>
         <button onClick={() => setMode("mainnet")} className={`inline-flex items-center gap-1.5 h-8 px-3 rounded border ticker text-[11px] tracking-wider transition-colors ${mode === "mainnet" ? "border-neon bg-neon/10 text-neon" : "border-border bg-transparent text-muted-foreground hover:text-foreground opacity-50 cursor-not-allowed"}`} title="Coming soon">
-          <Zap className="h-3 w-3" /> MAINNET <span className="text-[9px] text-amber-400 ml-0.5">SOON</span>
+          MAINNET <span className="text-[9px] text-amber-400 ml-0.5">SOON</span>
         </button>
       </div>
 
@@ -87,16 +87,16 @@ function DiscoverPage() {
         <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="animate-pulse rounded-lg border border-border bg-card h-16" />)}</div>
       ) : mode === "mainnet" ? (
         <div className="rounded-lg border border-border bg-card p-12 text-center">
-          <Zap className="mx-auto h-10 w-10 text-amber-400 mb-3" />
+          
           <h3 className="font-display text-lg font-semibold mb-2">Mainnet — Coming Soon</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">Live mainnet agents with real USDC trading will be available soon.</p>
         </div>
       ) : sorted.length === 0 ? (
         <div className="rounded-lg border border-border bg-card p-12 text-center">
-          <Search className="mx-auto h-8 w-8 text-muted-foreground mb-3" />
+          
           <p className="text-sm text-muted-foreground mb-4">No agents found. Be the first to launch one!</p>
           <Button onClick={() => setShowCreateModal(true)} className="bg-neon text-primary-foreground hover:bg-neon/90">
-            <Sparkles className="mr-2 h-4 w-4" /> Create Agent
+            Create Agent
           </Button>
         </div>
       ) : (
@@ -134,7 +134,7 @@ function DiscoverPage() {
                     <td className={`px-4 py-3 text-right ticker font-semibold ${pnl >= 0 ? "text-neon" : "text-loss"}`}>{pnl >= 0 ? "+" : ""}${pnl.toLocaleString()}</td>
                     <td className="px-4 py-3 text-right ticker text-muted-foreground">{trades}</td>
                     <td className="px-4 py-3 text-right"><span className={`ticker text-xs px-2 py-0.5 rounded ${winRate >= 50 ? "bg-neon/10 text-neon" : "bg-loss/10 text-loss"}`}>{winRate}%</span></td>
-                    <td className="px-4 py-3 text-right"><div className="inline-flex items-center gap-1 ticker text-xs text-muted-foreground"><Users className="h-3 w-3" />{copiers}</div></td>
+                    <td className="px-4 py-3 text-right"><div className="inline-flex items-center gap-1 ticker text-xs text-muted-foreground">{copiers}</div></td>
                     <td className="px-4 py-3 text-right"><span className={`inline-flex items-center gap-1 ticker text-[10px] px-2 py-0.5 rounded border ${isActive ? "border-neon/30 bg-neon/5 text-neon" : "border-amber-400/30 bg-amber-400/5 text-amber-400"}`}><span className={`h-1.5 w-1.5 rounded-full ${isActive ? "bg-neon animate-pulse" : "bg-amber-400"}`} />ARC TESTNET</span></td>
                     <td className="px-4 py-3 text-right"><Link to="/agent/$id" params={{ id: a.id }} className="text-neon hover:underline ticker text-xs">open →</Link></td>
                   </tr>

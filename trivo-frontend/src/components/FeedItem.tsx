@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Copy, TrendingUp, ArrowUpRight, ArrowDownRight, Target } from "lucide-react";
+import { Copy, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -116,8 +116,8 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
                 isLong ? "bg-neon/15 text-neon" : "bg-loss/15 text-loss"
               }`}
             >
-              {isLong ? <ArrowUpRight className="inline h-3 w-3 -mt-0.5" /> : <ArrowDownRight className="inline h-3 w-3 -mt-0.5" />}
-              {" "}{side.toUpperCase()}
+              
+               {side.toUpperCase()}
             </span>
 
             {/* Pair */}
@@ -132,7 +132,7 @@ export function FeedItem({ event }: { event?: FeedEvent }) {
             {/* Confidence (if opened) */}
             {confidence > 0 && isOpened && (
               <span className="ticker text-[11px] text-amber-400">
-                🎯 {confidence}% confidence
+                {confidence}% confidence
               </span>
             )}
           </div>
