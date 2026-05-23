@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useAgents, useUpdateAgentStatus } from "@/hooks/useAgents";
-import { api } from "@/lib/api";
+import { api, pnlApi } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -28,7 +28,7 @@ function MyAgents() {
       const results: Record<string, { unrealizedPnl: number; totalPositions: number }> = {};
       for (const a of agents) {
         try {
-          const r = await api.get(`/api/pnl/agents/${a.id}`).then(r => r.data);
+          const r = await pnlApi.agentSummary(a.id);
           results[a.id] = { unrealizedPnl: r.unrealizedPnl || 0, totalPositions: r.totalPositions || 0 };
         } catch { results[a.id] = { unrealizedPnl: 0, totalPositions: 0 }; }
       }
