@@ -87,7 +87,7 @@ export const closeTradeTool: EngineTool = {
 
     // Feed event with PnL
     await db.insert(feedEvents).values({
-      id: crypto.randomUUID(), agentId: pos.agentId ?? '', type: 'position_closed',
+      id: crypto.randomUUID(), agentId: (pos.agentId ?? (args as Record<string,unknown>)._agentId as string) || '', type: 'position_closed',
       venue: pos.venue ?? '', pair, side, size: String(size),
       data: JSON.stringify({
         positionId, reason, entryPrice, exitPrice, pnl: pnl.toFixed(2), pnlPct: pnlPct.toFixed(2), txHash,

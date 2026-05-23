@@ -70,10 +70,7 @@ export class AgentRunner {
         if (pos) {
           console.log(`   🔄 [${this.agentName}] Trying to close position ${pos.id}`)
           try {
-            const result = await this.tools.execute('close_trade', { 
-              positionId: pos.id, 
-              reason: 'Taking profit or cutting loss' 
-            })
+            const result = await this.tools.execute('close_trade', { ...{ positionId: pos.id, reason: 'Taking profit or cutting loss' }, _agentId: this.agentId })
             const tradePnl = parseFloat((result as Record<string, unknown>).pnl as string) || 0
             await this.updateAgentPnL(tradePnl)
             this.dailyTradeCount++
@@ -138,7 +135,7 @@ export class AgentRunner {
       }
 
       console.log(`   ⚡ ${decision.tool}`)
-      const result = await this.tools.execute(decision.tool, decision.args)
+      const result = await this.tools.execute(decision.tool, { ...decision.args, _agentId: this.agentId })
 
       await this.saveMemory('execution', `${decision.tool}: ${JSON.stringify(result)}`, decision.reasoning, {
         tool: decision.tool, args: decision.args,

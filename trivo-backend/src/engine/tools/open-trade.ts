@@ -47,7 +47,7 @@ export const openTradeTool: EngineTool = {
     const dbId = crypto.randomUUID()
     await db.insert(positions).values({
       id: dbId,
-      agentId: '',
+      agentId: (args as Record<string,unknown>)._agentId as string || '',
       copyTradingPositionId: String(positionId),
       venue,
       market: pair,
@@ -61,7 +61,7 @@ export const openTradeTool: EngineTool = {
     }).execute().catch((err: Error) => console.error('[open_trade] DB:', err.message))
 
     await db.insert(feedEvents).values({
-      id: crypto.randomUUID(), agentId: '', type: 'position_opened',
+      id: crypto.randomUUID(), agentId: (args as Record<string,unknown>)._agentId as string || '', type: 'position_opened',
       venue, pair, side, size: String(size),
       data: JSON.stringify({ leverage, entryPrice, txHash }),
     }).execute().catch((err: Error) => console.error('[open_trade] Feed:', err.message))
