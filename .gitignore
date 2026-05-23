@@ -20,3 +20,9 @@ trivo-frontend/.understand-anything/
 .DS_Store
 *.bak
 docs/plans/*.bak
+
+# Implementation docs (local only)
+docs/plans/engine-refactor-plan.md
+docs/plans/IMPLEMENTATION_TICKETS.md
+docs/submission-google-form.txt
+docs/submission-text.md
