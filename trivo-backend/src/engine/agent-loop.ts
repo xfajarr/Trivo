@@ -51,7 +51,7 @@ export class AgentEngine {
   start(): void {
     if (this.isRunning) return
     this.isRunning = true
-    console.log(`🚀 Engine cycling every 10s — agents run in parallel`)
+    console.log(`🚀 Engine cycling every 60s — agents run in parallel`)
 
     this.intervalId = setInterval(async () => {
       try {
@@ -65,7 +65,7 @@ export class AgentEngine {
           ))
         )
       } catch (error) { console.error('Engine:', error) }
-    }, 10_000)
+    }, 60_000)
   }
 
   stop(): void {

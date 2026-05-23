@@ -22,7 +22,7 @@ export function startEngine(config?: Partial<EngineConfig>): void {
   const provider = buildProvider()
 
   engine = new AgentEngine(
-    { cycleIntervalMs: 10_000, maxAgentsPerCycle: 20, memoryContextSize: 5, ...config },
+    { cycleIntervalMs: 60_000, maxAgentsPerCycle: 20, memoryContextSize: 5, ...config },
     provider,
     tools,
   )
