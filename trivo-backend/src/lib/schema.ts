@@ -132,4 +132,4 @@ export const agentTools = pgTable('agent_tools', {
   enabled: text('enabled').default('true'),
   config: text('config'),
   createdAt: timestamp('created_at').defaultNow(),
-});
+})

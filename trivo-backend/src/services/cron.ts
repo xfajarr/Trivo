@@ -29,16 +29,14 @@ async function marketDataJob() {
         const mod = await import('./contract.service')
         await mod.updatePrice(pair, price)
       } catch {
-      console.warn("Non-critical error")
-    }
+        console.warn('Non-critical error')
+      }
     }
   }
 }
 
 async function agentProcessingJob() {
-  const activeAgents = await db.select().from(agentsTable)
-    .where(eq(agentsTable.status, 'active'))
-    .limit(10)
+  const activeAgents = await db.select().from(agentsTable).where(eq(agentsTable.status, 'active')).limit(10)
 
   if (activeAgents.length === 0) return
 
@@ -53,23 +51,27 @@ async function agentProcessingJob() {
 
   for (const agent of activeAgents) {
     try {
-      const recentMemory = await db.select()
+      const recentMemory = await db
+        .select()
         .from(agentMemory)
         .where(eq(agentMemory.agentId, agent.id))
         .orderBy(desc(agentMemory.createdAt))
         .limit(5)
 
-      const decision = await decide({
-        id: agent.id,
-        name: agent.name,
-        strategy: agent.strategy,
-        modelProvider: agent.modelProvider,
-        memory: recentMemory.map(m => ({
-          type: m.type,
-          content: m.content,
-          reasoning: m.reasoning,
-        })),
-      }, { prices })
+      const decision = await decide(
+        {
+          id: agent.id,
+          name: agent.name,
+          strategy: agent.strategy,
+          modelProvider: agent.modelProvider,
+          memory: recentMemory.map((m) => ({
+            type: m.type,
+            content: m.content,
+            reasoning: m.reasoning,
+          })),
+        },
+        { prices },
+      )
 
       await db.insert(agentMemory).values({
         id: crypto.randomUUID(),
@@ -102,8 +104,7 @@ async function agentProcessingJob() {
 }
 
 async function pnlWatcherJob() {
-  const openPositions = await db.select().from(positions)
-    .where(eq(positions.status, 'open'))
+  const openPositions = await db.select().from(positions).where(eq(positions.status, 'open'))
 
   for (const pos of openPositions) {
     try {
@@ -116,7 +117,7 @@ async function pnlWatcherJob() {
 
       if (Math.abs(change) > 0.02) {
         const isLong = pos.side === 'LONG' || pos.side === 'BUY' || pos.side === 'YES'
-        const pnlRaw = isLong ? change * Number(pos.size) : (-change) * Number(pos.size)
+        const pnlRaw = isLong ? change * Number(pos.size) : -change * Number(pos.size)
         const pnl = Math.floor(pnlRaw)
 
         // Call closePosition on Arc
@@ -130,12 +131,15 @@ async function pnlWatcherJob() {
           console.error('Close on-chain failed:', e)
         }
 
-        await db.update(positions).set({
-          status: 'closed',
-          pnl: pnl.toString(),
-          markPrice: currentPrice.toString(),
-          closedAt: new Date(),
-        }).where(eq(positions.id, pos.id))
+        await db
+          .update(positions)
+          .set({
+            status: 'closed',
+            pnl: pnl.toString(),
+            markPrice: currentPrice.toString(),
+            closedAt: new Date(),
+          })
+          .where(eq(positions.id, pos.id))
 
         await db.insert(feedEvents).values({
           id: crypto.randomUUID(),

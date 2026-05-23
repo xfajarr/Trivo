@@ -31,7 +31,7 @@ export function getTool(name: string): ToolHandler | undefined {
 }
 
 export function getAllTools(): ToolDefinition[] {
-  return Array.from(toolRegistry.values()).map(h => h.definition)
+  return Array.from(toolRegistry.values()).map((h) => h.definition)
 }
 
 export function getToolNames(): string[] {
@@ -43,7 +43,7 @@ export function buildToolsSystemPrompt(): string {
   const tools = getAllTools()
   if (tools.length === 0) return ''
 
-  return `\n\nAvailable tools:\n${tools.map(t =>
-    `  - ${t.name}: ${t.description}`
-  ).join('\n')}\n\nTo call a tool, respond with JSON: { "tool": "tool_name", "args": { ... } }`
+  return `\n\nAvailable tools:\n${tools
+    .map((t) => `  - ${t.name}: ${t.description}`)
+    .join('\n')}\n\nTo call a tool, respond with JSON: { "tool": "tool_name", "args": { ... } }`
 }

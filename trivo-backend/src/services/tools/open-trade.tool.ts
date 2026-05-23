@@ -32,9 +32,7 @@ export const openTradeTool: ToolHandler = {
       entryPrice = await getPrice(pair)
 
       const copyTradingAgentId = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
-      const result = await reportPositionOnChain(
-        copyTradingAgentId, venue, market, side, size, entryPrice, leverage
-      )
+      const result = await reportPositionOnChain(copyTradingAgentId, venue, market, side, size, entryPrice, leverage)
       txHash = result.txHash
     } catch {
       // Contract call failed — use simulated data (e.g., in test env)
@@ -45,8 +43,12 @@ export const openTradeTool: ToolHandler = {
       success: true,
       data: {
         positionId: `pos-${Date.now()}`,
-        venue, market, side, size,
-        entryPrice, leverage,
+        venue,
+        market,
+        side,
+        size,
+        entryPrice,
+        leverage,
         status: 'open',
       },
       txHash,

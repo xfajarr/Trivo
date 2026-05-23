@@ -27,7 +27,9 @@ memoryRoutes.get('/agents/:id/memory', async (c) => {
   const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200)
   const type = c.req.query('type')
 
-  let memories = await db.select().from(agentMemory)
+  let memories = await db
+    .select()
+    .from(agentMemory)
     .where(eq(agentMemory.agentId, agentId))
     .orderBy(desc(agentMemory.createdAt))
 
@@ -56,7 +58,9 @@ memoryRoutes.get('/user/memory', authMiddleware, async (c) => {
   const userId = c.get('userId')
   const limit = Math.min(parseInt(c.req.query('limit') || '50'), 200)
 
-  const memories = await db.select().from(userMemory)
+  const memories = await db
+    .select()
+    .from(userMemory)
     .where(eq(userMemory.userId, userId))
     .orderBy(desc(userMemory.createdAt))
     .limit(limit)

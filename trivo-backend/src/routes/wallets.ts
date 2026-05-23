@@ -18,19 +18,25 @@ walletRoutes.post('/create', authMiddleware, async (c) => {
   try {
     const { walletId, walletAddress } = await createAgentWallet(existing[0]?.name ?? 'Agent')
 
-    await db.update(agents).set({
-      circleWalletId: walletId,
-      circleWalletAddress: walletAddress,
-    }).where(eq(agents.id, agentId))
+    await db
+      .update(agents)
+      .set({
+        circleWalletId: walletId,
+        circleWalletAddress: walletAddress,
+      })
+      .where(eq(agents.id, agentId))
 
-    return c.json({
-      message: 'Agent wallet created',
-      agentId,
-      walletId,
-      walletAddress,
-      chain: 'Arc Testnet',
-      chainId: 5042002,
-    }, 201)
+    return c.json(
+      {
+        message: 'Agent wallet created',
+        agentId,
+        walletId,
+        walletAddress,
+        chain: 'Arc Testnet',
+        chainId: 5042002,
+      },
+      201,
+    )
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err)
     return c.json({ error: `Wallet creation failed: ${msg}` }, 500)

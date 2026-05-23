@@ -93,7 +93,10 @@ agentRoutes.put('/:id', authMiddleware, async (c) => {
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
   if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
-  await db.update(agentsTable).set({ ...body, updatedAt: new Date() }).where(eq(agentsTable.id, id))
+  await db
+    .update(agentsTable)
+    .set({ ...body, updatedAt: new Date() })
+    .where(eq(agentsTable.id, id))
   const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
   return c.json({ agent: agent[0] })
 })

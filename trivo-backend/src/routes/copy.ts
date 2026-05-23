@@ -34,19 +34,16 @@ copyRoutes.post('/attach', authMiddleware, async (c) => {
 copyRoutes.post('/detach', async (c) => {
   const { followerAgentId } = await c.req.json()
 
-  const existing = await db.select().from(copyRelations)
-    .where(eq(copyRelations.followerAgentId, followerAgentId))
+  const existing = await db.select().from(copyRelations).where(eq(copyRelations.followerAgentId, followerAgentId))
   if (existing.length === 0) return c.json({ error: 'Relation not found' }, 404)
 
-  await db.update(copyRelations).set({ active: 'false' })
-    .where(eq(copyRelations.followerAgentId, followerAgentId))
+  await db.update(copyRelations).set({ active: 'false' }).where(eq(copyRelations.followerAgentId, followerAgentId))
 
   return c.json({ status: 'detached' })
 })
 
 copyRoutes.get('/relations/:agentId', async (c) => {
   const agentId = c.req.param('agentId')
-  const followers = await db.select().from(copyRelations)
-    .where(eq(copyRelations.targetAgentId, agentId))
+  const followers = await db.select().from(copyRelations).where(eq(copyRelations.targetAgentId, agentId))
   return c.json({ followers })
 })

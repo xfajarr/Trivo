@@ -24,10 +24,7 @@ interface MarketContext {
  * Main decision engine: given agent context + market data, decide what to do.
  * In production, this calls the AI model. For MVP, uses rule-based logic.
  */
-export async function decide(
-  agent: AgentContext,
-  market: MarketContext
-): Promise<TradeDecision> {
+export async function decide(agent: AgentContext, market: MarketContext): Promise<TradeDecision> {
   const btcPrice = market.prices['BTC/USD'] ?? 0
   const ethPrice = market.prices['ETH/USD'] ?? 0
 
@@ -110,10 +107,7 @@ export async function decide(
 /**
  * Execute a tool call from a decision
  */
-export async function executeDecision(
-  agentId: string,
-  decision: TradeDecision
-): Promise<ToolResult | null> {
+export async function executeDecision(agentId: string, decision: TradeDecision): Promise<ToolResult | null> {
   if (!decision.shouldTrade || !decision.tool) return null
 
   const tool = getTool(decision.tool)

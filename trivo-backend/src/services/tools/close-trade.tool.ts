@@ -27,9 +27,8 @@ export const closeTradeTool: ToolHandler = {
       const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
       currentPrice = await getPrice(pair)
 
-      const pnl = side === 'LONG' || side === 'BUY' || side === 'YES'
-        ? Math.floor(size * 0.01)
-        : Math.floor(size * 0.008)
+      const pnl =
+        side === 'LONG' || side === 'BUY' || side === 'YES' ? Math.floor(size * 0.01) : Math.floor(size * 0.008)
 
       const copyTradingPosId = parseInt((args.positionId as string).replace(/\D/g, '')) || 1
       const receipt = await closePositionOnChain(copyTradingPosId, currentPrice, pnl)

@@ -11,7 +11,7 @@ describe('Decision Engine', () => {
         modelProvider: 'deepseek',
         memory: [],
       },
-      { prices: { 'BTC/USD': 72880, 'ETH/USD': 3508, 'SOL/USD': 211 } }
+      { prices: { 'BTC/USD': 72880, 'ETH/USD': 3508, 'SOL/USD': 211 } },
     )
 
     expect(decision).toBeDefined()
@@ -25,7 +25,7 @@ describe('Decision Engine', () => {
     for (let i = 0; i < 20; i++) {
       const decision = await decide(
         { id: `agent-${i}`, name: `Agent`, strategy: 'test', modelProvider: null, memory: [] },
-        { prices: { 'BTC/USD': 72880, 'ETH/USD': 3508, 'SOL/USD': 211 } }
+        { prices: { 'BTC/USD': 72880, 'ETH/USD': 3508, 'SOL/USD': 211 } },
       )
 
       if (decision.shouldTrade) {
@@ -48,7 +48,7 @@ describe('Decision Engine', () => {
         modelProvider: null,
         memory: [],
       },
-      { prices: { 'BTC/USD': 0, 'ETH/USD': 0, 'SOL/USD': 0 } }
+      { prices: { 'BTC/USD': 0, 'ETH/USD': 0, 'SOL/USD': 0 } },
     )
 
     expect(decision).toBeDefined()
@@ -59,7 +59,7 @@ describe('Decision Engine', () => {
     for (let i = 0; i < 10; i++) {
       const d = await decide(
         { id: 'a', name: 'A', strategy: null, modelProvider: null, memory: [] },
-        { prices: { 'BTC/USD': 70000, 'ETH/USD': 3400, 'SOL/USD': 200 } }
+        { prices: { 'BTC/USD': 70000, 'ETH/USD': 3400, 'SOL/USD': 200 } },
       )
       expect(d.confidence).toBeGreaterThanOrEqual(0)
       expect(d.confidence).toBeLessThanOrEqual(1)

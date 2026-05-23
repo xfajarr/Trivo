@@ -44,11 +44,14 @@ setTimeout(async () => {
 }, 1000)
 
 const port = parseInt(process.env.PORT || '3000')
-serve({
-  fetch: app.fetch,
-  port,
-}, (info) => {
-  console.log(`⚡ Trivo API running on http://localhost:${info.port}`)
-})
+serve(
+  {
+    fetch: app.fetch,
+    port,
+  },
+  (info) => {
+    console.log(`⚡ Trivo API running on http://localhost:${info.port}`)
+  },
+)
 
 export default app

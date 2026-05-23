@@ -1,4 +1,4 @@
-import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
+import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets'
 import { config } from '../config'
 import { publicClient } from './contract.service'
 
@@ -27,12 +27,12 @@ async function getWalletSetId(): Promise<string> {
 
   const c = getClient()
   try {
-    const response = await c.createWalletSet({ name: "Trivo Agents" })
+    const response = await c.createWalletSet({ name: 'Trivo Agents' })
     _walletSetId = response.data?.walletSet?.id ?? null
     if (_walletSetId) return _walletSetId
   } catch {
     // Wallet set may already exist — use a deterministic ID
-    _walletSetId = "trivo-agents-wallet-set"
+    _walletSetId = 'trivo-agents-wallet-set'
     return _walletSetId
   }
 
@@ -42,13 +42,13 @@ async function getWalletSetId(): Promise<string> {
 /**
  * Create a wallet for an agent on Arc Testnet
  */
-export async function createAgentWallet(agentName: string): Promise<{ walletId: string; walletAddress: string }> {
+export async function createAgentWallet(_agentName: string): Promise<{ walletId: string; walletAddress: string }> {
   const c = getClient()
   const setId = await getWalletSetId()
 
   const response = await c.createWallets({
-    accountType: "SCA",
-    blockchains: ["ARC-TESTNET"],
+    accountType: 'SCA',
+    blockchains: ['ARC-TESTNET'],
     count: 1,
     walletSetId: setId,
   })
