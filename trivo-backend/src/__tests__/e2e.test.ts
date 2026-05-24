@@ -1,18 +1,64 @@
-import { describe, it, expect, beforeAll, afterAll, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // Mock the database and contract calls
 vi.mock('../lib/db', () => ({
   db: {
-    select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ orderBy: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue([]) }) }) }) }),
-    insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockReturnValue([{ id: 'test-id' }]), execute: vi.fn().mockResolvedValue(undefined) }) }),
-    update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockReturnValue({ returning: vi.fn().mockReturnValue([]), execute: vi.fn().mockResolvedValue(undefined) }) }) }),
+    select: vi
+      .fn()
+      .mockReturnValue({
+        from: vi
+          .fn()
+          .mockReturnValue({
+            where: vi
+              .fn()
+              .mockReturnValue({ orderBy: vi.fn().mockReturnValue({ limit: vi.fn().mockReturnValue([]) }) }),
+          }),
+      }),
+    insert: vi
+      .fn()
+      .mockReturnValue({
+        values: vi
+          .fn()
+          .mockReturnValue({
+            returning: vi.fn().mockReturnValue([{ id: 'test-id' }]),
+            execute: vi.fn().mockResolvedValue(undefined),
+          }),
+      }),
+    update: vi
+      .fn()
+      .mockReturnValue({
+        set: vi
+          .fn()
+          .mockReturnValue({
+            where: vi
+              .fn()
+              .mockReturnValue({
+                returning: vi.fn().mockReturnValue([]),
+                execute: vi.fn().mockResolvedValue(undefined),
+              }),
+          }),
+      }),
     query: {
-      agents: { findFirst: vi.fn().mockResolvedValue({
-        id: 'test-agent-1', name: 'TestBot', handle: 'testbot', status: 'active',
-        strategy: 'Test strategy', skills: 'perp', maxLeverage: '3', stopLossPct: '5', spendLimit: '100',
-        totalPnl: '0', tradeCount: '0', winRate: '0', copiers: '0',
-        modelProvider: 'asi1-mini', circleWalletAddress: '0x1234...', erc8004TokenId: '5'
-      }) },
+      agents: {
+        findFirst: vi.fn().mockResolvedValue({
+          id: 'test-agent-1',
+          name: 'TestBot',
+          handle: 'testbot',
+          status: 'active',
+          strategy: 'Test strategy',
+          skills: 'perp',
+          maxLeverage: '3',
+          stopLossPct: '5',
+          spendLimit: '100',
+          totalPnl: '0',
+          tradeCount: '0',
+          winRate: '0',
+          copiers: '0',
+          modelProvider: 'asi1-mini',
+          circleWalletAddress: '0x1234...',
+          erc8004TokenId: '5',
+        }),
+      },
       positions: { findFirst: vi.fn().mockResolvedValue(null) },
     },
     fn: { count: vi.fn() },
@@ -27,7 +73,7 @@ describe('E2E — Agent Trading Flow', () => {
     })
 
     it('should assign skills correctly', () => {
-      const skills = 'perp'.split(',').map(s => s.trim())
+      const skills = 'perp'.split(',').map((s) => s.trim())
       expect(skills).toContain('perp')
       expect(skills).not.toContain('polymarket')
     })
@@ -110,9 +156,7 @@ describe('E2E — Agent Trading Flow', () => {
     })
 
     it('should reset after a win', () => {
-      let losses = 3
-      // Simulate win
-      losses = 0
+      const losses = 0
       expect(losses).toBe(0)
     })
 
@@ -174,7 +218,7 @@ describe('E2E — Agent Trading Flow', () => {
     })
 
     it('should accumulate total PnL from multiple trades', () => {
-      const trades = [12.50, -3.20, 8.75, -1.50, 15.00]
+      const trades = [12.5, -3.2, 8.75, -1.5, 15.0]
       const totalPnl = trades.reduce((sum, p) => sum + p, 0)
       expect(totalPnl).toBeCloseTo(31.55, 1)
     })
@@ -241,7 +285,7 @@ describe('E2E — Agent Trading Flow', () => {
     })
 
     it('should include PnL in closed events', () => {
-      const event = { type: 'position_closed', pnl: 12.50 }
+      const event = { type: 'position_closed', pnl: 12.5 }
       expect(event.type).toBe('position_closed')
       expect(event.pnl).toBeDefined()
       expect(event.pnl).toBeGreaterThan(0)
@@ -256,27 +300,24 @@ describe('E2E — Agent Trading Flow', () => {
   describe('Venue Side Labels', () => {
     it('should use LONG/SHORT for perp', () => {
       const getSide = (venue: string, side: string) =>
-        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') :
-        venue === 'lp' ? 'ADD' : side.toUpperCase()
-      
+        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') : venue === 'lp' ? 'ADD' : side.toUpperCase()
+
       expect(getSide('perp', 'long')).toBe('LONG')
       expect(getSide('perp', 'short')).toBe('SHORT')
     })
 
     it('should use YES/NO for polymarket', () => {
       const getSide = (venue: string, side: string) =>
-        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') :
-        venue === 'lp' ? 'ADD' : side.toUpperCase()
-      
+        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') : venue === 'lp' ? 'ADD' : side.toUpperCase()
+
       expect(getSide('polymarket', 'yes')).toBe('YES')
       expect(getSide('polymarket', 'no')).toBe('NO')
     })
 
     it('should use ADD for LP', () => {
       const getSide = (venue: string, side: string) =>
-        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') :
-        venue === 'lp' ? 'ADD' : side.toUpperCase()
-      
+        venue === 'polymarket' ? (side === 'yes' ? 'YES' : 'NO') : venue === 'lp' ? 'ADD' : side.toUpperCase()
+
       expect(getSide('lp', 'add')).toBe('ADD')
       expect(getSide('lp', 'remove')).toBe('ADD')
     })
@@ -295,7 +336,7 @@ describe('E2E — Agent Trading Flow', () => {
     it('should format minutes correctly', () => {
       const formatTime = (ts: number) => {
         const s = Math.floor((Date.now() - ts) / 1000)
-        if (s < 3600) return `${Math.floor(s/60)}m ago`
+        if (s < 3600) return `${Math.floor(s / 60)}m ago`
         return ''
       }
       expect(formatTime(Date.now() - 120000)).toBe('2m ago')
