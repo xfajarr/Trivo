@@ -1,38 +1,86 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { usePrivy } from "@privy-io/react-auth";
 import { AuthContext } from "@/hooks/useAuth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const {
+    ready,
+    authenticated,
+    user,
+    login,
+    logout: privyLogout,
+    getAccessToken,
+  } = usePrivy();
+
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const mounted = useRef(true);
 
+  // On mount and when auth state changes, sync the token with backend
   useEffect(() => {
     mounted.current = true;
-    const token = localStorage.getItem("privy_token");
-    const stored = localStorage.getItem("privy_user_id");
-    if (token && stored && mounted.current) {
-      setUserId(stored);
+
+    async function sync() {
+      if (!ready) return;
+
+      if (authenticated && user?.id) {
+        const token = await getAccessToken();
+        if (!mounted.current) return;
+
+        if (token) {
+          localStorage.setItem("privy_token", token);
+          localStorage.setItem("privy_user_id", user.id);
+          setAccessToken(token);
+          setUserId(user.id);
+
+          // Verify with backend
+          try {
+            await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/auth/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accessToken: token }),
+            });
+          } catch {
+            // silent — backend may not be running
+          }
+        }
+      } else {
+        localStorage.removeItem("privy_token");
+        localStorage.removeItem("privy_user_id");
+        setAccessToken(null);
+        setUserId(null);
+      }
+
+      if (mounted.current) setIsLoading(false);
     }
-    setIsLoading(false);
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
 
-  const login = useCallback((token: string, id: string) => {
-    localStorage.setItem("privy_token", token);
-    localStorage.setItem("privy_user_id", id);
-    setUserId(id);
-  }, []);
+    sync();
+  }, [ready, authenticated, user, getAccessToken]);
 
-  const logout = useCallback(() => {
+  const handleLogin = useCallback(() => {
+    login();
+  }, [login]);
+
+  const handleLogout = useCallback(() => {
+    privyLogout();
     localStorage.removeItem("privy_token");
     localStorage.removeItem("privy_user_id");
     setUserId(null);
-  }, []);
+    setAccessToken(null);
+  }, [privyLogout]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated: !!userId, userId, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated: !!userId,
+        userId,
+        isLoading,
+        login: handleLogin,
+        logout: handleLogout,
+        accessToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

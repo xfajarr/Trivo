@@ -70,6 +70,7 @@
     "viem": "~2.50.4",
     "vite-tsconfig-paths": "^6.0.2",
     "wagmi": "^3.6.15",
+    "ws": "^8.21.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {

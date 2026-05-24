@@ -4,6 +4,7 @@ import { db } from '../lib/db'
 import { agents } from '../lib/schema'
 import { authMiddleware } from '../middleware/auth'
 import { createAgentWallet, getWalletBalance } from '../services/wallet.service'
+import { getUsdcBalance } from '../services/contract.service'
 
 export const walletRoutes = new Hono()
 
@@ -88,4 +89,17 @@ walletRoutes.post('/withdraw', authMiddleware, async (c) => {
     destinationAddress,
     amount,
   })
+})
+
+// ── USDC Balance for any address (no auth — public balance query) ──
+
+walletRoutes.get('/usdc/:address', async (c) => {
+  const address = c.req.param('address')
+
+  if (!address.match(/^0x[a-fA-F0-9]{40}$/)) {
+    return c.json({ error: 'Invalid address' }, 400)
+  }
+
+  const balance = await getUsdcBalance(address)
+  return c.json({ address, balance, currency: 'USDC', chain: 'Arc Testnet' })
 })

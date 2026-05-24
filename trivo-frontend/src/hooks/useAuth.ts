@@ -1,11 +1,12 @@
 import { createContext, useContext } from "react";
 
-interface AuthState {
+export interface AuthState {
   isAuthenticated: boolean;
   userId: string | null;
   isLoading: boolean;
-  login: (token: string, userId: string) => void;
+  login: () => void;
   logout: () => void;
+  accessToken: string | null;
 }
 
 export const AuthContext = createContext<AuthState | null>(null);

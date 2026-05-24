@@ -92,7 +92,6 @@ chat.post('/agent/:agentId', async (c) => {
   const a = agent[0]
   
   const provider = getProvider()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const client = (provider as any).client
 
   const systemPrompt = `You are ${a?.name}, an AI trading agent on Trivo.

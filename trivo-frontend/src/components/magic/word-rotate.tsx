@@ -23,10 +23,10 @@ export function WordRotate({ words, className, duration = 2500 }: WordRotateProp
         <span
           key={word}
           className={cn(
-            "absolute left-0 transition-all duration-500",
+            "transition-all duration-1000 ease-out",
             i === index
-              ? "opacity-100 translate-y-0 relative"
-              : "opacity-0 translate-y-3 pointer-events-none",
+              ? "opacity-100 translate-y-0 scale-100 relative"
+              : "opacity-0 translate-y-2 scale-[0.97] pointer-events-none absolute inset-0",
           )}
         >
           {word}

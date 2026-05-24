@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useRef } from "react";
+import { motion, useScroll, useSpring } from "framer-motion";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BlurFade } from "@/components/magic/blur-fade";
@@ -109,11 +109,10 @@ const STATS = [
 ];
 
 const VENUES = [
-  { label: "PERPETUALS" },
-  { label: "PREDICTION" },
-  { label: "LIQUIDITY" },
-  { label: "YIELD" },
-  { label: "SPOT" },
+  { src: "/images/arc-network-text-dark.svg", alt: "Arc" },
+  { src: "/images/Uniswap_horizontallogo_pink.png", alt: "Uniswap" },
+  { src: "/images/HL logo_green and white.png", alt: "Hyperliquid" },
+  { src: "/images/polymarket-logos/logo-white.svg", alt: "Polymarket" },
 ];
 
 const FEATURES = [
@@ -189,6 +188,15 @@ function BorderBeam({ className }: { className?: string }) {
 }
 
 function LandingPage() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 80);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const beamContainerRef = useRef<HTMLDivElement>(null);
   const stepRefs = [
     useRef<HTMLDivElement>(null),
@@ -214,14 +222,26 @@ function LandingPage() {
         <Particles className="opacity-50" quantity={40} color="#ABFF4F" />
 
         {/* Nav */}
-        <header className="relative z-20 flex items-center justify-between px-6 py-5 max-w-7xl mx-auto w-full">
+        <header
+          className={`z-20 fixed top-0 left-1/2 -translate-x-1/2 flex items-center justify-between px-6 w-full transition-all duration-300 ease-out ${
+            scrolled
+              ? "mt-2 py-2 px-4 max-w-2xl bg-background/85 backdrop-blur-xl rounded-xl border border-border/40 shadow-lg shadow-black/10"
+              : "mt-0 py-5 max-w-7xl bg-transparent shadow-none border-0"
+          }`}
+        >
           <Link to="/" className="flex items-center gap-3 group">
             <img
-              src="/images/trivo-icon.png"
+              src="/images/trivo-green-hirest.png"
               alt="Trivo"
-              className="h-9 w-9 rounded-lg object-cover group-hover:scale-105 transition-transform"
+              className={`rounded-lg object-cover group-hover:scale-105 transition-transform ${
+                scrolled ? "h-8 w-8" : "h-11 w-11"
+              }`}
             />
-            <span className="font-display text-xl font-bold tracking-tight">TRIVO</span>
+            <span className={`font-display font-bold tracking-tight transition-all ${
+              scrolled
+                ? "text-sm hidden sm:block"
+                : "text-xl"
+            }`}>TRIVO</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm">
             <a
@@ -243,38 +263,43 @@ function LandingPage() {
               How it works
             </a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-0">
             <Link to="/feed">
-              <Button variant="outline" size="sm" className="border-border">
-                Launch App
-              </Button>
-            </Link>
-            <Link to="/launch" className="hidden sm:block">
-              <ShimmerButton className="px-5 h-9 text-sm">Create Agent</ShimmerButton>
+              <ShimmerButton className="px-5 h-9 text-sm">Launch App</ShimmerButton>
             </Link>
           </div>
         </header>
 
         {/* Hero Content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-24 max-w-6xl mx-auto text-center">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-28 pb-24 max-w-6xl mx-auto text-center">
           <BlurFade delay={0}>
-            <div className="inline-flex items-center gap-2 rounded-full border border-neon/20 bg-neon/5 px-4 py-1.5 mb-8">
-              <span className="pulse-dot h-2 w-2 rounded-full bg-neon" />
-              <AnimatedShinyText className="text-[11px] text-neon font-mono tracking-wider uppercase">
-                Built on Arc · USDC Native Gas
-              </AnimatedShinyText>
+            <div className="relative inline-flex items-center gap-2 rounded-full border border-neon/20 bg-neon/5 px-4 py-1.5 mb-8 overflow-hidden">
+              {/* Shimmer sweep across the full badge */}
+              <span
+                className="pointer-events-none absolute inset-0 rounded-full z-0"
+                style={{
+                  background:
+                    "linear-gradient(90deg, transparent 5%, rgba(255,255,255,0.25) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.25) 60%, transparent 95%)",
+                  backgroundSize: "400% 100%",
+                  animation: "shiny-text-sweep 12s ease-in-out infinite",
+                }}
+              />
+              <span className="relative z-10 text-neon text-lg leading-none">✦</span>
+              <span className="relative z-10 text-[11px] text-neon font-mono tracking-wider uppercase">
+                Now Live on Arc Testnet
+              </span>
             </div>
           </BlurFade>
 
           <BlurFade delay={0.2}>
-            <h1 className="font-display text-4xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6">
+            <h1 className="font-display text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
               <span className="text-neon">AI Agents</span>
               <br />
               <span className="text-foreground">That Trade</span>{" "}
               <WordRotate
                 words={["Autonomously.", "Profitably.", "On-Chain.", "24/7."]}
                 className="text-neon inline-block"
-                duration={3000}
+                duration={4500}
               />
             </h1>
           </BlurFade>
@@ -305,35 +330,49 @@ function LandingPage() {
 
           {/* Stats */}
           <BlurFade delay={0.6}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-2xl border border-border bg-border max-w-3xl w-full">
-              {STATS.map((s, i) => (
-                <div key={s.label} className="bg-card/80 backdrop-blur px-6 py-6 text-center">
-                  <div className="font-display text-3xl md:text-4xl font-bold text-neon">
-                    <NumberTicker
-                      value={s.value}
-                      delay={i * 200}
-                      className="text-3xl md:text-4xl font-bold"
-                      suffix={s.suffix}
-                    />
+            <div className="mx-auto max-w-3xl rounded-2xl border border-border/60 bg-card/40 backdrop-blur-sm overflow-hidden">
+              <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/40">
+                {STATS.map((s, i) => (
+                  <div
+                    key={s.label}
+                    className="group relative py-6 px-4 text-center transition-all duration-300 hover:bg-neon/[0.02]"
+                  >
+                    <div className="relative z-10">
+                      <NumberTicker
+                        value={s.value}
+                        delay={i * 200}
+                        className="font-display text-3xl md:text-4xl font-bold text-neon"
+                        suffix={s.suffix}
+                      />
+                    </div>
+                    <div className="relative z-10 ticker text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 mt-2">
+                      {s.label}
+                    </div>
+                    {/* glow dot */}
+                    <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-neon/40 group-hover:bg-neon/80 transition-colors duration-500" />
                   </div>
-                  <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mt-2">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </BlurFade>
         </div>
       </section>
 
       {/* === VENUE MARQUEE === */}
-      <section className="relative z-10 border-y border-border py-5 overflow-hidden bg-card/50">
+      <section className="relative z-10 border-y border-border py-8 overflow-hidden bg-card/50">
+        <div className="max-w-7xl mx-auto px-6 mb-6">
+          <p className="text-center text-[13px] uppercase tracking-[0.2em] text-white/70">
+            Supported Ecosystem & Protocols
+          </p>
+        </div>
         <Marquee pauseOnHover className="py-2">
-          {[...VENUES, ...VENUES, ...VENUES, ...VENUES].map((v, i) => (
-            <div key={`${v.label}-${i}`} className="flex items-center gap-4 px-8">
-              <span className="ticker text-sm font-semibold text-foreground">{v.label}</span>
-              <span className="h-1.5 w-1.5 rounded-full bg-neon/60" />
-            </div>
+          {[...VENUES, ...VENUES].map((v, i) => (
+            <img
+              key={`${v.alt}-${i}`}
+              src={v.src}
+              alt={v.alt}
+              className="h-8 mx-8 w-auto object-contain opacity-90 transition-all duration-300 hover:opacity-100"
+            />
           ))}
         </Marquee>
       </section>
@@ -699,9 +738,9 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img
-              src="/images/trivo-icon.png"
+              src="/images/trivo-green-hirest.png"
               alt="Trivo"
-              className="h-7 w-7 rounded object-cover"
+              className="h-8 w-8 rounded object-cover"
             />
             <span className="font-display text-sm font-bold">TRIVO</span>
           </div>

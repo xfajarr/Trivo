@@ -107,7 +107,7 @@ function AgentDetail() {
             reasoning: t.reasoning,
             size: Number(t.size || 0),
           })).reverse()}
-          height={280}
+          height={400}
         />
       </div>
         <Tabs defaultValue="positions" className="w-full">
