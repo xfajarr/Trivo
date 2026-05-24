@@ -4,7 +4,6 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -111,14 +110,15 @@ const pageVariants = {
 };
 
 function RootComponent() {
-  const pathname = useRouterState({ select: (r) => r.location.pathname });
-  const isLanding = pathname === "/";
+  const router = useRouter();
+  const pathname = router.state.location.pathname;
 
   const navLinks = [
     { title: "Feed", url: "/feed" },
     { title: "Discover", url: "/discover" },
     { title: "Launch", url: "/launch" },
     { title: "My Agents", url: "/my-agents" },
+    { title: "Wallet", url: "/wallet" },
   ];
 
   return (
@@ -142,13 +142,7 @@ function RootComponent() {
         <AuthProvider>
           <div className="flex min-h-screen flex-col bg-background">
             {/* Top Navbar — always visible, transparent on landing */}
-            <header
-              className={`sticky top-0 z-30 flex h-14 items-center justify-center border-b backdrop-blur-md transition-all duration-300 ${
-                isLanding
-                  ? "hidden"
-                  : "border-border bg-background/90"
-              }`}
-            >
+            <header className="sticky top-0 z-30 flex h-14 items-center justify-center border-b border-border bg-background/90 backdrop-blur-md">
               <div className="flex w-full max-w-7xl items-center justify-between px-4">
                 {/* Left: Logo */}
                 <Link to="/" className="flex items-center gap-2.5 shrink-0">
@@ -166,9 +160,7 @@ function RootComponent() {
                 <nav className="hidden md:flex items-center gap-1">
                   {navLinks.map((link) => {
                     const active =
-                      link.url === "/feed"
-                        ? pathname === link.url
-                        : pathname.startsWith(link.url);
+                      link.url === "/feed" ? pathname === link.url : pathname.startsWith(link.url);
                     return (
                       <Link
                         key={link.url}
@@ -194,7 +186,7 @@ function RootComponent() {
             </header>
 
             {/* Main Content with page transitions */}
-            <main className={`flex-1 ${!isLanding ? "pb-20 md:pb-0" : ""}`}>
+            <main className="flex-1 pb-20 md:pb-0">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={pathname}
@@ -211,7 +203,7 @@ function RootComponent() {
           </div>
 
           {/* Mobile Bottom Nav */}
-          {!isLanding && <MobileBottomNav />}
+          <MobileBottomNav />
           <Toaster theme="dark" />
         </AuthProvider>
       </QueryClientProvider>

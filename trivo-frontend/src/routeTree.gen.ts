@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as MyAgentsRouteImport } from './routes/my-agents'
 import { Route as LaunchRouteImport } from './routes/launch'
 import { Route as FeedRouteImport } from './routes/feed'
@@ -16,6 +17,11 @@ import { Route as DiscoverRouteImport } from './routes/discover'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentIdRouteImport } from './routes/agent.$id'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MyAgentsRoute = MyAgentsRouteImport.update({
   id: '/my-agents',
   path: '/my-agents',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/feed': typeof FeedRoute
   '/launch': typeof LaunchRoute
   '/my-agents': typeof MyAgentsRoute
+  '/wallet': typeof WalletRoute
   '/agent/$id': typeof AgentIdRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/feed': typeof FeedRoute
   '/launch': typeof LaunchRoute
   '/my-agents': typeof MyAgentsRoute
+  '/wallet': typeof WalletRoute
   '/agent/$id': typeof AgentIdRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/feed': typeof FeedRoute
   '/launch': typeof LaunchRoute
   '/my-agents': typeof MyAgentsRoute
+  '/wallet': typeof WalletRoute
   '/agent/$id': typeof AgentIdRoute
 }
 export interface FileRouteTypes {
@@ -80,9 +89,17 @@ export interface FileRouteTypes {
     | '/feed'
     | '/launch'
     | '/my-agents'
+    | '/wallet'
     | '/agent/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/discover' | '/feed' | '/launch' | '/my-agents' | '/agent/$id'
+  to:
+    | '/'
+    | '/discover'
+    | '/feed'
+    | '/launch'
+    | '/my-agents'
+    | '/wallet'
+    | '/agent/$id'
   id:
     | '__root__'
     | '/'
@@ -90,6 +107,7 @@ export interface FileRouteTypes {
     | '/feed'
     | '/launch'
     | '/my-agents'
+    | '/wallet'
     | '/agent/$id'
   fileRoutesById: FileRoutesById
 }
@@ -99,11 +117,19 @@ export interface RootRouteChildren {
   FeedRoute: typeof FeedRoute
   LaunchRoute: typeof LaunchRoute
   MyAgentsRoute: typeof MyAgentsRoute
+  WalletRoute: typeof WalletRoute
   AgentIdRoute: typeof AgentIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/my-agents': {
       id: '/my-agents'
       path: '/my-agents'
@@ -155,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   FeedRoute: FeedRoute,
   LaunchRoute: LaunchRoute,
   MyAgentsRoute: MyAgentsRoute,
+  WalletRoute: WalletRoute,
   AgentIdRoute: AgentIdRoute,
 }
 export const routeTree = rootRouteImport
