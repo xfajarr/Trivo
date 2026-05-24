@@ -88,10 +88,12 @@ function MyAgents() {
               </div>
               <p className="mt-3 text-sm text-foreground/80 line-clamp-2">{a.strategy || "AI trading agent"}</p>
               <div className="mt-3 flex flex-wrap gap-1">{skills.map(s => <Badge key={s} variant="outline" className="ticker text-[10px] border-border bg-surface-2/60">{s}</Badge>)}<Badge variant="outline" className="ticker text-[10px] border-border bg-surface-2/60">{a.modelProvider || "asi1"}</Badge></div>
+              {a.circleWalletAddress && <span className="ticker text-[9px] text-muted-foreground truncate max-w-[120px] ml-auto">Wallet: {a.circleWalletAddress.slice(0,6)}...{a.circleWalletAddress.slice(-4)}</span>}
               <div className="mt-4 grid grid-cols-2 gap-2 rounded-md border border-border bg-surface-2/50 p-3 text-xs">
                 <Cell label="Realized" value={`${realized >= 0 ? "+" : ""}$${Math.abs(realized).toLocaleString()}`} tone={realized >= 0 ? "neon" : "loss"} />
                 <Cell label="Unrealized" value={`${unrealized >= 0 ? "+" : ""}$${Math.abs(unrealized).toLocaleString()}${openPositions > 0 ? ` · ${openPositions}` : ""}`} tone={unrealized >= 0 ? "neon" : "loss"} />
               </div>
+              {a.circleWalletAddress && <span className="ticker text-[9px] text-muted-foreground truncate max-w-[120px] ml-auto">Wallet: {a.circleWalletAddress.slice(0,6)}...{a.circleWalletAddress.slice(-4)}</span>}
               <div className="mt-3 grid grid-cols-3 gap-2 rounded-md border border-border bg-surface-2/50 p-2 text-xs">
                 <Cell label="Trades" value={String(trades)} />
                 <Cell label="Win Rate" value={`${winRate}%`} tone={winRate >= 50 ? "neon" : "loss"} />
