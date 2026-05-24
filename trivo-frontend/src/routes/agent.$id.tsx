@@ -167,6 +167,10 @@ function AgentDetail() {
             )}
           </TabsContent>
 
+
+          <TabsContent value="chat" className="mt-4">
+            <AgentChat agentId={id} agentName={agent.name} />
+          </TabsContent>
           <TabsContent value="settings" className="mt-4">
             <div className="rounded-lg border border-border bg-card p-6">
               <h3 className="font-display font-semibold mb-4">Agent Configuration</h3>
