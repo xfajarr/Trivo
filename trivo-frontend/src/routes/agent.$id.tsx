@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { AgentChat } from "@/components/AgentChat";
 import { AgentChart } from "@/components/AgentChart";
 import { useAgent } from "@/hooks/useAgents";
 import { usePositions } from "@/hooks/usePositions";
@@ -113,6 +114,7 @@ function AgentDetail() {
           <TabsList className="bg-surface-2">
             <TabsTrigger value="positions">Positions ({positions.length})</TabsTrigger>
             <TabsTrigger value="history">History ({history?.totalTrades || 0})</TabsTrigger>
+            <TabsTrigger value="chat">Train</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 

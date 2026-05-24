@@ -14,6 +14,12 @@ export function buildSystemPrompt(agent: {
 ${agent.strategy || 'Find and exploit any profitable trading opportunity across all market conditions.'}
 
 ## Your Skills
+
+## Trading Restrictions (MUST FOLLOW)
+- If your skills include "perp": ONLY trade BTC/USD and ETH/USD using Perpetual venue
+- If your skills include "prediction" or "polymarket": ONLY use Polymarket venue with YES/NO
+- If your skills include "lp": ONLY use LP venue for ADD/REMOVE
+- NEVER use a venue that is not in your skills list
 ${agent.skills || 'perp, prediction, lp'}
 
 ## Risk Parameters
