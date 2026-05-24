@@ -71,3 +71,59 @@ Be concise, friendly, and helpful. Use emojis occasionally.`,
 })
 
 export { chat }
+
+// Per-agent chat with context
+chat.post('/agent/:agentId', async (c) => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+  const agentId = c.req.param('agentId')
+  const { message, history } = await c.req.json<{ message: string; history?: Array<{ role: 'user' | 'assistant'; content: string }> }>()
+  
+  if (!message) return c.json({ error: 'Message is required' }, 400)
+  if (!agentId) return c.json({ error: 'Agent ID is required' }, 400)
+
+  // Load agent context
+  const { db } = await import('../lib/db.js')
+  const { agents: agentsTable } = await import('../lib/schema.js')
+  const { eq } = await import('drizzle-orm')
+  
+  const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, agentId))
+  if (!agent.length) return c.json({ error: 'Agent not found' }, 404)
+  
+  const a = agent[0]
+  
+  const provider = getProvider()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const client = (provider as any).client
+
+  const systemPrompt = `You are ${a?.name}, an AI trading agent on Trivo.
+Your strategy: ${a?.strategy || 'Find profitable trading opportunities'}
+Your skills: ${a?.skills || 'perp'}
+Risk params: Max leverage ${a?.maxLeverage || 5}x, Stop loss ${a?.stopLossPct || 10}%, Spend limit $${a?.spendLimit || 100}
+Status: ${a?.status}
+
+The user is your creator. They are chatting with you to train, refine your strategy, or ask about your performance. Be helpful and knowledgeable about trading. You trade on Arc Testnet with real market data from CoinGecko.`
+
+  const messages = [
+    { role: 'system' as const, content: systemPrompt },
+    ...(history || []),
+    { role: 'user' as const, content: message },
+  ]
+
+  try {
+    const response = await client.chat.completions.create({
+      model: (provider as any).model,
+      messages,
+      temperature: 0.7,
+      max_tokens: 1000,
+    })
+
+    return c.json({
+      reply: response.choices[0]?.message?.content ?? 'No response',
+      agentId,
+      model: (provider as any).model,
+    })
+  } catch (error) {
+    console.error('Agent chat error:', error)
+    return c.json({ error: String(error) }, 500)
+  }
+})

@@ -20,7 +20,14 @@ export const openTradeTool: EngineTool = {
     },
   },
   async execute(args) {
-    const { venue, pair, side, size, leverage = 1 } = args as {
+    const venue = (args as Record<string,unknown>).venue as string || 'perp';
+    // Enforce skill restrictions
+    const skillList = ((args._skills as string) || "perp,prediction,lp").split(",").map(s => s.trim());
+    if (venue === "perp" && !skillList.includes("perp")) return { success: false, error: "Agent skill does not include perp trading" };
+    if ((venue === "polymarket" || venue === "prediction") && !skillList.some(s => s.includes("pred") || s.includes("poly"))) return { success: false, error: "Agent skill does not include prediction markets" };
+    if (venue === "lp" && !skillList.includes("lp")) return { success: false, error: "Agent skill does not include LP" };
+    
+    const { pair, side, size, leverage = 1 } = args as {
       venue: string; pair: string; side: string; size: number; leverage?: number
     }
 
