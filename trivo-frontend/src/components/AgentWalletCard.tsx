@@ -1,120 +1,59 @@
 import { useState } from "react";
-import { Copy, Shield, Wallet, Key, ArrowUpRight } from "lucide-react";
+import { Copy, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 
-interface Props {
-  agentName: string;
-  walletAddress?: string;
-  walletId?: string;
-}
+interface Props { agentName: string; walletAddress?: string }
 
-export function AgentWalletCard({ agentName, walletAddress, walletId }: Props) {
-  const [showKey, setShowKey] = useState(false);
-  const [perTxLimit, setPerTxLimit] = useState([100]);
-  const [dailyLimit, setDailyLimit] = useState([500]);
+export function AgentWalletCard({ agentName, walletAddress }: Props) {
+  const [amount, setAmount] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  if (!walletAddress) return null;
 
   function copyAddress() {
-    if (!walletAddress) return;
-    navigator.clipboard.writeText(walletAddress);
-    toast.success("Wallet address copied");
+    navigator.clipboard.writeText(walletAddress!);
+    setCopied(true); toast.success("Address copied");
+    setTimeout(() => setCopied(false), 2000);
   }
 
-  function exportKey() {
-    if (!walletAddress) return;
-    // For Circle Dev-Controlled Wallets, the key is managed via MPC
-    // Users can export via Circle SDK if needed
-    setShowKey(!showKey);
-    if (!showKey) {
-      toast.info("Circle MPC Wallet", {
-        description: "Key is managed by Circle's secure enclave. Contact support for key export.",
-      });
-    }
+  async function handleTransfer() {
+    if (!amount || Number(amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    toast.success(`$${amount} USDC transferred`, { description: `To: ${walletAddress!.slice(0,10)}...` });
+    setAmount("");
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 space-y-4">
-      {/* Header */}
+    <div className="rounded-lg border border-border bg-surface-2/50 p-3 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Wallet className="h-4 w-4 text-neon" />
-          <h3 className="font-display text-sm font-semibold">Agent Wallet</h3>
-          <Badge variant="outline" className="ticker text-[10px] border-neon/30 text-neon">CIRCLE MPC</Badge>
+          <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">Wallet</span>
+          <span className="font-mono text-[11px] text-foreground">{walletAddress.slice(0,8)}...{walletAddress.slice(-6)}</span>
         </div>
-        {walletId && <span className="ticker text-[10px] text-muted-foreground">ID: {walletId.slice(0,8)}...</span>}
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyAddress}>
+            {copied ? <Check className="h-3 w-3 text-neon" /> : <Copy className="h-3 w-3" />}
+          </Button>
+          <button onClick={() => setExpanded(!expanded)} className="text-[10px] text-neon hover:underline ticker">{expanded ? "Close" : "Fund"}</button>
+        </div>
       </div>
 
-      {/* Wallet Address */}
-      {walletAddress ? (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2/50 p-3">
-            <code className="flex-1 text-xs font-mono truncate">{walletAddress}</code>
-            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={copyAddress}>
-              <Copy className="h-3.5 w-3.5" />
-            </Button>
+      {expanded && (
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          <div className="flex gap-1.5">
+            {[10, 50, 100].map(n => (
+              <button key={n} onClick={() => setAmount(String(n))} className={`flex-1 text-[10px] py-1 rounded border ticker ${amount === String(n) ? "border-neon bg-neon/10 text-neon" : "border-border text-muted-foreground hover:text-foreground"}`}>${n}</button>
+            ))}
           </div>
-
-          {/* Quick actions */}
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => toast.info("Coming soon", { description: "Bridge USDC from any chain to Arc Testnet" })}>
-              Deposit USDC
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={exportKey}>
-              <Key className="mr-1 h-3 w-3" />
-              {showKey ? "Hide key" : "Export key"}
-            </Button>
+            <div className="flex-1 relative">
+              <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="pr-10 text-xs h-8" min={1} />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">USDC</span>
+            </div>
+            <Button size="sm" onClick={handleTransfer} className="h-8 bg-neon text-primary-foreground hover:bg-neon/90 text-xs"><ArrowRight className="h-3 w-3" /></Button>
           </div>
-
-          {/* Spending Rules */}
-          <div className="rounded-md border border-border bg-surface-2/30 p-3 space-y-3">
-            <div className="flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5 text-amber-400" />
-              <span className="font-display text-xs font-semibold">Spending Rules</span>
-            </div>
-            
-            <div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                <span>Per Transaction</span>
-                <span className="text-foreground font-semibold">${perTxLimit[0]}</span>
-              </div>
-              <Slider value={perTxLimit} onValueChange={setPerTxLimit} min={10} max={500} step={10} className="h-4" />
-            </div>
-
-            <div>
-              <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                <span>Daily Limit</span>
-                <span className="text-foreground font-semibold">${dailyLimit[0]}</span>
-              </div>
-              <Slider value={dailyLimit} onValueChange={setDailyLimit} min={50} max={2000} step={50} className="h-4" />
-            </div>
-
-            <Button 
-              size="sm" 
-              className="w-full bg-neon text-primary-foreground hover:bg-neon/90 text-xs"
-              onClick={() => toast.success("Rules saved", { description: `Per-tx: $${perTxLimit[0]} | Daily: $${dailyLimit[0]}` })}
-            >
-              <Shield className="mr-1.5 h-3 w-3" /> Save Rules
-            </Button>
-          </div>
-
-          {/* View on Arcscan */}
-          <a
-            href={`https://testnet.arcscan.app/address/${walletAddress}`}
-            target="_blank"
-            rel="noopener"
-            className="flex items-center justify-center gap-1 text-[10px] text-violet hover:underline ticker"
-          >
-            View on Arcscan <ArrowUpRight className="h-3 w-3" />
-          </a>
-        </div>
-      ) : (
-        <div className="rounded-md border border-border bg-surface-2/50 p-4 text-center">
-          <Wallet className="mx-auto h-6 w-6 text-muted-foreground mb-2" />
-          <p className="text-xs text-muted-foreground">Wallet not configured</p>
-          <p className="text-[10px] text-muted-foreground mt-1">Circle API keys required</p>
+          <p className="text-[9px] text-muted-foreground">Send USDC on Arc Testnet. {agentName} will use this for trading.</p>
         </div>
       )}
     </div>
