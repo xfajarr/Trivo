@@ -1,5 +1,13 @@
 export type Venue = "perp" | "prediction" | "lp" | "yield" | "spot";
-export type ModelProvider = "deepseek" | "claude" | "openai" | "qwen" | "byok" | "asi1-mini" | "asi1" | "asi1-ultra";
+export type ModelProvider =
+  | "deepseek"
+  | "claude"
+  | "openai"
+  | "qwen"
+  | "byok"
+  | "asi1-mini"
+  | "asi1"
+  | "asi1-ultra";
 export type AgentStatus = "inactive" | "active" | "paused";
 export type PositionStatus = "open" | "closed";
 export type HostingType = "trivo" | "self_hosted";
