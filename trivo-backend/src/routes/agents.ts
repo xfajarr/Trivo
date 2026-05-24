@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { agents as agentsTable, agentSessions, agentMemory } from '../lib/schema'
 import { erc8004Service } from '../engine/services/erc8004.service.js'
+import { createAgentWallet } from '../services/wallet.service.js'
 import { authMiddleware } from '../middleware/auth'
 
 export const agentRoutes = new Hono()
@@ -81,6 +82,19 @@ agentRoutes.post('/', authMiddleware, zValidator('json', createAgentSchema), asy
     console.log(`🆔 ERC-8004 agent #${erc8004Id} registered: https://testnet.arcscan.app/tx/${txHash}`)
   } catch (err) {
     console.warn('⚠️ ERC-8004 registration failed (non-blocking):', (err as Error).message)
+
+  // Create Circle wallet for agent
+  try {
+    const wallet = await createAgentWallet(data.name || "Agent")
+    if (wallet) {
+      await db.update(agentsTable)
+        .set({ circleWalletId: wallet.walletId, circleWalletAddress: wallet.walletAddress })
+        .where(eq(agentsTable.id, agentId))
+      console.log(`💳 Wallet created for ${data.name}: ${wallet.walletAddress}`)
+    }
+  } catch (err) {
+    console.warn("⚠️ Wallet creation failed (non-blocking):", (err as Error).message)
+  }
   }
 
   const systemPrompt = `You are ${data.name}, an AI trading agent on Trivo.
