@@ -16,6 +16,27 @@ onchain-ai-agent-guide-ts.md
 .superstack/
 trivo-frontend/.understand-anything/
 
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
 # OS files
 .DS_Store
 *.bak
@@ -24,5 +45,10 @@ docs/plans/*.bak
 # Implementation docs (local only)
 docs/plans/engine-refactor-plan.md
 docs/plans/IMPLEMENTATION_TICKETS.md
+
+# Package manager locks
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
 docs/submission-google-form.txt
 docs/submission-text.md
