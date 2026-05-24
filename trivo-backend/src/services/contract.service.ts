@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createPublicClient, http, keccak256, toHex } from 'viem'
 import { config } from '../config'
+import { getRealtimePrice } from './realtime-price.service.js'
 import { SimpleOracleABI, CopyTradingABI, MockPerpABI, MockPolymarketABI, MockLPV3ABI } from '../abi'
 
 const arcTestnet = {
@@ -40,6 +41,9 @@ export async function updatePrice(pair: string, price: number) {
 }
 
 export async function getPrice(pair: string): Promise<number> {
+  // Try real-time WS price first (faster)
+  const rtPrice = getRealtimePrice(pair)
+  if (rtPrice > 0) return rtPrice
   const pairHash = keccak256(toHex(pair))
   try {
     const result = (await publicClient.readContract({
@@ -166,14 +170,14 @@ export async function mockPerpClosePosition(
 // ── MockPolymarket ──
 
 export async function mockPolymarketCreateMarket(
-  question: string, endTime?: number
+  question: string, yesOdds: number = 50, noOdds: number = 50
 ): Promise<{ transactionHash: string; marketId: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
     address: config.MOCK_POLYMARKET as `0x${string}`,
     abi: MockPolymarketABI,
     functionName: 'createMarket',
-    args: [question, BigInt(endTime ?? Math.floor(Date.now() / 1000) + 3600)],
+    args: [question, BigInt(yesOdds), BigInt(noOdds)],
   } as any)
   const receipt = await publicClient.waitForTransactionReceipt({ hash: tx })
   return { transactionHash: receipt.transactionHash, marketId: `market-${Date.now()}` }
@@ -242,4 +246,43 @@ export async function depositFeeOnChain(
 ): Promise<{ transactionHash: string }> {
   // Mock implementation for now
   return { transactionHash: `0x${Date.now().toString(16)}mock` }
+}
+
+// ── USDC ERC-20 Balance ──
+
+const USDC_CONTRACT = '0x3600000000000000000000000000000000000000'
+
+// Minimal ERC-20 ABI — just balanceOf
+const USDC_ABI = [
+  {
+    constant: true,
+    inputs: [{ name: '_owner', type: 'address' }],
+    name: 'balanceOf',
+    outputs: [{ name: 'balance', type: 'uint256' }],
+    type: 'function',
+  },
+] as const
+
+/**
+ * Fetch USDC balance (ERC-20) for any address on Arc testnet.
+ * Returns the balance as a string with 2 decimal places (e.g. "12.34").
+ */
+export async function getUsdcBalance(address: string): Promise<string> {
+  try {
+    const result = (await publicClient.readContract({
+      address: USDC_CONTRACT,
+      abi: USDC_ABI,
+      functionName: 'balanceOf',
+      args: [address as `0x${string}`],
+    })) as bigint
+
+    const whole = result / 10n ** 6n
+    const frac = result % 10n ** 6n
+    const fracStr = frac.toString().padStart(6, '0').slice(0, 2)
+    return `${whole}.${fracStr}`
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.warn('[usdc] balanceOf failed:', msg)
+    return '0.00'
+  }
 }

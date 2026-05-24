@@ -4,6 +4,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { validateConfig } from './config'
+import { startRealtimePriceFeed } from './services/realtime-price.service.js'
 
 if (!process.env.VITEST) {
   validateConfig()
@@ -52,6 +53,7 @@ setTimeout(async () => {
   try {
     const { startAllCrons } = await import('./services/cron')
     startAllCrons()
+    startRealtimePriceFeed()
     const { startEngine } = await import('./engine/index.js')
     startEngine()
   } catch {
