@@ -58,7 +58,7 @@ agentRoutes.post('/', authMiddleware, zValidator('json', createAgentSchema), asy
     spendLimit: data.spendLimit,
     maxLeverage: data.maxLeverage,
     stopLossPct: data.stopLossPct,
-    status: 'inactive',
+    status: 'active',
   })
 
   // 🆔 ERC-8004: Register agent identity on-chain

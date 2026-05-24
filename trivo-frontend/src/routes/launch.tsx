@@ -98,7 +98,7 @@ function LaunchPage() {
       });
 
       toast.success(`${name} deployed`, {
-        description: `Agent created with ERC-8004 identity on Arc Testnet. Activate it to start trading.`,
+        description: `Agent created with ERC-8004 identity on Arc Testnet. Agent is now active and trading.`,
       });
 
       const agentId = (result as any)?.agent?.id;
