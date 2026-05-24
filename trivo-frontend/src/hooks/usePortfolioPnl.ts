@@ -8,7 +8,7 @@ import { pnlApi } from "@/lib/api";
  */
 export function usePortfolioPnl(agentIds: string[]) {
   return useQuery({
-    queryKey: ["pnl-summary"],  // Shared key across all pages
+    queryKey: ["pnl-summary"], // Shared key across all pages
     queryFn: async () => {
       const results: Record<string, { unrealizedPnl: number; totalPositions: number }> = {};
       // Fetch all agents in parallel
@@ -16,15 +16,20 @@ export function usePortfolioPnl(agentIds: string[]) {
         agentIds.map(async (id) => {
           try {
             const r = await pnlApi.agentSummary(id);
-            results[id] = { unrealizedPnl: r.unrealizedPnl || 0, totalPositions: r.totalPositions || 0 };
-          } catch { results[id] = { unrealizedPnl: 0, totalPositions: 0 }; }
-        })
+            results[id] = {
+              unrealizedPnl: r.unrealizedPnl || 0,
+              totalPositions: r.totalPositions || 0,
+            };
+          } catch {
+            results[id] = { unrealizedPnl: 0, totalPositions: 0 };
+          }
+        }),
       );
       return results;
     },
     enabled: agentIds.length > 0,
-    refetchInterval: 10_000,     // Real-time: every 10 seconds
-    staleTime: 5_000,            // Fresh for 5 seconds
+    refetchInterval: 10_000, // Real-time: every 10 seconds
+    staleTime: 5_000, // Fresh for 5 seconds
   });
 }
 

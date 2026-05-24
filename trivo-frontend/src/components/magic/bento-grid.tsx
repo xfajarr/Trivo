@@ -18,7 +18,13 @@ export function BentoGrid({
   return <div className={cn("grid gap-4 md:grid-cols-3", className)}>{children}</div>;
 }
 
-export function BentoItem({ children, className, style, colSpan = 1, rowSpan = 1 }: BentoItemProps) {
+export function BentoItem({
+  children,
+  className,
+  style,
+  colSpan = 1,
+  rowSpan = 1,
+}: BentoItemProps) {
   return (
     <div
       style={style}

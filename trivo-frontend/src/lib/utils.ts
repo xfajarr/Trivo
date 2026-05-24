@@ -13,7 +13,10 @@ export function useTimeAgo(ts: number | string | undefined) {
 
   // Parse timestamp once
   useEffect(() => {
-    if (!ts) { timestamp.current = 0; return; }
+    if (!ts) {
+      timestamp.current = 0;
+      return;
+    }
     const t = typeof ts === "string" ? new Date(ts).getTime() : ts;
     timestamp.current = isNaN(t) ? 0 : t;
   }, [ts]);
@@ -21,7 +24,10 @@ export function useTimeAgo(ts: number | string | undefined) {
   // Update display every second
   useEffect(() => {
     const tick = () => {
-      if (timestamp.current === 0) { setText("just now"); return; }
+      if (timestamp.current === 0) {
+        setText("just now");
+        return;
+      }
       const s = Math.max(1, Math.floor((Date.now() - timestamp.current) / 1000));
       if (s < 60) setText(`${s}s ago`);
       else if (s < 3600) setText(`${Math.floor(s / 60)}m ago`);

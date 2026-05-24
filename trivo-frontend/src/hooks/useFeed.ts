@@ -10,7 +10,7 @@ export function useFeed() {
     queryKey: ["feed", filter],
     queryFn: () => feedApi.list(filter ? { venue: filter } : undefined),
     refetchInterval: 5_000, // 🔄 Poll every 5 seconds
-    staleTime: 2000,        // Data considered fresh for 2s
+    staleTime: 2000, // Data considered fresh for 2s
   });
 
   // Force refetch on filter change

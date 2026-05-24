@@ -102,7 +102,6 @@ function FeedPage() {
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <div className="rounded-lg border border-border bg-card p-4">
             <div className="mb-3 flex items-center gap-2">
-              
               <h3 className="font-display text-sm font-semibold uppercase tracking-wider">
                 Top performers
               </h3>
