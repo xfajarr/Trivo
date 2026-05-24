@@ -24,13 +24,15 @@ export const closeTradeTool: ToolHandler = {
     const venue = (args.venue as string) || 'perp'
     let txHash = ''
     let currentPrice = 74100
-      let pnl
+    let pnl
 
     try {
       try {
         const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
         currentPrice = await getPrice(pair)
-      } catch { /* use default */ }
+      } catch {
+        /* use default */
+      }
 
       const isLong = side === 'LONG' || side === 'BUY' || side === 'YES'
       pnl = isLong
@@ -42,7 +44,9 @@ export const closeTradeTool: ToolHandler = {
         const copyTradingPosId = parseInt((args.positionId as string).replace(/\D/g, '')) || 1
         const r = await closePositionOnChain(copyTradingPosId, currentPrice, pnl)
         txHash = r.transactionHash
-      } catch { /* close failed — using sim */ }
+      } catch {
+        /* close failed — using sim */
+      }
 
       // Try fee deposit (non-blocking)
       if (pnl > 0) {
@@ -52,7 +56,9 @@ export const closeTradeTool: ToolHandler = {
             const agentNum = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
             await depositFeeOnChain(agentNum, feeAmount)
           }
-        } catch { /* fee deposit non-critical */ }
+        } catch {
+          /* fee deposit non-critical */
+        }
       }
 
       return {

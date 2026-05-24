@@ -24,6 +24,11 @@ import { thinkingRoutes } from './routes/thinking'
 import { modelRoutes } from './routes/models'
 import { pnlRoutes } from './routes/pnl'
 import { chat } from './routes/chat'
+import { marketRoutes } from './routes/market'
+import { intelligenceRoutes } from './routes/intelligence'
+import { transferRoutes } from './routes/transfers'
+import { bridgeRoutes } from './routes/bridge'
+import { unifiedBalanceRoutes } from './routes/unified-balance'
 import { setupDocs } from './lib/openapi'
 
 const app = new Hono()
@@ -38,6 +43,9 @@ app.route('/api/positions', positionRoutes)
 app.route('/api/feed', feedRoutes)
 app.route('/api/copy', copyRoutes)
 app.route('/api/wallets', walletRoutes)
+app.route('/api/transfers', transferRoutes)
+app.route('/api/bridge', bridgeRoutes)
+app.route('/api/unified', unifiedBalanceRoutes)
 app.route('/api/strategy', strategyRoutes)
 app.route('/api', memoryRoutes)
 app.route('/api/backtest', backtestRoutes)
@@ -45,6 +53,8 @@ app.route('/api', thinkingRoutes)
 app.route('/api/models', modelRoutes)
 app.route('/api/pnl', pnlRoutes)
 app.route('/api/chat', chat)
+app.route('/api/market', marketRoutes)
+app.route('/api/intelligence', intelligenceRoutes)
 
 // API documentation
 setupDocs(app)
@@ -62,12 +72,15 @@ setTimeout(async () => {
 }, 1000)
 
 const port = parseInt(process.env.PORT || '3000')
-serve({
-  fetch: app.fetch,
-  port,
-}, (info) => {
-  console.log(`⚡ Trivo API running on http://localhost:${info.port}`)
-  console.log(`📋 API Docs: http://localhost:${info.port}/api/docs`)
-})
+serve(
+  {
+    fetch: app.fetch,
+    port,
+  },
+  (info) => {
+    console.log(`⚡ Trivo API running on http://localhost:${info.port}`)
+    console.log(`📋 API Docs: http://localhost:${info.port}/api/docs`)
+  },
+)
 
 export default app

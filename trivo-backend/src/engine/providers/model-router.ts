@@ -20,20 +20,26 @@ export class ModelRouter {
     if (config.asiOne) {
       const models = ['asi1-mini', 'asi1', 'asi1-ultra']
       for (const model of models) {
-        this.providers.set(`asi-one:${model}`, new ASIOneProvider({
-          apiKey: config.asiOne.apiKey,
-          model,
-        }))
+        this.providers.set(
+          `asi-one:${model}`,
+          new ASIOneProvider({
+            apiKey: config.asiOne.apiKey,
+            model,
+          }),
+        )
       }
     }
 
     // Cache Heurist
     if (config.heurist) {
       const model = config.heurist.defaultModel ?? 'hermes-3-llama3.1-8b'
-      this.providers.set(`heurist:${model}`, new HeuristProvider({
-        apiKey: config.heurist.apiKey,
-        model,
-      }))
+      this.providers.set(
+        `heurist:${model}`,
+        new HeuristProvider({
+          apiKey: config.heurist.apiKey,
+          model,
+        }),
+      )
       this.embeddingProvider = this.providers.get(`heurist:${model}`) as HeuristProvider
     }
   }
@@ -52,10 +58,13 @@ export class ModelRouter {
 
   private getProviderKey(complexity: TaskComplexity): string {
     switch (complexity) {
-      case 'simple': return 'asi-one:asi1-mini'
-      case 'complex': return 'asi-one:asi1-ultra'
+      case 'simple':
+        return 'asi-one:asi1-mini'
+      case 'complex':
+        return 'asi-one:asi1-ultra'
       case 'standard':
-      default: return 'asi-one:asi1' // Default to balanced
+      default:
+        return 'asi-one:asi1' // Default to balanced
     }
   }
 }

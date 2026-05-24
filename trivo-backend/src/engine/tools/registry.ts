@@ -22,7 +22,7 @@ export class ToolRegistry {
   }
 
   getSchemas(): ToolSchema[] {
-    return [...this.tools.values()].map(t => t.schema)
+    return [...this.tools.values()].map((t) => t.schema)
   }
 
   async execute(name: string, args: Record<string, unknown>): Promise<unknown> {

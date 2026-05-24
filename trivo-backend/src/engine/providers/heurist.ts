@@ -30,6 +30,6 @@ export class HeuristProvider extends BaseProvider {
       input: texts,
       encoding_format: 'float',
     })
-    return r.data.map(d => d.embedding ?? [])
+    return r.data.map((d) => d.embedding ?? [])
   }
 }

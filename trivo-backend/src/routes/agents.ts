@@ -76,25 +76,27 @@ agentRoutes.post('/', authMiddleware, zValidator('json', createAgentSchema), asy
     })
     const metadataURI = erc8004Service.uploadMetadata(metadata)
     const { agentId: erc8004Id, txHash } = await erc8004Service.registerAgent(metadataURI)
-    await db.update(agentsTable)
+    await db
+      .update(agentsTable)
       .set({ erc8004TokenId: erc8004Id, erc8004TxHash: txHash, metadataUri: metadataURI })
       .where(eq(agentsTable.id, agentId))
     console.log(`🆔 ERC-8004 agent #${erc8004Id} registered: https://testnet.arcscan.app/tx/${txHash}`)
   } catch (err) {
     console.warn('⚠️ ERC-8004 registration failed (non-blocking):', (err as Error).message)
+  }
 
-  // Create Circle wallet for agent
+  // 💳 Circle wallet: create agent wallet independently from ERC-8004
   try {
-    const wallet = await createAgentWallet(data.name || "Agent")
+    const wallet = await createAgentWallet(data.name || 'Agent')
     if (wallet) {
-      await db.update(agentsTable)
+      await db
+        .update(agentsTable)
         .set({ circleWalletId: wallet.walletId, circleWalletAddress: wallet.walletAddress })
         .where(eq(agentsTable.id, agentId))
       console.log(`💳 Wallet created for ${data.name}: ${wallet.walletAddress}`)
     }
   } catch (err) {
-    console.warn("⚠️ Wallet creation failed (non-blocking):", (err as Error).message)
-  }
+    console.warn('⚠️ Wallet creation failed (non-blocking):', (err as Error).message)
   }
 
   const systemPrompt = `You are ${data.name}, an AI trading agent on Trivo.
@@ -131,7 +133,10 @@ agentRoutes.put('/:id', authMiddleware, async (c) => {
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
   if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
-  await db.update(agentsTable).set({ ...body, updatedAt: new Date() }).where(eq(agentsTable.id, id))
+  await db
+    .update(agentsTable)
+    .set({ ...body, updatedAt: new Date() })
+    .where(eq(agentsTable.id, id))
   const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, id))
   return c.json({ agent: agent[0] })
 })

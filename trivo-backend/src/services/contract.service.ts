@@ -56,19 +56,19 @@ export async function getPrice(pair: string): Promise<number> {
   } catch (error: any) {
     const errorSig = error?.data?.slice(0, 10)
     const errorName = error?.data?.errorName
-    
+
     // ZeroPrice() - no price data for this pair
     if (errorSig === '0x4dfba023' || errorName === 'ZeroPrice') {
       console.warn(`⚠️ ZeroPrice: ${pair} — no price data, returning 0`)
       return 0
     }
-    
+
     // PriceStale() - price not updated in >1 hour
     if (errorSig === '0x28771d91' || errorName === 'PriceStale') {
       console.warn(`⚠️ PriceStale: ${pair} — price not updated in >1 hour, returning 0`)
       return 0
     }
-    
+
     // For any other error, return 0 instead of throwing
     console.warn(`⚠️ getPrice failed for ${pair}:`, error?.message || error)
     return 0
@@ -76,7 +76,7 @@ export async function getPrice(pair: string): Promise<number> {
 }
 
 export async function getMultiplePrices(pairs: string[]): Promise<number[]> {
-  const pairHashes = pairs.map(p => keccak256(toHex(p)))
+  const pairHashes = pairs.map((p) => keccak256(toHex(p)))
   try {
     const result = (await publicClient.readContract({
       address: config.SIMPLE_ORACLE as `0x${string}`,
@@ -139,7 +139,10 @@ export async function closePositionOnChain(positionId: number, exitPrice: number
 // ── MockPerp ──
 
 export async function mockPerpOpenPosition(
-  pair: string, isLong: boolean, size: number, leverage: number
+  pair: string,
+  isLong: boolean,
+  size: number,
+  leverage: number,
 ): Promise<{ transactionHash: string }> {
   const wc = await getSigner()
   const pairHash = keccak256(toHex(pair))
@@ -154,7 +157,8 @@ export async function mockPerpOpenPosition(
 }
 
 export async function mockPerpClosePosition(
-  positionId: number, exitPrice: number
+  positionId: number,
+  exitPrice: number,
 ): Promise<{ transactionHash: string; pnl: number }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -170,7 +174,9 @@ export async function mockPerpClosePosition(
 // ── MockPolymarket ──
 
 export async function mockPolymarketCreateMarket(
-  question: string, yesOdds: number = 50, noOdds: number = 50
+  question: string,
+  yesOdds: number = 50,
+  noOdds: number = 50,
 ): Promise<{ transactionHash: string; marketId: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -184,7 +190,9 @@ export async function mockPolymarketCreateMarket(
 }
 
 export async function mockPolymarketBuyOutcome(
-  marketId: number, isYes: boolean, amount: number
+  marketId: number,
+  isYes: boolean,
+  amount: number,
 ): Promise<{ transactionHash: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -200,7 +208,10 @@ export async function mockPolymarketBuyOutcome(
 // ── MockLPV3 ──
 
 export async function mockLpCreatePool(
-  token0: string, token1: string, fee: number, sqrtPriceX96: number
+  token0: string,
+  token1: string,
+  fee: number,
+  sqrtPriceX96: number,
 ): Promise<{ transactionHash: string; poolId: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -214,7 +225,10 @@ export async function mockLpCreatePool(
 }
 
 export async function mockLpAddLiquidity(
-  poolId: number, tickLower: number, tickUpper: number, amount: number
+  poolId: number,
+  tickLower: number,
+  tickUpper: number,
+  amount: number,
 ): Promise<{ transactionHash: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -228,7 +242,8 @@ export async function mockLpAddLiquidity(
 }
 
 export async function mockLpSimulateFeeAccrual(
-  poolId: string | number, amount?: number
+  poolId: string | number,
+  amount?: number,
 ): Promise<{ transactionHash: string }> {
   const wc = await getSigner()
   const tx = await wc.writeContract({
@@ -241,9 +256,7 @@ export async function mockLpSimulateFeeAccrual(
   return { transactionHash: receipt.transactionHash }
 }
 
-export async function depositFeeOnChain(
-  _agentId: number, _amount: number
-): Promise<{ transactionHash: string }> {
+export async function depositFeeOnChain(_agentId: number, _amount: number): Promise<{ transactionHash: string }> {
   // Mock implementation for now
   return { transactionHash: `0x${Date.now().toString(16)}mock` }
 }

@@ -9,10 +9,7 @@ export class DecisionEngine {
     this.circuitBreaker = new CircuitBreaker(defaultRiskConfig)
   }
 
-  evaluate(
-    thinking: ThinkingOutput,
-    agentRiskConfig?: Partial<RiskConfig>,
-  ): TradeDecision | null {
+  evaluate(thinking: ThinkingOutput, agentRiskConfig?: Partial<RiskConfig>): TradeDecision | null {
     const config = { ...this.defaultRiskConfig, ...agentRiskConfig }
 
     // 1. Circuit breaker check

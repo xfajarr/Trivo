@@ -1,7 +1,18 @@
 import WebSocket from 'ws'
 
-interface PriceData { [token: string]: { indexPrice: number; timestamp: number } }
-interface MarketData { marketId: number; fundingRate: number; isBlocked: boolean; longOI: number; shortOI: number; skewness: number; minLeverage: number; maxLeverage: number }
+interface PriceData {
+  [token: string]: { indexPrice: number; timestamp: number }
+}
+interface MarketData {
+  marketId: number
+  fundingRate: number
+  isBlocked: boolean
+  longOI: number
+  shortOI: number
+  skewness: number
+  minLeverage: number
+  maxLeverage: number
+}
 
 let latestPrices: PriceData = {}
 let latestMarketData: MarketData[] = []
@@ -15,7 +26,7 @@ export function startRealtimePriceFeed(): void {
 
   // Price WebSocket
   const priceWs = new WebSocket('wss://data-api.speedtrading.pandora.fun/ws/?EIO=4&transport=websocket', {
-    headers: { Origin: 'https://trivo.xyz', 'User-Agent': 'Trivo/1.0' }
+    headers: { Origin: 'https://trivo.xyz', 'User-Agent': 'Trivo/1.0' },
   })
 
   priceWs.on('open', () => {
@@ -36,7 +47,9 @@ export function startRealtimePriceFeed(): void {
       if (parsed[0] === 'message' && parsed[1]?.event === 'ezmodePriceInfo') {
         latestPrices = parsed[1].data || {}
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   })
 
   priceWs.on('error', (e: Error) => console.warn('⚠️ Price WS:', e.message))
@@ -50,7 +63,7 @@ export function startRealtimePriceFeed(): void {
   // Market WebSocket
   setTimeout(() => {
     const marketWs = new WebSocket('wss://ws-api.speedtrading.pandora.fun/ws/?EIO=4&transport=websocket', {
-      headers: { Origin: 'https://trivo.xyz', 'User-Agent': 'Trivo/1.0' }
+      headers: { Origin: 'https://trivo.xyz', 'User-Agent': 'Trivo/1.0' },
     })
 
     marketWs.on('open', () => {
@@ -71,7 +84,9 @@ export function startRealtimePriceFeed(): void {
         if (parsed[0] === 'message' && parsed[1]?.event === 'moonMarketStatus') {
           latestMarketData = parsed[1].status || []
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     })
 
     marketWs.on('error', (e: Error) => console.warn('⚠️ Market WS:', e.message))
@@ -84,8 +99,12 @@ export function getRealtimePrice(token: string): number {
   return latestPrices[upper]?.indexPrice || 0
 }
 
-export function getAllRealtimePrices(): PriceData { return latestPrices }
-export function getMarketData(): MarketData[] { return latestMarketData }
+export function getAllRealtimePrices(): PriceData {
+  return latestPrices
+}
+export function getMarketData(): MarketData[] {
+  return latestMarketData
+}
 export function getFundingRate(marketId: number): number {
-  return latestMarketData.find(m => m.marketId === marketId)?.fundingRate || 0
+  return latestMarketData.find((m) => m.marketId === marketId)?.fundingRate || 0
 }

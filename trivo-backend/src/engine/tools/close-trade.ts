@@ -59,7 +59,9 @@ export const closeTradeTool: EngineTool = {
       if (!isLong) pnlPct = -pnlPct // Invert for short
     }
 
-    console.log(`[close_trade] ${pair} ${side}: entry $${entryPrice} → exit $${exitPrice} | PnL: $${pnl.toFixed(2)} (${pnlPct.toFixed(2)}%)`)
+    console.log(
+      `[close_trade] ${pair} ${side}: entry $${entryPrice} → exit $${exitPrice} | PnL: $${pnl.toFixed(2)} (${pnlPct.toFixed(2)}%)`,
+    )
 
     // Close on-chain
     let txHash = `0x${Date.now().toString(16)}mock`
@@ -72,7 +74,8 @@ export const closeTradeTool: EngineTool = {
     }
 
     // Update DB with PnL
-    await db.update(positions)
+    await db
+      .update(positions)
       .set({
         status: 'closed' as string,
         pnl: pnl.toFixed(2),
@@ -86,13 +89,28 @@ export const closeTradeTool: EngineTool = {
       .catch((err: Error) => console.error('[close_trade] DB update failed:', err.message))
 
     // Feed event with PnL
-    await db.insert(feedEvents).values({
-      id: crypto.randomUUID(), agentId: (pos.agentId ?? (args as Record<string,unknown>)._agentId as string) || '', type: 'position_closed',
-      venue: pos.venue ?? '', pair, side, size: String(size),
-      data: JSON.stringify({
-        positionId, reason, entryPrice, exitPrice, pnl: pnl.toFixed(2), pnlPct: pnlPct.toFixed(2), txHash,
-      }),
-    }).execute().catch((err: Error) => console.error('[close_trade] Feed insert failed:', err.message))
+    await db
+      .insert(feedEvents)
+      .values({
+        id: crypto.randomUUID(),
+        agentId: (pos.agentId ?? ((args as Record<string, unknown>)._agentId as string)) || '',
+        type: 'position_closed',
+        venue: pos.venue ?? '',
+        pair,
+        side,
+        size: String(size),
+        data: JSON.stringify({
+          positionId,
+          reason,
+          entryPrice,
+          exitPrice,
+          pnl: pnl.toFixed(2),
+          pnlPct: pnlPct.toFixed(2),
+          txHash,
+        }),
+      })
+      .execute()
+      .catch((err: Error) => console.error('[close_trade] Feed insert failed:', err.message))
 
     return {
       success: true,

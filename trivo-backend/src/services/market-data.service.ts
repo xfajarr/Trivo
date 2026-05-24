@@ -1,4 +1,10 @@
-import { updatePrice, mockPolymarketCreateMarket, mockLpCreatePool, mockLpSimulateFeeAccrual } from './contract.service'
+import {
+  updatePrice,
+  mockPolymarketCreateMarket,
+  mockLpCreatePool,
+  mockLpSimulateFeeAccrual,
+  getPrice,
+} from './contract.service'
 
 interface CoinGeckoPrice {
   bitcoin: { usd: number }
@@ -26,9 +32,7 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
       try {
         await updatePrice(pair, price)
         const shortPair = pair.split('-')[0] ?? pair
-        console.log(
-          `📊 ${shortPair} → $${price} (🔗 https://testnet.arcscan.app/tx/latest)`,
-        )
+        console.log(`📊 ${shortPair} → $${price} (🔗 https://testnet.arcscan.app/tx/latest)`)
       } catch (err) {
         console.error(`❌ Failed to push ${pair}:`, err)
       }
@@ -37,11 +41,13 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
     // Initialize LP pools on first run
     if (!lpPoolInitialized) {
       try {
-        const r1 = await mockLpCreatePool("0x01", "0x02", 500, 0)
-        await mockLpCreatePool("0x03", "0x01", 3000, 0)
+        const r1 = await mockLpCreatePool('0x01', '0x02', 500, 0)
+        await mockLpCreatePool('0x03', '0x01', 3000, 0)
         lpPoolInitialized = true
         console.log(`💧 LP pools created (🔗 https://testnet.arcscan.app/tx/${r1.transactionHash})`)
-      } catch { /* pool may already exist */ }
+      } catch {
+        /* pool may already exist */
+      }
     }
 
     // Polymarket 5m prediction — every 5 minutes
@@ -53,13 +59,93 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
     try {
       const r = await mockLpSimulateFeeAccrual(1, 500000)
       console.log(`💧 LP fee accrual simulated (🔗 https://testnet.arcscan.app/tx/${r.transactionHash})`)
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
 
     return prices
   } catch (err) {
     console.error('❌ Market data fetch failed:', err)
     return {}
   }
+}
+
+export interface Candle {
+  time: number
+  open: number
+  high: number
+  low: number
+  close: number
+  volume: number
+}
+
+export interface CandleResult {
+  symbol: string
+  timeframe: string
+  candles: Candle[]
+}
+
+const TIMEFRAME_SECONDS: Record<string, number> = {
+  '1m': 60,
+  '5m': 300,
+  '15m': 900,
+  '1h': 3600,
+  '4h': 14400,
+  '1d': 86400,
+}
+
+function symbolSeed(symbol: string): number {
+  return [...symbol].reduce((sum, char) => sum + char.charCodeAt(0), 0)
+}
+
+function basePriceForSymbol(symbol: string): number {
+  switch (symbol.toUpperCase()) {
+    case 'BTC/USD':
+      return 72880
+    case 'ETH/USD':
+      return 3508
+    case 'SOL/USD':
+      return 211.2
+    default:
+      return 100
+  }
+}
+
+export async function getCandles(symbol: string, timeframe: string, limit: number): Promise<CandleResult> {
+  const step = TIMEFRAME_SECONDS[timeframe]
+  if (!step) throw new Error(`Unsupported timeframe: ${timeframe}`)
+
+  const normalizedLimit = Math.min(Math.max(limit, 10), 500)
+  const currentPrice = await getPrice(symbol)
+  const anchorPrice = currentPrice > 0 ? currentPrice : basePriceForSymbol(symbol)
+  const seed = symbolSeed(symbol) % 97
+  const now = Math.floor(Date.now() / 1000)
+  const currentBucket = Math.floor(now / step)
+
+  const candles: Candle[] = []
+
+  for (let index = normalizedLimit - 1; index >= 0; index--) {
+    const bucket = currentBucket - index
+    const phase = bucket + seed
+    const drift = Math.sin(phase / 5) * anchorPrice * 0.004
+    const trend = ((index - normalizedLimit / 2) / normalizedLimit) * anchorPrice * 0.006
+    const open = anchorPrice + drift + trend
+    const close = anchorPrice + Math.sin((phase + 1) / 5) * anchorPrice * 0.004 + trend
+    const high = Math.max(open, close) * 1.0018
+    const low = Math.min(open, close) * 0.9982
+    const volume = 100 + Math.abs(Math.sin(phase)) * 250
+
+    candles.push({
+      time: bucket * step,
+      open: Number(open.toFixed(2)),
+      high: Number(high.toFixed(2)),
+      low: Number(low.toFixed(2)),
+      close: Number(close.toFixed(2)),
+      volume: Number(volume.toFixed(2)),
+    })
+  }
+
+  return { symbol, timeframe, candles }
 }
 
 async function initializePolymarketMarkets(prices: Record<string, number>) {

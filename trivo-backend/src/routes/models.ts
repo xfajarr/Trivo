@@ -19,13 +19,16 @@ modelRoutes.get('/', (c) => {
   const env = getEffectiveConfig()
   return c.json({
     providers: PROVIDERS,
-    currentEnv: env.apiKey ? {
-      provider: env.provider || 'not set',
-      baseURL: env.baseURL || 'not set',
-      model: env.model || 'not set',
-      hasApiKey: !!env.apiKey,
-    } : null,
-    instructions: 'Set AI_PROVIDER, AI_BASE_URL, AI_MODEL, AI_API_KEY in .env for global config, or use PUT /api/models/agents/:id for per-agent config.',
+    currentEnv: env.apiKey
+      ? {
+          provider: env.provider || 'not set',
+          baseURL: env.baseURL || 'not set',
+          model: env.model || 'not set',
+          hasApiKey: !!env.apiKey,
+        }
+      : null,
+    instructions:
+      'Set AI_PROVIDER, AI_BASE_URL, AI_MODEL, AI_API_KEY in .env for global config, or use PUT /api/models/agents/:id for per-agent config.',
   })
 })
 
@@ -59,15 +62,22 @@ modelRoutes.put('/agents/:id', authMiddleware, async (c) => {
     model: body.model || undefined,
   })
 
-  await db.update(agents).set({
-    modelProvider: body.provider,
-    modelConfig,
-    updatedAt: new Date(),
-  }).where(eq(agents.id, id))
+  await db
+    .update(agents)
+    .set({
+      modelProvider: body.provider,
+      modelConfig,
+      updatedAt: new Date(),
+    })
+    .where(eq(agents.id, id))
 
   return c.json({ message: 'Model config updated', agentId: id })
 })
 
 function tryParse(str: string) {
-  try { return JSON.parse(str) } catch { return str }
+  try {
+    return JSON.parse(str)
+  } catch {
+    return str
+  }
 }

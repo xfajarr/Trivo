@@ -74,10 +74,13 @@ export { chat }
 
 // Per-agent chat with context
 chat.post('/agent/:agentId', async (c) => {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const agentId = c.req.param('agentId')
-  const { message, history } = await c.req.json<{ message: string; history?: Array<{ role: 'user' | 'assistant'; content: string }> }>()
-  
+  const { message, history } = await c.req.json<{
+    message: string
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>
+  }>()
+
   if (!message) return c.json({ error: 'Message is required' }, 400)
   if (!agentId) return c.json({ error: 'Agent ID is required' }, 400)
 
@@ -85,12 +88,12 @@ chat.post('/agent/:agentId', async (c) => {
   const { db } = await import('../lib/db.js')
   const { agents: agentsTable } = await import('../lib/schema.js')
   const { eq } = await import('drizzle-orm')
-  
+
   const agent = await db.select().from(agentsTable).where(eq(agentsTable.id, agentId))
   if (!agent.length) return c.json({ error: 'Agent not found' }, 404)
-  
+
   const a = agent[0]
-  
+
   const provider = getProvider()
   const client = (provider as any).client
 

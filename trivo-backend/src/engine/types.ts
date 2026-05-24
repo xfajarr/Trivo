@@ -47,49 +47,52 @@ export interface MarketContext {
   prices: Record<string, number>
   priceChanges: Record<string, { hour: number; day: number }>
   sentiment: Record<string, { score: number; sentiment: string; volume: number }>
-  technicalAnalysis?: Record<string, {
-    timeframes: Array<{
-      timeframe: string
-      trend: 'bullish' | 'bearish' | 'neutral'
-      strength: number
-    }>
-    supportResistance: {
-      supports: number[]
-      resistances: number[]
-      nearestSupport: number
-      nearestResistance: number
-      description: string
+  technicalAnalysis?: Record<
+    string,
+    {
+      timeframes: Array<{
+        timeframe: string
+        trend: 'bullish' | 'bearish' | 'neutral'
+        strength: number
+      }>
+      supportResistance: {
+        supports: number[]
+        resistances: number[]
+        nearestSupport: number
+        nearestResistance: number
+        description: string
+      }
+      volume: {
+        currentVolume: number
+        averageVolume: number
+        volumeRatio: number
+        trend: 'high' | 'normal' | 'low'
+        confirmation: boolean
+        description: string
+      }
+      patterns: Array<{
+        name: string
+        type: 'bullish' | 'bearish' | 'neutral'
+        strength: 'strong' | 'medium' | 'weak'
+        description: string
+      }>
+      fundingRate: {
+        rate: number
+        sentiment: 'bullish' | 'bearish' | 'neutral'
+        description: string
+      }
+      correlation: {
+        pair1: string
+        pair2: string
+        coefficient: number
+        trend: 'correlated' | 'uncorrelated' | 'inverted'
+        description: string
+      }
+      overallBias: 'bullish' | 'bearish' | 'neutral'
+      confidence: number
+      summary: string
     }
-    volume: {
-      currentVolume: number
-      averageVolume: number
-      volumeRatio: number
-      trend: 'high' | 'normal' | 'low'
-      confirmation: boolean
-      description: string
-    }
-    patterns: Array<{
-      name: string
-      type: 'bullish' | 'bearish' | 'neutral'
-      strength: 'strong' | 'medium' | 'weak'
-      description: string
-    }>
-    fundingRate: {
-      rate: number
-      sentiment: 'bullish' | 'bearish' | 'neutral'
-      description: string
-    }
-    correlation: {
-      pair1: string
-      pair2: string
-      coefficient: number
-      trend: 'correlated' | 'uncorrelated' | 'inverted'
-      description: string
-    }
-    overallBias: 'bullish' | 'bearish' | 'neutral'
-    confidence: number
-    summary: string
-  }>
+  >
   recentTrades: Array<{ action: string; pnl: number; timestamp: string }>
   openPositions: Array<{ venue: string; side: string; size: number; entryPrice: number }>
   todayPnl: number

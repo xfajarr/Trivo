@@ -1,12 +1,4 @@
-import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  getContract,
-  parseAbiItem,
-  keccak256,
-  toHex,
-} from 'viem'
+import { createPublicClient, createWalletClient, http, getContract, parseAbiItem, keccak256, toHex } from 'viem'
 import { privateKeyToAccount } from 'viem/accounts'
 import { config } from '../../config.js'
 
@@ -22,19 +14,43 @@ const arcChain = {
 } as const
 
 const IDENTITY_ABI = [
-  { name: 'register', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'metadataURI', type: 'string' }], outputs: [] },
-  { name: 'ownerOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [{ name: '', type: 'address' }] },
-  { name: 'tokenURI', type: 'function', stateMutability: 'view', inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [{ name: '', type: 'string' }] },
+  {
+    name: 'register',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'metadataURI', type: 'string' }],
+    outputs: [],
+  },
+  {
+    name: 'ownerOf',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    name: 'tokenURI',
+    type: 'function',
+    stateMutability: 'view',
+    inputs: [{ name: 'tokenId', type: 'uint256' }],
+    outputs: [{ name: '', type: 'string' }],
+  },
 ] as const
 
 const REPUTATION_ABI = [
   {
-    name: 'giveFeedback', type: 'function', stateMutability: 'nonpayable',
+    name: 'giveFeedback',
+    type: 'function',
+    stateMutability: 'nonpayable',
     inputs: [
-      { name: 'agentId', type: 'uint256' }, { name: 'value', type: 'int128' },
-      { name: 'valueDecimals', type: 'uint8' }, { name: 'tag1', type: 'string' },
-      { name: 'tag2', type: 'string' }, { name: 'endpoint', type: 'string' },
-      { name: 'feedbackURI', type: 'string' }, { name: 'feedbackHash', type: 'bytes32' },
+      { name: 'agentId', type: 'uint256' },
+      { name: 'value', type: 'int128' },
+      { name: 'valueDecimals', type: 'uint8' },
+      { name: 'tag1', type: 'string' },
+      { name: 'tag2', type: 'string' },
+      { name: 'endpoint', type: 'string' },
+      { name: 'feedbackURI', type: 'string' },
+      { name: 'feedbackHash', type: 'bytes32' },
     ],
     outputs: [],
   },
@@ -123,15 +139,23 @@ export class ERC8004Service {
   }
 
   createAgentMetadata(agent: {
-    name: string; description: string; strategy: string
-    skills: string[]; riskParams: Record<string, unknown>
+    name: string
+    description: string
+    strategy: string
+    skills: string[]
+    riskParams: Record<string, unknown>
   }): Record<string, unknown> {
     return {
-      name: agent.name, description: agent.description,
+      name: agent.name,
+      description: agent.description,
       image: `https://trivo.xyz/agents/${agent.name.toLowerCase().replace(/\s+/g, '-')}.png`,
-      agent_type: 'trading', capabilities: agent.skills, version: '1.0.0',
-      platform: 'trivo', chain: 'arc-testnet',
-      strategy: agent.strategy, risk_params: agent.riskParams,
+      agent_type: 'trading',
+      capabilities: agent.skills,
+      version: '1.0.0',
+      platform: 'trivo',
+      chain: 'arc-testnet',
+      strategy: agent.strategy,
+      risk_params: agent.riskParams,
     }
   }
 

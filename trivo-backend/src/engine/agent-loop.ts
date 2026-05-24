@@ -19,14 +19,15 @@ export class AgentEngine {
   private isRunning = false
   private intervalId: ReturnType<typeof setInterval> | null = null
 
-  constructor(
-    config: EngineConfig,
-    provider: BaseProvider,
-    tools: ToolRegistry,
-  ) {
+  constructor(config: EngineConfig, provider: BaseProvider, tools: ToolRegistry) {
     this.tools = tools
     this.thinking = new ThinkingEngine(provider, tools)
-    console.log(`🔧 Tools: ${tools.getSchemas().map(t => t.name).join(', ')}`)
+    console.log(
+      `🔧 Tools: ${tools
+        .getSchemas()
+        .map((t) => t.name)
+        .join(', ')}`,
+    )
     console.log(`🧠 Provider: ${provider.constructor.name}`)
   }
 
@@ -60,22 +61,27 @@ export class AgentEngine {
 
         // PARALLEL: all agents run simultaneously
         await Promise.allSettled(
-          active.map(a => this.runAgentCycle(a.id).catch(e =>
-            console.error(`[${a.name}] cycle failed:`, e.message)
-          ))
+          active.map((a) =>
+            this.runAgentCycle(a.id).catch((e) => console.error(`[${a.name}] cycle failed:`, e.message)),
+          ),
         )
-      } catch (error) { console.error('Engine:', error) }
+      } catch (error) {
+        console.error('Engine:', error)
+      }
     }, 60_000)
   }
 
   stop(): void {
     this.isRunning = false
-    if (this.intervalId) { clearInterval(this.intervalId); this.intervalId = null }
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+      this.intervalId = null
+    }
     this.runners.clear()
     console.log('⏹️ Engine stopped')
   }
 
   getStatus() {
-    return Array.from(this.runners.values()).map(r => r.getStatus())
+    return Array.from(this.runners.values()).map((r) => r.getStatus())
   }
 }

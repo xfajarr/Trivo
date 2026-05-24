@@ -6,7 +6,8 @@ import type { EngineTool } from './registry.js'
 export const openTradeTool: EngineTool = {
   schema: {
     name: 'open_trade',
-    description: 'Open a new trading position. Use this when you identify a profitable opportunity. Always check price first with get_price.',
+    description:
+      'Open a new trading position. Use this when you identify a profitable opportunity. Always check price first with get_price.',
     input_schema: {
       type: 'object',
       properties: {
@@ -20,15 +21,29 @@ export const openTradeTool: EngineTool = {
     },
   },
   async execute(args) {
-    const venue = (args as Record<string,unknown>).venue as string || 'perp';
+    const venue = ((args as Record<string, unknown>).venue as string) || 'perp'
     // Enforce skill restrictions
-    const skillList = ((args._skills as string) || "perp,prediction,lp").split(",").map(s => s.trim());
-    if (venue === "perp" && !skillList.includes("perp")) return { success: false, error: "Agent skill does not include perp trading" };
-    if ((venue === "polymarket" || venue === "prediction") && !skillList.some(s => s.includes("pred") || s.includes("poly"))) return { success: false, error: "Agent skill does not include prediction markets" };
-    if (venue === "lp" && !skillList.includes("lp")) return { success: false, error: "Agent skill does not include LP" };
-    
-    const { pair, side, size, leverage = 1 } = args as {
-      venue: string; pair: string; side: string; size: number; leverage?: number
+    const skillList = ((args._skills as string) || 'perp,prediction,lp').split(',').map((s) => s.trim())
+    if (venue === 'perp' && !skillList.includes('perp'))
+      return { success: false, error: 'Agent skill does not include perp trading' }
+    if (
+      (venue === 'polymarket' || venue === 'prediction') &&
+      !skillList.some((s) => s.includes('pred') || s.includes('poly'))
+    )
+      return { success: false, error: 'Agent skill does not include prediction markets' }
+    if (venue === 'lp' && !skillList.includes('lp')) return { success: false, error: 'Agent skill does not include LP' }
+
+    const {
+      pair,
+      side,
+      size,
+      leverage = 1,
+    } = args as {
+      venue: string
+      pair: string
+      side: string
+      size: number
+      leverage?: number
     }
 
     // GET REAL PRICE from on-chain oracle
@@ -52,30 +67,50 @@ export const openTradeTool: EngineTool = {
     }
 
     const dbId = crypto.randomUUID()
-    await db.insert(positions).values({
-      id: dbId,
-      agentId: (args as Record<string,unknown>)._agentId as string || '',
-      copyTradingPositionId: String(positionId),
-      venue,
-      market: pair,
-      side,
-      size: String(size),
-      entryPrice: String(entryPrice),            // REAL PRICE
-      markPrice: String(entryPrice),             // Current mark = entry at start
-      leverage: String(leverage),
-      pnl: '0',
-      pnlPct: '0',
-    }).execute().catch((err: Error) => console.error('[open_trade] DB:', err.message))
+    await db
+      .insert(positions)
+      .values({
+        id: dbId,
+        agentId: ((args as Record<string, unknown>)._agentId as string) || '',
+        copyTradingPositionId: String(positionId),
+        venue,
+        market: pair,
+        side,
+        size: String(size),
+        entryPrice: String(entryPrice), // REAL PRICE
+        markPrice: String(entryPrice), // Current mark = entry at start
+        leverage: String(leverage),
+        pnl: '0',
+        pnlPct: '0',
+      })
+      .execute()
+      .catch((err: Error) => console.error('[open_trade] DB:', err.message))
 
-    await db.insert(feedEvents).values({
-      id: crypto.randomUUID(), agentId: (args as Record<string,unknown>)._agentId as string || '', type: 'position_opened',
-      venue, pair, side, size: String(size),
-      data: JSON.stringify({ leverage, entryPrice, txHash }),
-    }).execute().catch((err: Error) => console.error('[open_trade] Feed:', err.message))
+    await db
+      .insert(feedEvents)
+      .values({
+        id: crypto.randomUUID(),
+        agentId: ((args as Record<string, unknown>)._agentId as string) || '',
+        type: 'position_opened',
+        venue,
+        pair,
+        side,
+        size: String(size),
+        data: JSON.stringify({ leverage, entryPrice, txHash }),
+      })
+      .execute()
+      .catch((err: Error) => console.error('[open_trade] Feed:', err.message))
 
     return {
-      success: true, txHash, positionId: dbId,
-      venue, pair, side, size, leverage, entryPrice,
+      success: true,
+      txHash,
+      positionId: dbId,
+      venue,
+      pair,
+      side,
+      size,
+      leverage,
+      entryPrice,
     }
   },
 }

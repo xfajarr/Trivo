@@ -1,6 +1,6 @@
 import { initiateDeveloperControlledWalletsClient } from '@circle-fin/developer-controlled-wallets'
 import { config } from '../config'
-import { publicClient } from './contract.service'
+import { getUsdcBalance } from './contract.service'
 
 let client: ReturnType<typeof initiateDeveloperControlledWalletsClient> | null = null
 
@@ -64,15 +64,46 @@ export async function createAgentWallet(_agentName: string): Promise<{ walletId:
 }
 
 /**
- * Check USDC balance on Arc for a wallet address
+ * Check USDC balance on Arc for a wallet address.
+ * Uses ERC-20 balanceOf (6 decimals) — NOT native getBalance.
  */
 export async function getWalletBalance(walletAddress: string): Promise<number> {
   try {
-    const balance = await publicClient.getBalance({
-      address: walletAddress as `0x${string}`,
-    })
-    return Number(balance) / 1e18
+    const bal = await getUsdcBalance(walletAddress)
+    return parseFloat(bal)
   } catch {
     return 0
+  }
+}
+
+/**
+ * Send USDC from an agent's Circle dev-controlled wallet to any address.
+ * Uses Circle SDK's createTransaction (v10 API).
+ */
+export async function sendFromAgentWallet(
+  walletId: string,
+  destinationAddress: string,
+  amount: string,
+): Promise<{ txHash: string; transactionId: string }> {
+  const c = getClient()
+
+  // USDC token address on Arc Testnet
+  const tokenAddress = '0x3600000000000000000000000000000000000000'
+
+  const response = await (c as unknown as { createTransaction: (args: Record<string, unknown>) => Promise<unknown> }).createTransaction({
+    walletId,
+    tokenAddress,
+    blockchain: 'ARC-TESTNET',
+    amounts: [amount],
+    destinationAddress,
+    feeLevel: 'MEDIUM',
+  })
+
+  const data = (response as unknown as { data?: { id?: string } }).data
+  if (!data) throw new Error('Transfer transaction creation failed')
+
+  return {
+    txHash: data.id ?? 'pending',
+    transactionId: data.id ?? '',
   }
 }

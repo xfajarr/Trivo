@@ -2,7 +2,6 @@ import { db } from '../../lib/db.js'
 import { agentMemory, positions } from '../../lib/schema.js'
 import { eq, desc } from 'drizzle-orm'
 import { getPrice } from '../../services/contract.service.js'
-import { getFundingRate, getMarketData } from '../../services/realtime-price.service.js'
 import { getSentimentTool } from '../tools/get-sentiment.js'
 import { calculateEnhancedAnalysis, generateSimulatedOHLCV } from '../tools/enhanced-ta.js'
 import type { MarketContext } from '../types.js'
@@ -22,31 +21,29 @@ export async function buildMarketContext(agentId: string): Promise<MarketContext
     if (price > 0) {
       // Generate simulated OHLCV (in production: fetch from CoinGecko/exchange)
       const candles = generateSimulatedOHLCV(price, 100)
-      const candlePrices = candles.map(c => c.close)
-      const candleVolumes = candles.map(c => c.volume)
-      
+      const candlePrices = candles.map((c) => c.close)
+      const candleVolumes = candles.map((c) => c.volume)
+
       technicalAnalysis[pair] = calculateEnhancedAnalysis(candlePrices, candleVolumes, price)
     }
   }
 
-  const recentTrades = await db.select()
+  const recentTrades = await db
+    .select()
     .from(agentMemory)
     .where(eq(agentMemory.agentId, agentId))
     .orderBy(desc(agentMemory.createdAt))
     .limit(10)
 
-  const openPositions = await db.select()
-    .from(positions)
-    .where(eq(positions.agentId, agentId))
-    .limit(10)
+  const openPositions = await db.select().from(positions).where(eq(positions.agentId, agentId)).limit(10)
 
   const todayPnl = recentTrades.reduce((sum, t) => {
-    const meta = t.metadata ? JSON.parse(t.metadata) as { pnl?: number } : {}
+    const meta = t.metadata ? (JSON.parse(t.metadata) as { pnl?: number }) : {}
     return sum + (meta.pnl ?? 0)
   }, 0)
 
-  const wins = recentTrades.filter(t => {
-    const meta = t.metadata ? JSON.parse(t.metadata) as { pnl?: number } : {}
+  const wins = recentTrades.filter((t) => {
+    const meta = t.metadata ? (JSON.parse(t.metadata) as { pnl?: number }) : {}
     return (meta.pnl ?? 0) > 0
   }).length
   const winRate = recentTrades.length > 0 ? (wins / recentTrades.length) * 100 : 0
@@ -55,7 +52,11 @@ export async function buildMarketContext(agentId: string): Promise<MarketContext
   const sentiment: Record<string, { score: number; sentiment: string; volume: number }> = {}
   for (const pair of ['BTC', 'ETH', 'SOL']) {
     try {
-      const s = await getSentimentTool.execute({ token: pair, timeframe: '4h' }) as { score: number; sentiment: string; volume: number }
+      const s = (await getSentimentTool.execute({ token: pair, timeframe: '4h' })) as {
+        score: number
+        sentiment: string
+        volume: number
+      }
       sentiment[pair] = s
     } catch {
       sentiment[pair] = { score: 0, sentiment: 'neutral', volume: 0 }
@@ -71,15 +72,15 @@ export async function buildMarketContext(agentId: string): Promise<MarketContext
     },
     sentiment: sentiment as MarketContext['sentiment'],
     technicalAnalysis: technicalAnalysis as MarketContext['technicalAnalysis'],
-    recentTrades: recentTrades.map(t => {
-      const meta = t.metadata ? JSON.parse(t.metadata) as { pnl?: number } : {}
+    recentTrades: recentTrades.map((t) => {
+      const meta = t.metadata ? (JSON.parse(t.metadata) as { pnl?: number }) : {}
       return {
         action: t.type ?? 'unknown',
         pnl: meta.pnl ?? 0,
         timestamp: t.createdAt?.toISOString() ?? new Date().toISOString(),
       }
     }),
-    openPositions: openPositions.map(p => ({
+    openPositions: openPositions.map((p) => ({
       venue: (p as unknown as { venue?: string }).venue ?? 'perp',
       side: (p as unknown as { side?: string }).side ?? 'long',
       size: Number(p.size ?? 0),
@@ -112,46 +113,51 @@ ${ta.summary}
 **Correlation:** ${ta.correlation.description}
 
 **Patterns Detected:**
-${ta.patterns.length > 0 
-  ? ta.patterns.map(p => `  - ${p.name} (${p.type}): ${p.description}`).join('\n')
-  : '  - No significant patterns'
+${
+  ta.patterns.length > 0
+    ? ta.patterns.map((p) => `  - ${p.name} (${p.type}): ${p.description}`).join('\n')
+    : '  - No significant patterns'
 }`
     })
     .join('\n\n')
 
-  const tradeLines = context.recentTrades.length > 0
-    ? context.recentTrades.map(t =>
-        `- ${t.action}: ${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)} (${t.timestamp})`
-      ).join('\n')
-    : 'No recent trades'
+  const tradeLines =
+    context.recentTrades.length > 0
+      ? context.recentTrades
+          .map((t) => `- ${t.action}: ${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)} (${t.timestamp})`)
+          .join('\n')
+      : 'No recent trades'
 
-  const positionLines = context.openPositions.length > 0
-    ? context.openPositions.map(p => {
-        const entry = p.entryPrice || 0;
-        const current = context.prices[p.venue === `perp` ? `BTC/USD` : p.venue] || 0;
-        const isLong = (p.side || `long`).toLowerCase() === `long`;
-        let upnl = 0;
-        if (entry > 0 && current > 0) {
-          upnl = isLong ? ((current - entry) / entry) * (p.size || 0) : ((entry - current) / entry) * (p.size || 0);
-        }
-        const upnlStr = upnl >= 0 ? `+$${upnl.toFixed(2)}` : `-$${Math.abs(upnl).toFixed(2)}`;
-        return `- ID: ${(p as unknown as { id?: string }).id || `?`} | ${p.venue} ${p.side} $${p.size} @ $${entry} | Unrealized: ${upnlStr}`;
-      }).join(`\n`)
-    : `No open positions`
+  const positionLines =
+    context.openPositions.length > 0
+      ? context.openPositions
+          .map((p) => {
+            const entry = p.entryPrice || 0
+            const current = context.prices[p.venue === `perp` ? `BTC/USD` : p.venue] || 0
+            const isLong = (p.side || `long`).toLowerCase() === `long`
+            let upnl = 0
+            if (entry > 0 && current > 0) {
+              upnl = isLong ? ((current - entry) / entry) * (p.size || 0) : ((entry - current) / entry) * (p.size || 0)
+            }
+            const upnlStr = upnl >= 0 ? `+$${upnl.toFixed(2)}` : `-$${Math.abs(upnl).toFixed(2)}`
+            return `- ID: ${(p as unknown as { id?: string }).id || `?`} | ${p.venue} ${p.side} $${p.size} @ $${entry} | Unrealized: ${upnlStr}`
+          })
+          .join(`\n`)
+      : `No open positions`
 
   // Determine market condition from enhanced analysis
   const btcTA = context.technicalAnalysis?.['BTC/USD']
   const btcSentiment = context.sentiment['BTC']?.score ?? 0
-  
+
   let marketHint = 'SIDEWAYS'
   if (btcTA?.overallBias === 'bullish' && btcSentiment > 0) marketHint = 'BULLISH — Look for long opportunities'
   if (btcTA?.overallBias === 'bearish' && btcSentiment < 0) marketHint = 'BEARISH — Look for short opportunities'
   if (btcTA?.overallBias === 'bullish' && btcSentiment > 30) marketHint = 'STRONG BULLISH — High conviction long'
   if (btcTA?.overallBias === 'bearish' && btcSentiment < -30) marketHint = 'STRONG BEARISH — High conviction short'
-  
+
   // Check for pattern signals
-  const bullishPatterns = btcTA?.patterns.filter(p => p.type === 'bullish') ?? []
-  const bearishPatterns = btcTA?.patterns.filter(p => p.type === 'bearish') ?? []
+  const bullishPatterns = btcTA?.patterns.filter((p) => p.type === 'bullish') ?? []
+  const bearishPatterns = btcTA?.patterns.filter((p) => p.type === 'bearish') ?? []
   if (bullishPatterns.length > 0) marketHint += ` | ${bullishPatterns[0]?.name} detected`
   if (bearishPatterns.length > 0) marketHint += ` | ${bearishPatterns[0]?.name} detected`
 

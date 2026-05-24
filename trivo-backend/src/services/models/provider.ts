@@ -37,7 +37,9 @@ export function getEffectiveConfig(agentModelConfig?: string | null): {
           apiKey: cfg.apiKey,
         }
       }
-    } catch { /* non-critical */ }
+    } catch {
+      /* non-critical */
+    }
   }
 
   // Fallback to env vars
@@ -58,9 +60,9 @@ export function getEffectiveConfig(agentModelConfig?: string | null): {
   // Fallback to built-in defaults + OPENAI_API_KEY
   const BUILT_IN: Record<string, { baseURL: string; model: string }> = {
     deepseek: { baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-    claude:   { baseURL: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514' },
-    openai:   { baseURL: 'https://api.openai.com/v1', model: 'gpt-4o' },
-    qwen:     { baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-max' },
+    claude: { baseURL: 'https://api.anthropic.com/v1', model: 'claude-sonnet-4-20250514' },
+    openai: { baseURL: 'https://api.openai.com/v1', model: 'gpt-4o' },
+    qwen: { baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-max' },
   }
 
   const provider = envProvider || 'openai'

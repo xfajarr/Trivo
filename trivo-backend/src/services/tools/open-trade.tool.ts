@@ -1,5 +1,11 @@
 import { ToolHandler } from './registry'
-import { reportPositionOnChain, getPrice, mockPerpOpenPosition, mockPolymarketBuyOutcome, mockLpAddLiquidity } from '../contract.service'
+import {
+  reportPositionOnChain,
+  getPrice,
+  mockPerpOpenPosition,
+  mockPolymarketBuyOutcome,
+  mockLpAddLiquidity,
+} from '../contract.service'
 
 export const openTradeTool: ToolHandler = {
   definition: {
@@ -29,7 +35,11 @@ export const openTradeTool: ToolHandler = {
 
     try {
       const pair = `${market.split('-')[0] ?? 'BTC'}/USD`
-      try { entryPrice = await getPrice(pair) } catch { /* use default */ }
+      try {
+        entryPrice = await getPrice(pair)
+      } catch {
+        /* use default */
+      }
 
       // Try venue contract call (non-blocking)
       try {
@@ -46,20 +56,29 @@ export const openTradeTool: ToolHandler = {
           const r = await mockLpAddLiquidity(poolId, -1000, 1000, size)
           txHash = r.transactionHash
         }
-      } catch { /* contract call failed — use sim data */ }
+      } catch {
+        /* contract call failed — use sim data */
+      }
 
       // Try CopyTrading report (non-blocking)
       try {
         const copyTradingAgentId = parseInt(agentId.replace(/\D/g, '').slice(0, 5)) || 1
         const r = await reportPositionOnChain(copyTradingAgentId, venue, market, side, size, entryPrice, leverage)
         txHash = r.txHash || txHash
-      } catch { /* copy trading report failed — using venue tx */ }
+      } catch {
+        /* copy trading report failed — using venue tx */
+      }
 
       return {
         success: true,
         data: {
           positionId: `pos-${Date.now()}`,
-          venue, market, side, size, entryPrice, leverage,
+          venue,
+          market,
+          side,
+          size,
+          entryPrice,
+          leverage,
           status: 'open',
         },
         txHash,

@@ -103,7 +103,7 @@ export class CircuitBreaker {
 
   private calculateWinRate(): number {
     if (this.tradeHistory.length === 0) return 0
-    const wins = this.tradeHistory.filter(t => t.pnl > 0).length
+    const wins = this.tradeHistory.filter((t) => t.pnl > 0).length
     return (wins / this.tradeHistory.length) * 100
   }
 

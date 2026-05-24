@@ -10,6 +10,6 @@ export type FunctionToolCall = {
 
 export function getFunctionCalls(message: OpenAI.ChatCompletionMessage): FunctionToolCall[] {
   return ((message.tool_calls ?? []) as unknown as FunctionToolCall[]).filter(
-    tc => tc.type === 'function' && tc.function != null
+    (tc) => tc.type === 'function' && tc.function != null,
   )
 }

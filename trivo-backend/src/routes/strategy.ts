@@ -35,10 +35,7 @@ strategyRoutes.post('/train', async (c) => {
 
 function extractTriggers(text: string): string[] {
   const triggers: string[] = []
-  const patterns = [
-    /when\s+(\w+)\s+(is|below|above|hits?|reaches?)/gi,
-    /if\s+(\w+)\s+(drops?|rises?|goes?|exceeds?)/gi,
-  ]
+  const patterns = [/when\s+(\w+)\s+(is|below|above|hits?|reaches?)/gi, /if\s+(\w+)\s+(drops?|rises?|goes?|exceeds?)/gi]
   for (const pattern of patterns) {
     let match: RegExpExecArray | null
     while ((match = pattern.exec(text)) !== null) {
@@ -61,7 +58,7 @@ function detectRiskLevel(text: string): string {
   const aggressiveWords = ['aggressive', 'high leverage', 'risky', 'moon', 'ape', 'yolo']
   const conservativeWords = ['conservative', 'safe', 'low risk', 'gradual', 'hedge']
   const lower = text.toLowerCase()
-  if (aggressiveWords.some(w => lower.includes(w))) return 'aggressive'
-  if (conservativeWords.some(w => lower.includes(w))) return 'conservative'
+  if (aggressiveWords.some((w) => lower.includes(w))) return 'aggressive'
+  if (conservativeWords.some((w) => lower.includes(w))) return 'conservative'
   return 'moderate'
 }

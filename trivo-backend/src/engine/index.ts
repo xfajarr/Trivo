@@ -6,6 +6,7 @@ import { getPriceTool } from './tools/get-price.js'
 import { openTradeTool } from './tools/open-trade.js'
 import { closeTradeTool } from './tools/close-trade.js'
 import { getSentimentTool } from './tools/get-sentiment.js'
+import { swapTokenTool } from './tools/swap-token.js'
 import type { EngineConfig } from './types.js'
 
 let engine: AgentEngine | null = null
@@ -17,6 +18,7 @@ export function startEngine(config?: Partial<EngineConfig>): void {
   tools.register(openTradeTool)
   tools.register(closeTradeTool)
   tools.register(getSentimentTool)
+  tools.register(swapTokenTool)
 
   // Build provider (SOLID-D: use abstraction)
   const provider = buildProvider()

@@ -32,8 +32,12 @@ export function calculateIndicators(prices: number[]): TechnicalIndicators {
   if (bollinger.position === 'below_lower') signals.push('BELOW BB → oversold bounce')
   if (bollinger.position === 'above_upper') signals.push('ABOVE BB → overbought reversal')
 
-  const bullish = signals.filter(s => s.includes('buy') || s.includes('BULLISH') || s.includes('up') || s.includes('bounce')).length
-  const bearish = signals.filter(s => s.includes('sell') || s.includes('BEARISH') || s.includes('down') || s.includes('reversal')).length
+  const bullish = signals.filter(
+    (s) => s.includes('buy') || s.includes('BULLISH') || s.includes('up') || s.includes('bounce'),
+  ).length
+  const bearish = signals.filter(
+    (s) => s.includes('sell') || s.includes('BEARISH') || s.includes('down') || s.includes('reversal'),
+  ).length
   const bias = bullish > bearish + 1 ? 'BULLISH' : bearish > bullish + 1 ? 'BEARISH' : 'NEUTRAL'
 
   return { rsi, macd, ema, bollinger, summary: `TA BIAS: ${bias} | ${signals.join(', ') || 'No strong signals'}` }
@@ -44,20 +48,32 @@ function calcRSI(prices: number[]): { value: number; signal: string; description
   for (let i = 1; i < prices.length; i++) changes.push(prices[i]! - prices[i - 1]!)
 
   const recent = changes.slice(-14)
-  const gains = recent.filter(c => c > 0)
-  const losses = recent.filter(c => c < 0).map(c => Math.abs(c))
+  const gains = recent.filter((c) => c > 0)
+  const losses = recent.filter((c) => c < 0).map((c) => Math.abs(c))
 
   const avgGain = gains.length > 0 ? gains.reduce((a, b) => a + b, 0) / 14 : 0
   const avgLoss = losses.length > 0 ? losses.reduce((a, b) => a + b, 0) / 14 : 0
   const rs = avgLoss === 0 ? 100 : avgGain / avgLoss
-  const rsi = 100 - (100 / (1 + rs))
+  const rsi = 100 - 100 / (1 + rs)
 
-  if (rsi < 30) return { value: rsi, signal: 'oversold', description: `RSI ${rsi.toFixed(1)} — OVERSOLD. Potential buy signal.` }
-  if (rsi > 70) return { value: rsi, signal: 'overbought', description: `RSI ${rsi.toFixed(1)} — OVERBOUGHT. Potential sell signal.` }
+  if (rsi < 30)
+    return { value: rsi, signal: 'oversold', description: `RSI ${rsi.toFixed(1)} — OVERSOLD. Potential buy signal.` }
+  if (rsi > 70)
+    return {
+      value: rsi,
+      signal: 'overbought',
+      description: `RSI ${rsi.toFixed(1)} — OVERBOUGHT. Potential sell signal.`,
+    }
   return { value: rsi, signal: 'neutral', description: `RSI ${rsi.toFixed(1)} — Neutral zone.` }
 }
 
-function calcMACD(prices: number[]): { macd: number; signal: number; histogram: number; crossover: string; description: string } {
+function calcMACD(prices: number[]): {
+  macd: number
+  signal: number
+  histogram: number
+  crossover: string
+  description: string
+} {
   const ema12 = emaSingle(prices, 12)
   const ema26 = emaSingle(prices, 26)
   const macd = ema12 - ema26
@@ -72,12 +88,21 @@ function calcMACD(prices: number[]): { macd: number; signal: number; histogram: 
   const histogram = macd - signalLine
 
   let crossover = 'none'
-  let description = histogram > 0 ? `MACD positive (${histogram.toFixed(2)}) — bullish.` : `MACD negative (${histogram.toFixed(2)}) — bearish.`
+  let description =
+    histogram > 0
+      ? `MACD positive (${histogram.toFixed(2)}) — bullish.`
+      : `MACD negative (${histogram.toFixed(2)}) — bearish.`
 
   if (macdVals.length >= 2) {
     const prev = macdVals[macdVals.length - 2]! - signalLine
-    if (histogram > 0 && prev <= 0) { crossover = 'bullish'; description = 'MACD bullish crossover — momentum turning positive.' }
-    if (histogram < 0 && prev >= 0) { crossover = 'bearish'; description = 'MACD bearish crossover — momentum turning negative.' }
+    if (histogram > 0 && prev <= 0) {
+      crossover = 'bullish'
+      description = 'MACD bullish crossover — momentum turning positive.'
+    }
+    if (histogram < 0 && prev >= 0) {
+      crossover = 'bearish'
+      description = 'MACD bearish crossover — momentum turning negative.'
+    }
   }
 
   return { macd, signal: signalLine, histogram, crossover, description }
@@ -87,12 +112,30 @@ function calcEMA(prices: number[]): { ema9: number; ema21: number; crossover: st
   const ema9 = emaSingle(prices, 9)
   const ema21 = emaSingle(prices, 21)
 
-  if (ema9 > ema21) return { ema9, ema21, crossover: 'bullish', description: `EMA9 (${ema9.toFixed(0)}) > EMA21 (${ema21.toFixed(0)}) — Short-term bullish.` }
-  if (ema9 < ema21) return { ema9, ema21, crossover: 'bearish', description: `EMA9 (${ema9.toFixed(0)}) < EMA21 (${ema21.toFixed(0)}) — Short-term bearish.` }
+  if (ema9 > ema21)
+    return {
+      ema9,
+      ema21,
+      crossover: 'bullish',
+      description: `EMA9 (${ema9.toFixed(0)}) > EMA21 (${ema21.toFixed(0)}) — Short-term bullish.`,
+    }
+  if (ema9 < ema21)
+    return {
+      ema9,
+      ema21,
+      crossover: 'bearish',
+      description: `EMA9 (${ema9.toFixed(0)}) < EMA21 (${ema21.toFixed(0)}) — Short-term bearish.`,
+    }
   return { ema9, ema21, crossover: 'none', description: 'EMA9 ≈ EMA21 — Neutral.' }
 }
 
-function calcBollinger(prices: number[]): { upper: number; middle: number; lower: number; position: string; description: string } {
+function calcBollinger(prices: number[]): {
+  upper: number
+  middle: number
+  lower: number
+  position: string
+  description: string
+} {
   const recent = prices.slice(-20)
   const middle = recent.reduce((a, b) => a + b, 0) / recent.length
   const variance = recent.reduce((sum, p) => sum + Math.pow(p - middle, 2), 0) / recent.length
@@ -103,10 +146,38 @@ function calcBollinger(prices: number[]): { upper: number; middle: number; lower
   const range = upper - lower || 1
   const pos = (price - lower) / range
 
-  if (price > upper) return { upper, middle, lower, position: 'above_upper', description: `Price ABOVE upper band ($${upper.toFixed(0)}) — Overbought.` }
-  if (pos > 0.8) return { upper, middle, lower, position: 'near_upper', description: `Price near upper ($${upper.toFixed(0)}) — Caution.` }
-  if (pos < 0.2) return { upper, middle, lower, position: 'near_lower', description: `Price near lower ($${lower.toFixed(0)}) — Support zone.` }
-  if (price < lower) return { upper, middle, lower, position: 'below_lower', description: `Price BELOW lower ($${lower.toFixed(0)}) — Oversold.` }
+  if (price > upper)
+    return {
+      upper,
+      middle,
+      lower,
+      position: 'above_upper',
+      description: `Price ABOVE upper band ($${upper.toFixed(0)}) — Overbought.`,
+    }
+  if (pos > 0.8)
+    return {
+      upper,
+      middle,
+      lower,
+      position: 'near_upper',
+      description: `Price near upper ($${upper.toFixed(0)}) — Caution.`,
+    }
+  if (pos < 0.2)
+    return {
+      upper,
+      middle,
+      lower,
+      position: 'near_lower',
+      description: `Price near lower ($${lower.toFixed(0)}) — Support zone.`,
+    }
+  if (price < lower)
+    return {
+      upper,
+      middle,
+      lower,
+      position: 'below_lower',
+      description: `Price BELOW lower ($${lower.toFixed(0)}) — Oversold.`,
+    }
   return { upper, middle, lower, position: 'middle', description: 'Price in middle band — Neutral.' }
 }
 

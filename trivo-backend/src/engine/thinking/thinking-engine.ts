@@ -15,7 +15,10 @@ export class ThinkingEngine {
   ) {}
 
   async run(agent: {
-    id: string; name: string; strategy: string | null; skills: string | null
+    id: string
+    name: string
+    strategy: string | null
+    skills: string | null
     riskConfig: { maxLeverage: number; stopLossPct: number; spendLimit: number }
   }): Promise<ThinkingOutput> {
     const context = await buildMarketContext(agent.id)

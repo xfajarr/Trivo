@@ -34,20 +34,21 @@ positionRoutes.get('/:id', async (c) => {
 positionRoutes.get('/history/:agentId', async (c) => {
   const agentId = c.req.param('agentId')
   const limit = Math.min(parseInt(c.req.query('limit') || '50'), 100)
-  
-  const history = await db.select().from(positionsTable)
+
+  const history = await db
+    .select()
+    .from(positionsTable)
     .where(eq(positionsTable.agentId, agentId))
     .orderBy(desc(positionsTable.closedAt))
     .limit(limit)
 
-  const closed = history.filter(p => p.status === 'closed')
-  
+  const closed = history.filter((p) => p.status === 'closed')
+
   const summary = {
     totalTrades: closed.length,
     totalPnl: closed.reduce((s, p) => s + Number(p.pnl || 0), 0),
-    winRate: closed.length > 0 
-      ? Math.round((closed.filter(p => Number(p.pnl || 0) > 0).length / closed.length) * 100) 
-      : 0,
+    winRate:
+      closed.length > 0 ? Math.round((closed.filter((p) => Number(p.pnl || 0) > 0).length / closed.length) * 100) : 0,
     trades: closed,
   }
 

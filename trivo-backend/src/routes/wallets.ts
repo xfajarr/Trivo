@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { agents } from '../lib/schema'
 import { authMiddleware } from '../middleware/auth'
-import { createAgentWallet, getWalletBalance } from '../services/wallet.service'
+import { createAgentWallet, getWalletBalance, sendFromAgentWallet } from '../services/wallet.service'
 import { getUsdcBalance } from '../services/contract.service'
 
 export const walletRoutes = new Hono()
@@ -78,17 +78,35 @@ walletRoutes.post('/withdraw', authMiddleware, async (c) => {
   const userId = c.get('userId')
   const { agentId, amount, destinationAddress } = await c.req.json()
 
+  if (!amount || !destinationAddress) {
+    return c.json({ error: 'amount and destinationAddress are required' }, 400)
+  }
+
   const existing = await db.select().from(agents).where(eq(agents.id, agentId))
   if (existing.length === 0) return c.json({ error: 'Agent not found' }, 404)
   if (existing[0]?.ownerId !== userId) return c.json({ error: 'Not your agent' }, 403)
 
-  return c.json({
-    message: 'Sign the withdrawal from your wallet',
-    agentId,
-    walletAddress: existing[0]?.circleWalletAddress,
-    destinationAddress,
-    amount,
-  })
+  const walletId = existing[0]?.circleWalletId
+  const walletAddress = existing[0]?.circleWalletAddress
+  if (!walletId || !walletAddress) {
+    return c.json({ error: 'Agent wallet not created yet' }, 400)
+  }
+
+  try {
+    const result = await sendFromAgentWallet(walletId, destinationAddress, amount)
+    return c.json({
+      message: 'Withdrawal initiated',
+      agentId,
+      fromAddress: walletAddress,
+      destinationAddress,
+      amount,
+      txHash: result.txHash,
+      transactionId: result.transactionId,
+    })
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return c.json({ error: `Withdrawal failed: ${msg}` }, 500)
+  }
 })
 
 // ── USDC Balance for any address (no auth — public balance query) ──

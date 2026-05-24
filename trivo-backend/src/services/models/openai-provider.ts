@@ -1,11 +1,7 @@
 import OpenAI from 'openai'
 import type { LLMProvider, StructuredDecision } from './provider'
 
-export function createOpenAIProvider(
-  modelName: string,
-  apiKey: string,
-  baseURL: string
-): LLMProvider {
+export function createOpenAIProvider(modelName: string, apiKey: string, baseURL: string): LLMProvider {
   const client = new OpenAI({ apiKey, baseURL })
 
   return {
@@ -16,7 +12,10 @@ export function createOpenAIProvider(
         model: modelName,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analyze the current market situation and your portfolio. What are you thinking?\n\n${context}` },
+          {
+            role: 'user',
+            content: `Analyze the current market situation and your portfolio. What are you thinking?\n\n${context}`,
+          },
         ],
         temperature: 0.7,
         max_tokens: 1024,
@@ -30,7 +29,10 @@ export function createOpenAIProvider(
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'assistant', content: `My analysis:\n${thinking}` },
-          { role: 'user', content: `Based on your analysis, what action do you take?\n\n${context}\n\nRespond with JSON only:\n{ "reasoning": "...", "confidence": 0.75, "tool": "open_trade" | null, "args": { "venue": "perp", "market": "BTC-PERP", "side": "LONG", "size": 5000 } | null }` },
+          {
+            role: 'user',
+            content: `Based on your analysis, what action do you take?\n\n${context}\n\nRespond with JSON only:\n{ "reasoning": "...", "confidence": 0.75, "tool": "open_trade" | null, "args": { "venue": "perp", "market": "BTC-PERP", "side": "LONG", "size": 5000 } | null }`,
+          },
         ],
         response_format: { type: 'json_object' },
         temperature: 0.3,

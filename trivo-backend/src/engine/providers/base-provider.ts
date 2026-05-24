@@ -13,12 +13,10 @@ export abstract class BaseProvider {
     tools: ToolRegistry,
     maxIterations: number = 5,
   ): Promise<ThinkingOutput> {
-    const messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'user', content: userPrompt },
-    ]
+    const messages: OpenAI.ChatCompletionMessageParam[] = [{ role: 'user', content: userPrompt }]
 
     for (let i = 0; i < maxIterations; i++) {
-      const toolSchemas = tools.getSchemas().map(s => ({
+      const toolSchemas = tools.getSchemas().map((s) => ({
         type: 'function' as const,
         function: { name: s.name, description: s.description, parameters: s.input_schema },
       }))
@@ -28,7 +26,7 @@ export abstract class BaseProvider {
         model: this.model,
         messageCount: messages.length + 1,
         toolCount: toolSchemas.length,
-        tools: toolSchemas.map(t => t.function.name),
+        tools: toolSchemas.map((t) => t.function.name),
       })
 
       try {
@@ -60,7 +58,11 @@ export abstract class BaseProvider {
               const result = await tools.execute(tc.function.name, JSON.parse(tc.function.arguments))
               messages.push({ role: 'tool' as const, tool_call_id: tc.id, content: JSON.stringify(result) })
             } catch (error) {
-              messages.push({ role: 'tool' as const, tool_call_id: tc.id, content: JSON.stringify({ error: String(error) }) })
+              messages.push({
+                role: 'tool' as const,
+                tool_call_id: tc.id,
+                content: JSON.stringify({ error: String(error) }),
+              })
             }
           }
           continue
@@ -92,16 +94,24 @@ export abstract class BaseProvider {
         tool: p.tool ?? null,
         args: p.args ?? null,
         confidence: Number(p.confidence ?? 0),
-        riskLevel: (['low','medium','high'].includes(p.riskLevel) ? p.riskLevel : 'medium') as ThinkingOutput['riskLevel'],
+        riskLevel: (['low', 'medium', 'high'].includes(p.riskLevel)
+          ? p.riskLevel
+          : 'medium') as ThinkingOutput['riskLevel'],
         reasoning: String(p.reasoning ?? ''),
         abortConditions: Array.isArray(p.abortConditions) ? p.abortConditions : [],
       }
     } catch {
       console.warn(`[${this.constructor.name}] Failed to parse AI response`)
       return {
-        observation: '', analysis: content, action: 'hold',
-        tool: null, args: null, confidence: 0, riskLevel: 'low',
-        reasoning: 'Response parsing failed', abortConditions: [],
+        observation: '',
+        analysis: content,
+        action: 'hold',
+        tool: null,
+        args: null,
+        confidence: 0,
+        riskLevel: 'low',
+        reasoning: 'Response parsing failed',
+        abortConditions: [],
       }
     }
   }

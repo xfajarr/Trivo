@@ -34,7 +34,6 @@ async function marketDataJob() {
   }
 }
 
-
 // agentProcessingJob DISABLED — replaced by new engine/agent-runner.ts
 
 async function pnlWatcherJob() {
@@ -42,8 +41,8 @@ async function pnlWatcherJob() {
 
   for (const pos of openPositions) {
     try {
-      const KNOWN_TOKENS = ["BTC", "ETH", "SOL"]
-      const baseToken = KNOWN_TOKENS.find(t => pos.market?.toUpperCase().includes(t)) ?? "BTC"
+      const KNOWN_TOKENS = ['BTC', 'ETH', 'SOL']
+      const baseToken = KNOWN_TOKENS.find((t) => pos.market?.toUpperCase().includes(t)) ?? 'BTC'
       const pair = `${baseToken}/USD`
       const currentPrice = await getPrice(pair)
       if (currentPrice === 0) {

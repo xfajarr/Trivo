@@ -40,9 +40,9 @@ export async function runBacktest(config: BacktestConfig): Promise<BacktestResul
     pnl: (Math.random() - 0.4) * 500,
   }))
 
-  const winningTrades = simulatedTrades.filter(t => t.pnl > 0)
+  const winningTrades = simulatedTrades.filter((t) => t.pnl > 0)
   const totalPnl = simulatedTrades.reduce((s, t) => s + t.pnl, 0)
-  const returns = simulatedTrades.map(t => t.pnl / config.initialCapital)
+  const returns = simulatedTrades.map((t) => t.pnl / config.initialCapital)
   const avgReturn = returns.reduce((s, r) => s + r, 0) / returns.length
   const stdDev = Math.sqrt(returns.reduce((s, r) => s + (r - avgReturn) ** 2, 0) / returns.length)
   const sharpeRatio = stdDev > 0 ? (avgReturn / stdDev) * Math.sqrt(365) : 0

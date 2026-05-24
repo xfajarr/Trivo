@@ -8,7 +8,8 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 export const getSentimentTool: EngineTool = {
   schema: {
     name: 'get_sentiment',
-    description: 'Get real-time Twitter/X sentiment for a crypto token. Use this to gauge market mood before trading. High bullish sentiment with low volume = potential pump. High bearish sentiment = potential dump.',
+    description:
+      'Get real-time Twitter/X sentiment for a crypto token. Use this to gauge market mood before trading. High bullish sentiment with low volume = potential pump. High bearish sentiment = potential dump.',
     input_schema: {
       type: 'object',
       properties: {

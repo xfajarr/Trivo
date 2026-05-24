@@ -11,7 +11,8 @@ export async function distillAgentMemory(
 ): Promise<void> {
   const client = new OpenAI({ apiKey, baseURL })
 
-  const recent = await db.select()
+  const recent = await db
+    .select()
     .from(agentMemory)
     .where(eq(agentMemory.agentId, agentId))
     .orderBy(desc(agentMemory.createdAt))
@@ -22,9 +23,7 @@ export async function distillAgentMemory(
     return
   }
 
-  const memoriesText = recent
-    .map(m => `[${m.type}] ${m.content}`)
-    .join('\n\n')
+  const memoriesText = recent.map((m) => `[${m.type}] ${m.content}`).join('\n\n')
 
   const response = await client.chat.completions.create({
     model,
