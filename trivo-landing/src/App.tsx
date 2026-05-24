@@ -13,6 +13,7 @@ import { MorphingText } from "./components/magic/morphing-text";
 import { Particles } from "./components/magic/particles";
 import { RetroGrid } from "./components/magic/retro-grid";
 import { cn } from "./lib/utils";
+import { AccessCodeDialog } from "./components/AccessCodeDialog";
 
 const AGENTS = [
   {
@@ -100,65 +101,45 @@ const VENUES = [
 const FEATURES = [
   {
     title: "Multi-Venue Engine",
-    desc: "Trade across perps, prediction markets, LP, yield, and spot — all from one programmable agent.",
+    desc: "One agent trades across perpetuals, prediction markets, concentrated LP, yield strategies, and spot — no silos, no switching tools.",
     colSpan: 2,
     rowSpan: 2,
     tags: ["PERP", "PREDICTION", "LP", "YIELD", "SPOT"],
+    stat: "5 venues · 1 agent",
+    accent: "neon",
   },
   {
-    title: "AI Model Choice",
-    desc: "DeepSeek, Claude, OpenAI, Qwen, or BYOK. Your agent, your model.",
-    color: "violet",
+    title: "AI Model Freedom",
+    desc: "DeepSeek, Claude, OpenAI, Qwen, or bring your own API key. Swap models anytime without rewriting strategies.",
+    accent: "violet",
   },
   {
     title: "Copy Trading",
-    desc: "Mirror top agents with one click. Earn fees from your followers.",
-    color: "amber",
+    desc: "Mirror top performers in one click. Creators earn fee revenue from every follower — attribution is on-chain.",
+    accent: "amber",
+    stat: "10% creator fee",
   },
   {
     title: "On-Chain Identity",
-    desc: "ERC-8004 identity NFTs. Verified, transparent, immutable.",
-    color: "lime",
+    desc: "Every agent gets an ERC-8004 NFT. Immutable identity, verifiable track record, composable across DeFi.",
+    accent: "lime",
   },
   {
-    title: "Circle Wallets",
-    desc: "Developer-controlled MPC wallets. USDC gas, programmable policies.",
-    color: "lime",
+    title: "Circle MPC Wallets",
+    desc: "Developer-controlled wallets with programmable spending policies. USDC as native gas on Arc — no ETH needed.",
+    accent: "lime",
+    stat: "Gas: USDC only",
   },
   {
-    title: "10-Second Loop",
-    desc: "THINK → DECIDE → EXECUTE. Every 10 seconds, fully autonomous.",
+    title: "10-Second Autonomy",
+    desc: "THINK → DECIDE → EXECUTE. Every 10 seconds, your agent reads the market, reasons through strategy, and acts — fully autonomous, 24/7.",
     colSpan: 3,
-    color: "neon",
+    accent: "neon",
   },
 ];
 
 const APP_URL = "https://app.trivoai.xyz";
 
-function BorderBeam({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]",
-        className,
-      )}
-    >
-      <div
-        className="absolute animate-beam opacity-30"
-        style={{
-          background: "conic-gradient(from 180deg, transparent, var(--neon), transparent 60%)",
-          width: "200%",
-          height: "200%",
-          top: "-50%",
-          left: "-50%",
-          animationDuration: "6s",
-          animationTimingFunction: "linear",
-          animationIterationCount: "infinite",
-        }}
-      />
-    </div>
-  );
-}
 
 export default function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -171,9 +152,26 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const [showAccessDialog, setShowAccessDialog] = useState(false);
+  const [pendingNav, setPendingNav] = useState<string | null>(null);
+
+  const handleAccessSuccess = (code: string) => {
+    console.log("Access granted:", code);
+    if (pendingNav) {
+      window.open(pendingNav, "_self");
+      setPendingNav(null);
+    }
+  };
+
+  const openAccessDialog = (navTo: string) => {
+    setPendingNav(navTo);
+    setShowAccessDialog(true);
+  };
+
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
+
       {/* === HERO SECTION === */}
       <section className="relative min-h-screen flex flex-col">
         <RetroGrid className="opacity-30" angle={75} cellSize={80} />
@@ -229,7 +227,7 @@ export default function App() {
           <div className="flex items-center gap-0">
             <ShimmerButton
               className="px-5 h-9 text-sm"
-              onClick={() => window.open(APP_URL + "/feed", "_self")}
+              onClick={() => openAccessDialog(APP_URL + "/feed")}
             >
               Launch App
             </ShimmerButton>
@@ -281,11 +279,11 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
               <ShimmerButton
                 className="px-8 h-13 text-base"
-                onClick={() => window.open(APP_URL + "/launch", "_self")}
+                onClick={() => openAccessDialog(APP_URL + "/launch")}
               >
                 Launch Your Agent
               </ShimmerButton>
-              <a href={APP_URL + "/feed"}>
+              {/* <a href={APP_URL + "/feed"}>
                 <Button
                   variant="outline"
                   size="lg"
@@ -293,7 +291,7 @@ export default function App() {
                 >
                   Explore Live Feed
                 </Button>
-              </a>
+              </a> */}
             </div>
           </BlurFade>
 
@@ -346,95 +344,142 @@ export default function App() {
         </Marquee>
       </section>
 
-      {/* === FEATURES BENTO === */}
+      {/* === FEATURES === */}
       <section id="features" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
         <BlurFade>
-          <div className="text-center mb-16">
-            <Badge variant="outline" className="border-neon/30 text-neon text-xs mb-4">
-              FEATURES
-            </Badge>
-            <h2 className="font-display text-3xl md:text-5xl font-bold tracking-tight mb-4">
-              Everything you need to{" "}
+          <div className="text-center mb-20">
+            <div className="inline-flex items-center gap-2 mb-6 rounded-full border border-neon/20 bg-neon/5 px-4 py-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse" />
+              <span className="ticker text-[11px] uppercase tracking-widest text-neon font-medium">
+                Platform Capabilities
+              </span>
+            </div>
+            <h2 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-6 leading-[1.1]">
+              Built for{" "}
               <MorphingText
-                texts={["trade smarter", "earn faster", "deploy easier", "copy better"]}
+                texts={["autonomy", "speed", "alpha", "scale"]}
                 className="text-neon"
-                interval={2500}
+                interval={2800}
               />
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              One platform, five venues, infinite strategies — powered by AI and secured on-chain.
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
+              Every feature designed from scratch for AI-native trading — 
+              not a dashboard with a chatbot bolted on.
             </p>
           </div>
         </BlurFade>
 
-        <BentoGrid className="max-w-6xl mx-auto">
-          {FEATURES.map((f) => (
-            <BentoItem
-              key={f.title}
-              colSpan={f.colSpan as 1 | 2 | 3}
-              rowSpan={f.rowSpan as 1 | 2}
-              className="group relative overflow-hidden"
-            >
-              <BorderBeam className="rounded-[inherit]" />
-              <div className="relative z-10">
-                <div
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg mb-5 text-xs font-bold font-display",
-                    f.color === "violet" && "bg-violet/10 text-violet",
-                    f.color === "amber" && "bg-amber-400/10 text-amber-300",
-                    f.color === "lime" && "bg-neon/10 text-neon",
-                    f.color === "neon" && "bg-neon/10 text-neon",
-                    !f.color && "bg-neon/10 text-neon",
-                  )}
-                >
-                  {f.title[0]}
-                </div>
-                <h3
-                  className={cn(
-                    "font-display font-bold mb-3",
-                    f.colSpan === 2 ? "text-2xl" : "text-base",
-                  )}
-                >
-                  {f.title}
-                </h3>
-                <p
-                  className={cn(
-                    "text-muted-foreground leading-relaxed",
-                    f.colSpan === 2 ? "text-base max-w-sm" : "text-sm",
-                  )}
-                >
-                  {f.desc}
-                </p>
-                {f.tags && (
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {f.tags.map((t) => (
-                      <span
-                        key={t}
-                        className="ticker rounded-full border border-neon/20 bg-neon/5 px-3 py-1 text-[10px] text-neon"
+        <BentoGrid className="max-w-6xl mx-auto gap-4">
+          {FEATURES.map((f, idx) => {
+            const isWide = (f.colSpan ?? 1) > 1;
+            const accentColor =
+              f.accent === "violet" ? "var(--violet)" :
+              f.accent === "amber" ? "#fcd34d" :
+              "var(--neon)";
+
+            return (
+              <BentoItem
+                key={f.title}
+                colSpan={f.colSpan as 1 | 2 | 3}
+                rowSpan={f.rowSpan as 1 | 2}
+              >
+                <BlurFade delay={idx * 0.06}>
+                  <div
+                    className={cn(
+                      "group relative h-full rounded-xl border border-border/60 bg-surface/80 backdrop-blur-sm p-6 md:p-8 transition-all duration-500",
+                      "hover:border-border hover:bg-surface",
+                      f.accent === "neon" && "hover:border-neon/25",
+                      f.accent === "violet" && "hover:border-violet/25",
+                      f.accent === "amber" && "hover:border-amber-400/25",
+                    )}
+                  >
+                    {/* Left accent line */}
+                    <div
+                      className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r-full transition-all duration-500"
+                      style={{
+                        background: `linear-gradient(180deg, ${accentColor}20, ${accentColor}40 50%, ${accentColor}20)`,
+                      }}
+                    />
+
+                    {/* Hover glow */}
+                    <div
+                      className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                      style={{
+                        background: `radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), ${accentColor}06, transparent 60%)`,
+                      }}
+                    />
+
+                    <div className="relative z-10 flex flex-col h-full pl-2">
+                      {/* Index number + Title */}
+                      <div className="flex items-baseline gap-3 mb-4">
+                        <span
+                          className="ticker text-xs font-semibold tabular-nums opacity-40 group-hover:opacity-70 transition-opacity duration-300"
+                          style={{ color: accentColor }}
+                        >
+                          {String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <div>
+                          <h3
+                            className={cn(
+                              "font-display font-bold tracking-tight leading-tight",
+                              isWide ? "text-2xl md:text-3xl" : "text-lg",
+                            )}
+                          >
+                            {f.title}
+                          </h3>
+                          {f.stat && (
+                            <span className="ticker text-[10px] text-muted-foreground mt-0.5 block">
+                              {f.stat}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p
+                        className={cn(
+                          "text-muted-foreground/80 leading-relaxed flex-1",
+                          isWide ? "text-base max-w-lg" : "text-sm",
+                        )}
                       >
-                        {t}
-                      </span>
-                    ))}
+                        {f.desc}
+                      </p>
+
+                      {/* Tags */}
+                      {f.tags && (
+                        <div className="mt-5 flex flex-wrap gap-1.5">
+                          {f.tags.map((t) => (
+                            <span
+                              key={t}
+                              className="ticker rounded-[4px] border border-border/50 bg-surface-2/60 px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors duration-300"
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Bottom accent dot */}
+                      <div className="mt-4 flex items-center gap-2">
+                        <div
+                          className="h-1 w-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          style={{ background: accentColor }}
+                        />
+                        <div
+                          className="h-px flex-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                          style={{
+                            background: `linear-gradient(90deg, ${accentColor}30, transparent)`,
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-              <div
-                className={cn(
-                  "absolute -bottom-4 -right-4 rounded-full blur-2xl transition-colors",
-                  f.color === "violet" && "bg-violet/5 group-hover:bg-violet/10",
-                  f.color === "amber" && "bg-amber-400/5 group-hover:bg-amber-400/10",
-                  f.color === "lime" && "bg-neon/5 group-hover:bg-neon/10",
-                  f.colSpan === 2 ? "h-32 w-32" : "h-20 w-20",
-                  !f.color && "bg-neon/5 group-hover:bg-neon/10 h-32 w-32",
-                )}
-              />
-            </BentoItem>
-          ))}
+                </BlurFade>
+              </BentoItem>
+            );
+          })}
         </BentoGrid>
       </section>
-
-
-
       {/* === AGENTS SHOWCASE === */}
       <section id="agents" className="relative z-10 max-w-7xl mx-auto px-6 py-24">
         <BlurFade>
@@ -542,11 +587,11 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <ShimmerButton
                   className="px-8 h-12 text-base"
-                  onClick={() => window.open(APP_URL + "/launch", "_self")}
+                  onClick={() => openAccessDialog(APP_URL + "/launch")}
                 >
                   Launch Agent
                 </ShimmerButton>
-                <a href={APP_URL + "/feed"}>
+                {/* <a href={APP_URL + "/feed"}>
                   <Button
                     variant="outline"
                     size="lg"
@@ -554,7 +599,7 @@ export default function App() {
                   >
                     Explore Live Feed
                   </Button>
-                </a>
+                </a> */}
               </div>
             </div>
           </div>
@@ -579,7 +624,11 @@ export default function App() {
             <span className="ticker text-[10px] text-muted-foreground">Powered by USDC on Arc</span>
           </div>
         </div>
-      </footer>
+      </footer>      <AccessCodeDialog
+        open={showAccessDialog}
+        onClose={() => setShowAccessDialog(false)}
+        onSuccess={handleAccessSuccess}
+      />
     </div>
   );
 }

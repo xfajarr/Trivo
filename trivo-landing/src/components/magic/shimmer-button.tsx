@@ -36,7 +36,7 @@ export function ShimmerButton({
     >
       {/* Base shimmer sweep */}
       <span
-        className="absolute inset-0"
+        className="absolute inset-0 pointer-events-none"
         style={{
           background: `linear-gradient(105deg, transparent 40%, ${shimmerColor} 50%, transparent 60%)`,
           backgroundSize: "200% 100%",
