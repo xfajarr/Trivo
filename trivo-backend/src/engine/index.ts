@@ -9,6 +9,18 @@ import { getSentimentTool } from './tools/get-sentiment.js'
 import { swapTokenTool } from './tools/swap-token.js'
 import type { EngineConfig } from './types.js'
 
+// Phase 6 exports
+export { AuditSystem, auditSystem } from './audit/audit-system.js'
+export { BaseAgent } from './agents/base-agent.js'
+export { TechnicalAnalystAgent } from './agents/analysts/technical-analyst.js'
+export { SentimentAnalystAgent } from './agents/analysts/sentiment-analyst.js'
+export { MacroAnalystAgent } from './agents/analysts/macro-analyst.js'
+export { LearningEngine } from './learning/learning-engine.js'
+export { AutonomousRunner } from './autonomous/autonomous-runner.js'
+export { DebateOrchestrator } from './discussion/debate-orchestrator.js'
+export { IdentityService, identityService } from './identity/identity-service.js'
+export * from './schemas/index.js'
+
 let engine: AgentEngine | null = null
 
 export function startEngine(config?: Partial<EngineConfig>): void {

@@ -91,6 +91,13 @@ export const positions = pgTable('positions', {
   reasoning: text('reasoning'),
   openedAt: timestamp('opened_at').defaultNow(),
   closedAt: timestamp('closed_at'),
+  unrealizedPnl: text('unrealized_pnl'),
+  realizedPnl: text('realized_pnl'),
+  realizedPnlPct: text('realized_pnl_pct'),
+  fees: text('fees').default('0'),
+  netPnl: text('net_pnl'),
+  closedBy: text('closed_by'),
+  decisionId: text('decision_id'),
 })
 
 export const copyRelations = pgTable('copy_relations', {
@@ -260,5 +267,45 @@ export const marketRegimes = pgTable('market_regimes', {
   confidence: text('confidence'),
   evidence: text('evidence'),
   source: text('source'),
+  createdAt: timestamp('created_at').defaultNow(),
+})
+
+// ─── PnL Tracking Tables (Phase 6) ──────────────────────────────────────────
+
+export const agentPnlSnapshots = pgTable('agent_pnl_snapshots', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  window: text('window').notNull(), // 'hourly' | 'daily' | 'weekly'
+  realizedPnl: text('realized_pnl'),
+  unrealizedPnl: text('unrealized_pnl'),
+  totalPnl: text('total_pnl'),
+  openPositions: text('open_positions'),
+  closedPositions: text('closed_positions'),
+  winningPositions: text('winning_positions'),
+  losingPositions: text('losing_positions'),
+  winRate: text('win_rate'),
+  sharpeRatio: text('sharpe_ratio'),
+  maxDrawdown: text('max_drawdown'),
+  portfolioValue: text('portfolio_value'),
+  snapshotAt: timestamp('snapshot_at').defaultNow(),
+})
+
+export const tradeOutcomes = pgTable('trade_outcomes', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  decisionId: text('decision_id'),
+  positionId: text('position_id'),
+  market: text('market').notNull(),
+  side: text('side').notNull(),
+  size: text('size').notNull(),
+  entryPrice: text('entry_price').notNull(),
+  exitPrice: text('exit_price').notNull(),
+  grossPnl: text('gross_pnl'),
+  fees: text('fees').default('0'),
+  netPnl: text('net_pnl'),
+  pnlPct: text('pnl_pct'),
+  holdTimeMs: text('hold_time_ms'),
+  wasCorrect: text('was_correct'),
+  won: text('won'),
   createdAt: timestamp('created_at').defaultNow(),
 })

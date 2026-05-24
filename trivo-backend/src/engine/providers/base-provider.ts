@@ -2,6 +2,7 @@ import OpenAI from 'openai'
 import type { ThinkingOutput } from '../types.js'
 import type { ToolRegistry } from '../tools/registry.js'
 import { getFunctionCalls } from '../_tool-types.js'
+import { z } from 'zod'
 
 export abstract class BaseProvider {
   protected abstract client: OpenAI
@@ -21,7 +22,6 @@ export abstract class BaseProvider {
         function: { name: s.name, description: s.description, parameters: s.input_schema },
       }))
 
-      // DEBUG: Log what we're sending
       console.log('🔍 DEBUG: Sending to AI:', {
         model: this.model,
         messageCount: messages.length + 1,
@@ -76,6 +76,53 @@ export abstract class BaseProvider {
     }
 
     throw new Error('ReAct loop exceeded max iterations')
+  }
+
+  /**
+   * Complete a prompt with structured output (Zod schema validation)
+   * Used by the new AI Engine v2 agents for typed LLM calls
+   */
+  async completeWithSchema<T>(
+    systemPrompt: string,
+    userPrompt: string,
+    schema: z.ZodType<T>,
+    maxTokens: number = 2048
+  ): Promise<T> {
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.7,
+      max_tokens: maxTokens,
+      response_format: { type: 'json_object' },
+    })
+
+    const content = response.choices[0]?.message?.content
+    if (!content) {
+      throw new Error('Empty response from AI provider')
+    }
+
+    // Parse JSON from response
+    let jsonStr = content
+    const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (jsonMatch?.[1]) jsonStr = jsonMatch[1]
+    const objectMatch = jsonStr.match(/\{[\s\S]*\}/)
+    if (objectMatch) jsonStr = objectMatch[0]
+
+    const parsed = JSON.parse(jsonStr)
+
+    // Validate with Zod schema
+    const result = schema.parse(parsed)
+    return result
+  }
+
+  /**
+   * Get the current model version/name
+   */
+  getModelVersion(): string {
+    return this.model
   }
 
   protected parseResponse(content: string): ThinkingOutput {
