@@ -94,23 +94,21 @@ function AgentDetail() {
       <div className="mx-auto max-w-6xl px-4 py-8">
 
       {/* Chart */}
-      {history?.trades?.length > 0 && (
-        <div className="mb-6">
-          <AgentChart
-            pair={history.trades[0]?.market || "BTC/USD"}
-            trades={history.trades.map((t: any) => ({
-              time: t.closedAt ? Math.floor(new Date(t.closedAt).getTime() / 1000) : t.openedAt ? Math.floor(new Date(t.openedAt).getTime() / 1000) : Math.floor(Date.now() / 1000),
-              price: Number(t.entryPrice) || 0,
-              type: t.status === "open" ? "entry" : t.pnl && Number(t.pnl) !== 0 ? "close" : "entry",
-              side: t.side || "long",
-              pnl: Number(t.pnl || 0),
-              reasoning: t.reasoning,
-              size: Number(t.size || 0),
-            })).reverse()}
-            height={280}
-          />
-        </div>
-      )}
+      <div className="mb-6">
+        <AgentChart
+          pair={history?.trades?.[0]?.market || "BTC/USD"}
+          trades={(history?.trades || []).map((t: any) => ({
+            time: t.closedAt ? Math.floor(new Date(t.closedAt).getTime() / 1000) : t.openedAt ? Math.floor(new Date(t.openedAt).getTime() / 1000) : Math.floor(Date.now() / 1000),
+            price: Number(t.entryPrice) || 0,
+            type: t.status === "open" ? "entry" : t.pnl && Number(t.pnl) !== 0 ? "close" : "entry",
+            side: t.side || "long",
+            pnl: Number(t.pnl || 0),
+            reasoning: t.reasoning,
+            size: Number(t.size || 0),
+          })).reverse()}
+          height={280}
+        />
+      </div>
         <Tabs defaultValue="positions" className="w-full">
           <TabsList className="bg-surface-2">
             <TabsTrigger value="positions">Positions ({positions.length})</TabsTrigger>
