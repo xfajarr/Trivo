@@ -137,3 +137,128 @@ export const agentTools = pgTable('agent_tools', {
   config: text('config'),
   createdAt: timestamp('created_at').defaultNow(),
 })
+
+export const agentDecisions = pgTable('agent_decisions', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  cycleId: text('cycle_id').notNull(),
+  market: text('market'),
+  action: text('action').notNull(),
+  toolName: text('tool_name'),
+  toolArgs: text('tool_args'),
+  rawConfidence: text('raw_confidence'),
+  calibratedConfidence: text('calibrated_confidence'),
+  riskLevel: text('risk_level'),
+  marketRegimeId: text('market_regime_id'),
+  committeeSummary: text('committee_summary'),
+  riskDecision: text('risk_decision'),
+  riskReason: text('risk_reason'),
+  finalReasoning: text('final_reasoning'),
+  txHash: text('tx_hash'),
+  positionId: text('position_id'),
+  status: text('status').default('proposed'),
+  createdAt: timestamp('created_at').defaultNow(),
+})
+
+export const committeeReports = pgTable('committee_reports', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  decisionId: text('decision_id').notNull(),
+  cycleId: text('cycle_id').notNull(),
+  role: text('role').notNull(),
+  stance: text('stance').notNull(),
+  confidence: text('confidence'),
+  summary: text('summary'),
+  evidence: text('evidence'),
+  modelProvider: text('model_provider'),
+  latencyMs: text('latency_ms'),
+  createdAt: timestamp('created_at').defaultNow(),
+})
+
+export const agentReflections = pgTable('agent_reflections', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  decisionId: text('decision_id'),
+  positionId: text('position_id'),
+  outcomePnl: text('outcome_pnl'),
+  outcomePnlPct: text('outcome_pnl_pct'),
+  wasCorrect: text('was_correct'),
+  lesson: text('lesson'),
+  mistakePattern: text('mistake_pattern'),
+  improvement: text('improvement'),
+  usableInPrompt: text('usable_in_prompt').default('true'),
+  createdAt: timestamp('created_at').defaultNow(),
+})
+
+export const agentScorecards = pgTable('agent_scorecards', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  window: text('window').notNull(),
+  trivoScore: text('trivo_score'),
+  realizedPnlScore: text('realized_pnl_score'),
+  winRateScore: text('win_rate_score'),
+  drawdownScore: text('drawdown_score'),
+  consistencyScore: text('consistency_score'),
+  riskAdjustedScore: text('risk_adjusted_score'),
+  explanationScore: text('explanation_score'),
+  totalTrades: text('total_trades'),
+  maxDrawdownPct: text('max_drawdown_pct'),
+  sharpeLikeRatio: text('sharpe_like_ratio'),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+export const agentRiskPolicies = pgTable('agent_risk_policies', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  maxOpenPositions: text('max_open_positions'),
+  maxLeverageX: text('max_leverage_x'),
+  maxTradeUsd: text('max_trade_usd'),
+  maxDailyLossUsd: text('max_daily_loss_usd'),
+  minConfidenceOpen: text('min_confidence_open'),
+  minConfidenceClose: text('min_confidence_close'),
+  cooldownMinutes: text('cooldown_minutes'),
+  blockIfRegime: text('block_if_regime'),
+  requireCommitteeQuorum: text('require_committee_quorum'),
+  enabled: text('enabled').default('true'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+export const skillPacks = pgTable('skill_packs', {
+  id: text('id').primaryKey(),
+  slug: text('slug').notNull(),
+  name: text('name').notNull(),
+  category: text('category').notNull(),
+  description: text('description'),
+  config: text('config'),
+  toolNames: text('tool_names'),
+  committeeRoles: text('committee_roles'),
+  enabled: text('enabled').default('true'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+export const agentSkillPacks = pgTable('agent_skill_packs', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  skillPackId: text('skill_pack_id').notNull(),
+  active: text('active').default('true'),
+  config: text('config'),
+  assignedAt: timestamp('assigned_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+})
+
+export const marketRegimes = pgTable('market_regimes', {
+  id: text('id').primaryKey(),
+  symbol: text('symbol').notNull(),
+  timeframe: text('timeframe').notNull(),
+  regime: text('regime').notNull(),
+  trendScore: text('trend_score'),
+  volatilityScore: text('volatility_score'),
+  liquidityScore: text('liquidity_score'),
+  sentimentShockScore: text('sentiment_shock_score'),
+  confidence: text('confidence'),
+  evidence: text('evidence'),
+  source: text('source'),
+  createdAt: timestamp('created_at').defaultNow(),
+})
