@@ -16,6 +16,7 @@ contract Deploy is Script {
 
         vm.startBroadcast(deployerPrivateKey);
 
+        // Deploy core contracts
         SimpleOracle oracle = new SimpleOracle();
         console.log("SimpleOracle:     ", address(oracle));
 
@@ -33,6 +34,7 @@ contract Deploy is Script {
 
         FeeManager fee = new FeeManager(deployer);
         console.log("FeeManager:       ", address(fee));
+
 
         // Link contracts
         perp.setCopyTrading(address(copy));

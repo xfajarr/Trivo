@@ -3,14 +3,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { AuthContext } from "@/hooks/useAuth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const {
-    ready,
-    authenticated,
-    user,
-    login,
-    logout: privyLogout,
-    getAccessToken,
-  } = usePrivy();
+  const { ready, authenticated, user, login, logout: privyLogout, getAccessToken } = usePrivy();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,11 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Verify with backend
           try {
-            await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/auth/verify`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ accessToken: token }),
-            });
+            await fetch(
+              `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/auth/verify`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ accessToken: token }),
+              },
+            );
           } catch {
             // silent — backend may not be running
           }

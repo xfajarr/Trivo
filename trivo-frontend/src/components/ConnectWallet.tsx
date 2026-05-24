@@ -61,7 +61,9 @@ export function ConnectWallet() {
           <span className="sm:hidden ticker text-[11px] text-muted-foreground">
             {address?.slice(0, 6)}…
           </span>
-          <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`h-3 w-3 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+          />
         </button>
 
         {/* Dropdown */}

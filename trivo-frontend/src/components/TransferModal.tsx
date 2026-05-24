@@ -45,7 +45,9 @@ export function TransferModal({ open, onClose, agentName, walletAddress }: Props
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
             <h2 className="font-display text-lg font-bold">Fund {agentName}</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Transfer USDC to your agent's wallet</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Transfer USDC to your agent's wallet
+            </p>
           </div>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-surface-2">
             <X className="h-5 w-5 text-muted-foreground" />
@@ -55,11 +57,22 @@ export function TransferModal({ open, onClose, agentName, walletAddress }: Props
         <div className="p-6 space-y-4">
           {/* Wallet Address */}
           <div>
-            <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Agent Wallet</div>
+            <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+              Agent Wallet
+            </div>
             <div className="flex items-center gap-2 rounded-md border border-border bg-surface-2/50 p-3">
               <code className="flex-1 text-xs font-mono truncate">{walletAddress}</code>
-              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={copyAddress}>
-                {copied ? <Check className="h-3.5 w-3.5 text-neon" /> : <Copy className="h-3.5 w-3.5" />}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 shrink-0"
+                onClick={copyAddress}
+              >
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-neon" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
               </Button>
             </div>
           </div>
@@ -67,7 +80,8 @@ export function TransferModal({ open, onClose, agentName, walletAddress }: Props
           {/* Quick deposit info */}
           <div className="rounded-md border border-border bg-surface-2/30 p-3">
             <p className="text-xs text-muted-foreground">
-              Send USDC to the address above from any wallet. The agent will use this balance for trading on Arc Testnet.
+              Send USDC to the address above from any wallet. The agent will use this balance for
+              trading on Arc Testnet.
             </p>
             <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
               <div className="rounded bg-surface-2 p-2 text-center">
@@ -83,26 +97,37 @@ export function TransferModal({ open, onClose, agentName, walletAddress }: Props
 
           {/* Quick transfer */}
           <div className="border-t border-border pt-4">
-            <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">Quick Transfer (Testnet)</div>
+            <div className="ticker text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5">
+              Quick Transfer (Testnet)
+            </div>
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <Input
                   type="number"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(e.target.value)}
                   placeholder="Amount in USDC"
                   className="pr-12 text-sm"
                   min={1}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">USDC</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                  USDC
+                </span>
               </div>
-              <Button onClick={handleTransfer} className="bg-neon text-primary-foreground hover:bg-neon/90">
+              <Button
+                onClick={handleTransfer}
+                className="bg-neon text-primary-foreground hover:bg-neon/90"
+              >
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             <div className="flex gap-2 mt-2">
-              {[10, 50, 100, 500].map(n => (
-                <button key={n} onClick={() => setAmount(String(n))} className={`text-[10px] px-2 py-1 rounded border ticker transition-colors ${amount === String(n) ? "border-neon bg-neon/10 text-neon" : "border-border text-muted-foreground hover:text-foreground"}`}>
+              {[10, 50, 100, 500].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => setAmount(String(n))}
+                  className={`text-[10px] px-2 py-1 rounded border ticker transition-colors ${amount === String(n) ? "border-neon bg-neon/10 text-neon" : "border-border text-muted-foreground hover:text-foreground"}`}
+                >
                   ${n}
                 </button>
               ))}
