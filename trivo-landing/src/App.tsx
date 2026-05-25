@@ -138,7 +138,7 @@ const FEATURES = [
   },
 ];
 
-const APP_URL = "https://app.trivoai.xyz";
+const APP_URL = "https://trivo.xfajarr-web3.workers.dev";
 
 
 export default function App() {
