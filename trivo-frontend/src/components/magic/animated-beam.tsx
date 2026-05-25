@@ -34,9 +34,9 @@ export function AnimatedBeam({
     if (!from || !to || !container) return;
 
     function calculate() {
-      const fromRect = from.getBoundingClientRect();
-      const toRect = to.getBoundingClientRect();
-      const containerRect = container.getBoundingClientRect();
+      const fromRect = from!.getBoundingClientRect();
+      const toRect = to!.getBoundingClientRect();
+      const containerRect = container!.getBoundingClientRect();
 
       const startX = fromRect.left + fromRect.width / 2 - containerRect.left;
       const startY = fromRect.top + fromRect.height / 2 - containerRect.top + startYOffset;

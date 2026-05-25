@@ -5,7 +5,7 @@ export function usePositions(agentId?: string) {
   const query = useQuery({
     queryKey: ["positions", agentId],
     queryFn: () => positionsApi.list(agentId ? { agentId, status: "open" } : { status: "open" }),
-    refetchInterval: 30_000,
+    refetchInterval: 10_000,
   });
 
   return {

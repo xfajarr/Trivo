@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createAgentSocket } from "@/lib/api";
 
-interface WSEvent {
-  event: string;
+export interface WSEvent {
+  event: "thinking" | "deciding" | "execution" | "error" | "connected";
   agentId: string;
   content?: string;
+  decision?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+  error?: string;
 }
 
 export function useWebSocket(agentId: string | null) {
@@ -13,15 +16,22 @@ export function useWebSocket(agentId: string | null) {
 
   useEffect(() => {
     if (!agentId) return;
+
     const ws = createAgentSocket(agentId);
     wsRef.current = ws;
-    ws.onmessage = (msg) => {
+
+    ws.onmessage = (msg: MessageEvent) => {
       try {
-        setLastEvent(JSON.parse(msg.data));
+        setLastEvent(JSON.parse(msg.data as string));
       } catch {
         // ignore parse errors
       }
     };
+
+    ws.onerror = () => {
+      // ws closed on error — reconnect handled by re-mount
+    };
+
     return () => {
       ws.close();
       wsRef.current = null;

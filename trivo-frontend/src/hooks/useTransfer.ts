@@ -7,8 +7,13 @@ interface Eip1193Provider {
   request(args: { method: string; params?: unknown[] }): Promise<unknown>;
 }
 
-function toHex(value: string | bigint): `0x${string}` {
-  const bn = typeof value === "string" ? BigInt(value) : value;
+function toHex(value: string | bigint | unknown): `0x${string}` {
+  const bn =
+    typeof value === "string"
+      ? BigInt(value as string)
+      : typeof value === "bigint"
+        ? value
+        : BigInt(String(value));
   return `0x${bn.toString(16)}` as `0x${string}`;
 }
 
@@ -21,7 +26,7 @@ async function sendSequential(
     method: "eth_getTransactionCount",
     params: [walletAddress, "pending"],
   });
-  let nonce = BigInt(rawNonce);
+  let nonce = BigInt(rawNonce as string);
 
   for (let i = 0; i < txs.length; i++) {
     const tx = txs[i];
@@ -30,17 +35,17 @@ async function sendSequential(
       from: walletAddress,
       to: tx.to,
       data: tx.data,
-      gas: toHex(tx.gas),
+      gas: toHex(tx.gas as string),
       nonce: toHex(nonce),
     };
     if (tx.value && tx.value !== "0") {
-      params.value = toHex(tx.value);
+      params.value = toHex((tx.value ?? "0") as string);
     }
 
-    const txHash = await provider.request({
+    const txHash = (await provider.request({
       method: "eth_sendTransaction",
       params: [params],
-    });
+    })) as string;
 
     nonce = nonce + 1n;
 
@@ -60,7 +65,7 @@ async function waitForReceipt(provider: Eip1193Provider, txHash: string, timeout
         params: [txHash],
       });
       if (receipt) {
-        if (receipt.status === "0x0") {
+        if (receipt && (receipt as { status?: string }).status === "0x0") {
           throw new Error(
             `Tx reverted — check you have enough USDC. Tx: ${txHash.slice(0, 16)}...`,
           );

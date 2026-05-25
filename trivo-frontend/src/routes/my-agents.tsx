@@ -162,7 +162,11 @@ function MyAgents() {
                   {a.modelProvider || "asi1"}
                 </Badge>
               </div>
-              <AgentWalletCard agentName={a.name} walletAddress={a.circleWalletAddress} />
+              <AgentWalletCard
+                agentId={a.id}
+                agentName={a.name}
+                walletAddress={a.circleWalletAddress}
+              />
               <div className="mt-4 grid grid-cols-2 gap-2 rounded-md border border-border bg-surface-2/50 p-3 text-xs">
                 <Cell
                   label="Realized"

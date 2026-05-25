@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AgentChat } from "@/components/AgentChat";
 import { AgentChart } from "@/components/AgentChart";
+import { AgentWalletCard } from "@/components/AgentWalletCard";
 import { useAgent } from "@/hooks/useAgents";
 import { usePositions } from "@/hooks/usePositions";
 import { useAgentPnl } from "@/hooks/usePortfolioPnl";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { useMarketCandles } from "@/hooks/useMarketCandles";
 import { useAgentDecisions, useAgentScorecard, useMarketRegimes } from "@/hooks/useIntelligence";
-import { fmtUSD, useTimeAgo } from "@/lib/utils";
+import { useThinkingTraces } from "@/hooks/useMemory";
+import { fmtUSD, timeAgo } from "@/lib/utils";
 
 interface TradeHistoryItem {
   id: string;
@@ -47,6 +50,7 @@ function AgentDetail() {
   const { data: agentData, isLoading } = useAgent(id);
   const { positions } = usePositions(id);
   const { data: pnlData } = useAgentPnl(id);
+  const { lastEvent } = useWebSocket(id);
   const agent = agentData?.agent;
   const [following, setFollowing] = useState(false);
   const [copyAll, setCopyAll] = useState(false);
@@ -64,6 +68,7 @@ function AgentDetail() {
   const decisionsQuery = useAgentDecisions(id);
   const scorecardQuery = useAgentScorecard(id);
   const regimeQuery = useMarketRegimes(primarySymbol, "1h");
+  const thinkingQuery = useThinkingTraces(id);
 
   if (isLoading) {
     return (
@@ -169,7 +174,36 @@ function AgentDetail() {
                 {following ? "Following" : "Follow"}
               </Button>
             </div>
+
+            {agent.circleWalletAddress && (
+              <div className="mt-4">
+                <AgentWalletCard
+                  agentId={agent.id}
+                  agentName={agent.name || "Agent"}
+                  walletAddress={agent.circleWalletAddress}
+                />
+              </div>
+            )}
           </div>
+
+          {/* Live agent activity ticker */}
+          {lastEvent && (
+            <div className="mt-3 rounded border border-neon/20 bg-neon/5 px-3 py-1.5 text-[11px] text-neon/80 ticker flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulse flex-shrink-0" />
+              <span className="uppercase tracking-widest text-muted-foreground/60">
+                {lastEvent.event}:
+              </span>
+              <span>
+                {lastEvent.content
+                  ? lastEvent.content.length > 120
+                    ? lastEvent.content.slice(0, 120) + "…"
+                    : lastEvent.content
+                  : lastEvent.result
+                    ? JSON.stringify(lastEvent.result).slice(0, 120)
+                    : ""}
+              </span>
+            </div>
+          )}
 
           {/* PnL Stats */}
           <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3 md:grid-cols-6">
@@ -369,6 +403,42 @@ function AgentDetail() {
                   Regime: {regimeQuery.data?.regimes?.[0]?.regime ?? "waiting"}
                 </p>
               </div>
+            </div>
+
+            {/* Thinking Traces — real-time agent reasoning */}
+            <div className="mt-4">
+              <div className="ticker mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">
+                Agent Reasoning
+              </div>
+              {thinkingQuery.isLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 animate-pulse rounded bg-surface-2" />
+                  ))}
+                </div>
+              ) : thinkingQuery.data?.traces?.length ? (
+                <div className="space-y-2">
+                  {thinkingQuery.data.traces.slice(0, 5).map((t) => (
+                    <div key={t.id} className="rounded border border-border bg-card p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="ticker text-[10px] uppercase tracking-widest text-neon">
+                          {t.type}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {t.createdAt ? timeAgo(new Date(t.createdAt).getTime()) : ""}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground/80 line-clamp-2">
+                        {t.content || "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  No reasoning traces yet — agent will generate them on next cycle.
+                </p>
+              )}
             </div>
           </TabsContent>
 

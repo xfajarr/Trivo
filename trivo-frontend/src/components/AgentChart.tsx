@@ -5,6 +5,7 @@ import type {
   SeriesMarker,
   Time,
 } from "lightweight-charts";
+import { ColorType } from "lightweight-charts";
 import type { Candle } from "@/lib/api";
 
 interface TradeMarker {
@@ -104,7 +105,7 @@ export function AgentChart({
       chart = createChart(el, {
         width: el.clientWidth,
         height,
-        layout: { background: { type: 0 as const, color: "#09090b" }, textColor: "#71717a" },
+        layout: { background: { type: ColorType.Solid, color: "#09090b" }, textColor: "#71717a" },
         grid: { vertLines: { color: "#18181b" }, horzLines: { color: "#18181b" } },
         crosshair: { mode: 0 as const },
         rightPriceScale: { borderColor: "#27272a", scaleMargins: { top: 0.1, bottom: 0.1 } },

@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -110,8 +111,7 @@ const pageVariants = {
 };
 
 function RootComponent() {
-  const router = useRouter();
-  const pathname = router.state.location.pathname;
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
 
   const navLinks = [
     { title: "Feed", url: "/feed" },
