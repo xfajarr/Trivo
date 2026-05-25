@@ -1,9 +1,16 @@
 {
   "buildCommand": "pnpm run build",
-  "outputDirectory": "dist/client",
   "installCommand": "pnpm install --prefer-offline",
   "framework": null,
+  "regions": ["iad1"],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs22.x",
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/api/index.ts" }
   ]
 }
