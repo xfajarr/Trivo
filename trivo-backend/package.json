@@ -3,8 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "node build.mjs",
+    "start": "node dist/index.cjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -36,6 +36,7 @@
     "@types/node": "^20.11.17",
     "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.10",
+    "esbuild": "^0.28.0",
     "eslint": "^10.4.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.8.3",
