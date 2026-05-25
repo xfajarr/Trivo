@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Copy, Sparkles, TrendingUp, ShieldCheck } from "lucide-react";
+import { Copy, Sparkles, TrendingUp, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -14,23 +14,58 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Position, fmtPct, fmtUSD, getAgent, VENUE_LABEL } from "@/lib/mock-data";
+import { fmtUSD, fmtPct } from "@/lib/utils";
+import { VENUE_LABEL } from "@/lib/constants";
+import { copyApi } from "@/lib/api";
+import type { Venue } from "@/lib/types";
+
+/** Shape expected by the copy-trade modal — convert from API Position before use. */
+export interface CopyTradePosition {
+  id: string;
+  agentId: string;
+  venue: Venue;
+  market: string;
+  side: string;
+  /** Notional size in USD (number). */
+  size: number;
+  leverage?: number;
+  /** Current unrealised PnL in USD. */
+  pnl: number;
+}
+
+/** Minimal agent info for display. */
+export interface CopyTradeAgentInfo {
+  name: string;
+  handle: string;
+  color: string;
+  avatar: string;
+}
 
 type Props = {
-  pos: Position;
+  pos: CopyTradePosition;
+  agent: CopyTradeAgentInfo;
+  /** The user's own agent ID that will follow this target. */
+  followerAgentId?: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onConfirmed?: () => void;
 };
 
-export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) {
-  const agent = getAgent(pos.agentId)!;
+export function CopyTradeModal({
+  pos,
+  agent,
+  followerAgentId,
+  open,
+  onOpenChange,
+  onConfirmed,
+}: Props) {
   const [amount, setAmount] = useState([Math.min(5000, Math.round(pos.size / 10))]);
   const [maxLev, setMaxLev] = useState([pos.leverage ?? 2]);
   const [stop, setStop] = useState([8]);
   const [tp, setTp] = useState([20]);
   const [autoExit, setAutoExit] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const ratio = amount[0] / pos.size;
   const projectedPnl = pos.pnl * ratio * (maxLev[0] / (pos.leverage ?? 1));
@@ -44,16 +79,36 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
     [pos.side],
   );
 
-  function confirm() {
+  async function confirm() {
+    if (!followerAgentId) {
+      toast.error("No agent selected. Create one first at /launch.");
+      return;
+    }
+
+    setLoading(true);
     setConfirmed(true);
-    toast.success(`Copied ${agent.name} → ${pos.market}`, {
-      description: `Mirrored ${fmtUSD(amount[0], { compact: true })} ${pos.side} @ ${maxLev[0]}× into your agent.`,
-    });
-    setTimeout(() => {
-      onConfirmed?.();
-      onOpenChange(false);
+
+    try {
+      await copyApi.attach({
+        followerAgentId,
+        targetAgentId: agent.name, // resolve from agent display name if needed
+        allocationBps: Math.round((amount[0] / 100_000) * 10_000), // 1% per $1k
+      });
+      toast.success(`Copied ${agent.name} → ${pos.market}`, {
+        description: `Mirrored ${fmtUSD(amount[0], { compact: true })} ${pos.side} @ ${maxLev[0]}× into your agent.`,
+      });
+      setTimeout(() => {
+        onConfirmed?.();
+        onOpenChange(false);
+        setConfirmed(false);
+      }, 1400);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      toast.error(`Copy failed: ${msg}`);
       setConfirmed(false);
-    }, 1400);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -64,7 +119,7 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
             <Copy className="h-4 w-4 text-neon" /> Copy this trade
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Mirror {agent.name}'s position into your own agent. Set your own risk.
+            Mirror {agent.name}&apos;s position into your own agent. Set your own risk.
           </DialogDescription>
         </DialogHeader>
 
@@ -124,7 +179,7 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
           </div>
 
           {/* Leverage */}
-          {pos.venue === "PERP" && (
+          {pos.venue === "perp" && (
             <div>
               <div className="flex items-center justify-between">
                 <Label className="ticker text-[11px] uppercase tracking-widest text-muted-foreground">
@@ -183,7 +238,7 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
             <div>
               <div className="font-display text-sm">Auto-exit if origin closes</div>
               <div className="text-[11px] text-muted-foreground">
-                Mirror {agent.name}'s exit instantly.
+                Mirror {agent.name}&apos;s exit instantly.
               </div>
             </div>
             <Switch checked={autoExit} onCheckedChange={setAutoExit} />
@@ -194,7 +249,7 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
             <div className="mb-2 flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-neon" />
               <span className="ticker text-[10px] uppercase tracking-widest text-muted-foreground">
-                Mock projection (at current mark)
+                Projected at current mark
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-xs">
@@ -206,18 +261,22 @@ export function CopyTradeModal({ pos, open, onOpenChange, onConfirmed }: Props) 
         </div>
 
         <DialogFooter className="border-t border-border p-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={confirmed}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
           <Button
             onClick={confirm}
-            disabled={confirmed}
+            disabled={loading || confirmed || !followerAgentId}
             className="bg-neon text-primary-foreground hover:bg-neon/90 glow-neon"
           >
-            {confirmed ? (
+            {loading ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : confirmed ? (
               <>
                 <ShieldCheck className="mr-1.5 h-4 w-4" /> Copied to your agent
               </>
+            ) : !followerAgentId ? (
+              "No agent to copy to"
             ) : (
               <>
                 <TrendingUp className="mr-1.5 h-4 w-4" /> Confirm copy ·{" "}

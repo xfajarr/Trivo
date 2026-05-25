@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Activity, Compass, Rocket, Wallet, Home } from "lucide-react";
 
 const items = [
@@ -10,13 +10,14 @@ const items = [
 ];
 
 export function MobileBottomNav() {
-  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const location = useLocation();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background/90 backdrop-blur-md md:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {items.map((it) => {
-          const active = it.url === "/" ? pathname === "/" : pathname.startsWith(it.url);
+          const active =
+            it.url === "/" ? location.pathname === "/" : location.pathname.startsWith(it.url);
           if (it.primary) {
             return (
               <li key={it.url} className="flex items-center justify-center">

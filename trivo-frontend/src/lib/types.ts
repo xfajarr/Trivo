@@ -12,12 +12,17 @@ export type AgentStatus = "inactive" | "active" | "paused";
 export type PositionStatus = "open" | "closed";
 export type HostingType = "trivo" | "self_hosted";
 
+// Agent type — mirrors the DB schema returned by GET /api/agents
+// Optional derived fields (color, venues, pnl24h, pnl7d, followers) may come
+// from computed/mocked sources; always provide fallbacks in components.
 export interface Agent {
   id: string;
   ownerId: string;
   name: string;
   handle: string;
   avatar?: string;
+  color?: string; // FE-only display color (not from backend)
+  venues?: Venue[]; // FE-only (derived from skills)
   hostingType?: HostingType;
   endpoint?: string;
   modelProvider?: string;
@@ -27,12 +32,20 @@ export interface Agent {
   spendLimit?: string;
   maxLeverage?: string;
   stopLossPct?: string;
+  takeProfitPct?: string;
+  copyable?: boolean;
   status: AgentStatus;
   totalPnl?: string;
   aum?: string;
   tradeCount?: string;
   winRate?: string;
   copiers?: string;
+  // Derived / UI fields (not from backend — provide fallbacks)
+  pnl24h?: number;
+  pnl7d?: number;
+  followers?: number;
+  // On-chain / wallet
+  circleWalletId?: string;
   circleWalletAddress?: string;
   erc8004TokenId?: string;
   erc8004TxHash?: string;

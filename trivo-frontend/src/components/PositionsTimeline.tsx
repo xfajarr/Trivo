@@ -1,14 +1,33 @@
-import { Position, fmtPct, fmtUSD, timeAgo, VENUE_LABEL, Venue } from "@/lib/mock-data";
+import { fmtPct, fmtUSD, timeAgo } from "@/lib/utils";
+import { VENUE_LABEL } from "@/lib/constants";
+import type { Venue } from "@/lib/types";
 
-const venueDot: Record<Venue, string> = {
-  PERP: "bg-neon",
-  PREDICTION: "bg-violet",
-  LP: "bg-cyber",
-  YIELD: "bg-warn",
-  SPOT: "bg-signal",
+/** Shape expected by the timeline — convert from API Position before use. */
+export interface TimelinePosition {
+  id: string;
+  venue: Venue;
+  market: string;
+  side: string;
+  /** Notional size in USD. */
+  size: number;
+  /** Unrealised PnL in USD. */
+  pnl: number;
+  /** PnL as percentage of entry. */
+  pnlPct: number;
+  leverage?: number;
+  /** Timestamp in ms. */
+  openedAt: number;
+}
+
+const venueDot: Record<string, string> = {
+  perp: "bg-neon",
+  prediction: "bg-violet",
+  lp: "bg-cyber",
+  yield: "bg-warn",
+  spot: "bg-signal",
 };
 
-export function PositionsTimeline({ positions }: { positions: Position[] }) {
+export function PositionsTimeline({ positions }: { positions: TimelinePosition[] }) {
   const sorted = [...positions].sort((a, b) => b.openedAt - a.openedAt);
   const totalPnl = positions.reduce((s, p) => s + p.pnl, 0);
 
@@ -110,8 +129,8 @@ export function PositionsTimeline({ positions }: { positions: Position[] }) {
                 <li key={v}>
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${venueDot[v as Venue]}`} />
-                      <span className="font-display">{VENUE_LABEL[v as Venue]}</span>
+                      <span className={`h-2 w-2 rounded-full ${venueDot[v]}`} />
+                      <span className="font-display">{VENUE_LABEL[v]}</span>
                       <span className="ticker text-[10px] text-muted-foreground">
                         ×{data.count}
                       </span>

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { useCreateAgent } from "@/hooks/useAgents";
+import { useAuth } from "@/hooks/useAuth";
 import type { ModelProvider } from "@/lib/types";
 
 const STEPS = ["Identity", "Strategy", "Risk", "Deploy"];
@@ -70,6 +71,7 @@ export const Route = createFileRoute("/launch")({
 function LaunchPage() {
   const navigate = useNavigate();
   const createAgent = useCreateAgent();
+  const { isAuthenticated, isLoading } = useAuth();
   const [step, setStep] = useState(0);
 
   // Form state
@@ -116,11 +118,13 @@ function LaunchPage() {
         spendLimit: String(budget),
         maxLeverage: String(maxLev[0]),
         stopLossPct: String(stopLoss[0]),
+        takeProfitPct: String(takeProfit[0]),
+        copyable,
         hostingType: "trivo",
       });
 
       toast.success(`${name} deployed`, {
-        description: `Agent created with ERC-8004 identity on Arc Testnet. Agent is now active and trading.`,
+        description: `Agent created with ERC-8004 identity and Circle wallet. Fund it below to start trading.`,
       });
 
       const agentId = result?.agent?.id;
