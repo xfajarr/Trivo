@@ -22,6 +22,15 @@ const ReflectionSchema = z.object({
   usableInPrompt: z.boolean(),
 })
 
+const ImprovedStrategiesSchema = z.object({
+  strategies: z.array(z.object({
+    name: z.string().max(100),
+    description: z.string().max(300),
+    expectedImprovement: z.string().max(200),
+    condition: z.string().max(200).optional(),
+  })).max(5),
+})
+
 type Reflection = z.infer<typeof ReflectionSchema>
 
 const SYSTEM_PROMPT = `You are a Trading Reflection Analyst — you evaluate completed trades to extract lessons.
@@ -42,9 +51,6 @@ export class ReflectionGenerator {
     this.provider = provider
   }
 
-  /**
-   * Generate a reflection from a completed trade
-   */
   async generateReflection(
     agentId: string,
     decisionId: string,
@@ -74,14 +80,48 @@ Generate a trading reflection as JSON:
     try {
       return await this.provider.completeWithSchema(SYSTEM_PROMPT, userPrompt, ReflectionSchema)
     } catch {
-      // Deterministic fallback
       return this.fallbackReflection(pnl, reasoning)
     }
   }
 
   /**
-   * Evaluate reasoning quality score
+   * Generate improved strategies from reflection data
    */
+  async generateImprovedStrategies(reflection: Reflection): Promise<string[]> {
+    const userPrompt = `Based on this trading reflection:
+Outcome: ${reflection.outcome}
+Lesson: ${reflection.lesson}
+Mistake Pattern: ${reflection.mistakePattern}
+Improvement: ${reflection.improvement}
+Reasoning Quality: ${reflection.reasoningQuality}/100
+
+Generate 1-3 improved strategy recommendations as JSON:
+{
+  "strategies": [
+    {
+      "name": "<strategy name>",
+      "description": "<brief description>",
+      "expectedImprovement": "<expected impact>",
+      "condition": "<when to apply this>"
+    }
+  ]
+}`
+
+    try {
+      const result = await this.provider.completeWithSchema(
+        'You generate strategy improvements from trading reflections.',
+        userPrompt,
+        ImprovedStrategiesSchema
+      )
+      return result.strategies.map(s => `[${s.name}] ${s.description}. Expected: ${s.expectedImprovement}`)
+    } catch {
+      return [
+        `${reflection.wasCorrect ? 'Continue' : 'Revise'} ${reflection.mistakePattern !== 'none' ? 'entry criteria based on ' + reflection.mistakePattern : 'current approach'}`,
+        `${reflection.wasCorrect ? 'Scale' : 'Reduce'} position sizing for similar setups`,
+      ]
+    }
+  }
+
   async evaluateReasoningQuality(agentId: string, decisionId: string): Promise<number> {
     const [decision] = await db
       .select()
@@ -89,7 +129,7 @@ Generate a trading reflection as JSON:
       .where(eq(agentDecisions.id, decisionId))
       .limit(1)
 
-    if (!decision) return 50 // Default score
+    if (!decision) return 50
 
     const userPrompt = `Evaluate the reasoning quality of this trading decision:
 Decision ID: ${decisionId}
@@ -117,9 +157,6 @@ Respond with ONLY a number between 0 and 100.`
     }
   }
 
-  /**
-   * Get recent lessons for LLM prompt context
-   */
   async buildReflectionSummary(agentId: string, limit: number = 5): Promise<string> {
     const reflections = await db
       .select()
@@ -142,9 +179,6 @@ Respond with ONLY a number between 0 and 100.`
     return `Recent Trading Lessons (last ${reflections.length} trades):\n\n${parts.join('\n\n')}`
   }
 
-  /**
-   * Extract lessons from a reflection
-   */
   extractLessons(reflection: Reflection): string[] {
     const lessons: string[] = []
     if (reflection.lesson) lessons.push(reflection.lesson)
@@ -155,9 +189,6 @@ Respond with ONLY a number between 0 and 100.`
     return lessons
   }
 
-  /**
-   * Deterministic fallback reflection
-   */
   private fallbackReflection(pnl: number, reasoning: string): Reflection {
     const isProfit = pnl > 0
     return {
@@ -178,8 +209,7 @@ Respond with ONLY a number between 0 and 100.`
   }
 }
 
-// Kept for backwards compatibility with agent-runner.ts and decision-memory.test.ts
-
+// Kept for backwards compatibility
 export interface ReflectionSummaryInput {
   market: string
   side: string

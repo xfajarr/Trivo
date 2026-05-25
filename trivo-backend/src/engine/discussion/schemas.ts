@@ -2,7 +2,6 @@
 // Debate and deliberation specific Zod schemas
 
 import { z } from 'zod'
-import type { Stance } from '../schemas/index.js'
 
 export const StanceSchema = z.enum(['bullish', 'bearish', 'neutral'])
 

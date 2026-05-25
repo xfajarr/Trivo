@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { BaseProvider } from '../providers/base-provider.js'
 import type { MarketContext } from '../types.js'
 import { BaseAgent, type AgentConfig, type AgentResponse } from './base-agent.js'
+import type { CompactAnalystReport } from './researchers/bull-researcher.js'
 
 export const TraderProposalSchema = z.object({
   action: z.enum(['buy', 'sell', 'hold']),
@@ -32,7 +33,7 @@ You determine:
 - Risk/reward ratio
 
 You MUST be specific and actionable. No vague recommendations.
-If you recommend 'hold', explain what would change your mind.`
+CRITICAL: In demo mode, you should actively seek trading opportunities. Only return 'hold' if there is a clear reason not to trade. When analyst signals are mixed, prefer taking a small position over holding cash. Never suggest holding just because signals aren't perfect — suggest a trade with appropriate position sizing instead.`
 
 export class TraderAgent extends BaseAgent {
   constructor(provider: BaseProvider) {
@@ -46,7 +47,22 @@ export class TraderAgent extends BaseAgent {
   }
 
   async analyze(context: MarketContext): Promise<AgentResponse<TraderProposal>> {
+    return this.analyzeWithResearch(context, '', [])
+  }
+
+  async analyzeWithResearch(
+    context: MarketContext,
+    researchPlan: string = '',
+    analystReports: CompactAnalystReport[] = []
+  ): Promise<AgentResponse<TraderProposal>> {
     const btcPrice = context.prices['BTC/USD']
+
+    const reportsSection = analystReports.length > 0
+      ? `\nAnalyst Reports:\n${analystReports.map(r => `- ${r.role}: ${r.stance.toUpperCase()} (${r.confidence}%): ${r.summary}`).join('\n')}`
+      : ''
+
+    const researchSection = researchPlan ? `\nResearch Plan:\n${researchPlan}` : ''
+
     const userPrompt = `Generate a trade proposal based on current market conditions:
 
 BTC Price: $${btcPrice?.toLocaleString() ?? 'N/A'}
@@ -54,6 +70,8 @@ Today's PnL: $${context.todayPnl.toFixed(2)}
 Win Rate: ${context.winRate.toFixed(1)}%
 Total Trades: ${context.totalTrades}
 Open Positions: ${context.openPositions.length || 0}
+${reportsSection}
+${researchSection}
 
 Consider:
 1. Current market conditions and trend

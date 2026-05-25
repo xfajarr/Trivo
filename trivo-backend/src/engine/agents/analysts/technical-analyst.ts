@@ -21,6 +21,18 @@ const TechnicalAnalysisSchema = z.object({
   }).optional(),
   summary: z.string().max(500),
   confidence: z.number().min(0).max(100),
+  patterns: z.array(z.object({
+    name: z.string(),
+    type: z.enum(['bullish', 'bearish', 'neutral']),
+    strength: z.enum(['strong', 'medium', 'weak']),
+  })).max(5).optional(),
+  evidence: z.array(z.object({
+    source: z.string(),
+    content: z.string(),
+    confidence: z.number().min(0).max(100),
+  })).max(5).optional(),
+  challenges: z.array(z.string()).max(3).optional(),
+  warnings: z.array(z.string()).max(3).optional(),
 })
 
 type TechnicalAnalysis = z.infer<typeof TechnicalAnalysisSchema>
@@ -70,7 +82,11 @@ Provide your technical analysis as JSON:
     "volume_trend": "increasing" | "decreasing" | "flat"
   },
   "summary": "<analysis summary>",
-  "confidence": <0-100>
+  "confidence": <0-100>,
+  "patterns": [{"name": "<pattern>", "type": "bullish"|"bearish"|"neutral", "strength": "strong"|"medium"|"weak"}],
+  "evidence": [{"source": "<data source>", "content": "<specific data point>", "confidence": <0-100>}],
+  "challenges": ["<question for other analysts>"],
+  "warnings": ["<risk warning>"]
 }`
 
     return this.callLLM(userPrompt, TechnicalAnalysisSchema)

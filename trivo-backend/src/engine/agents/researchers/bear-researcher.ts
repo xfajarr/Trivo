@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { BaseProvider } from '../../providers/base-provider.js'
 import type { MarketContext } from '../../types.js'
 import { BaseAgent, type AgentConfig, type AgentResponse } from '../base-agent.js'
+import type { CompactAnalystReport } from './bull-researcher.js'
 
 const BearResearchSchema = z.object({
   stance: z.enum(['bearish', 'neutral']),
@@ -42,8 +43,22 @@ export class BearResearcherAgent extends BaseAgent {
   }
 
   async analyze(context: MarketContext): Promise<AgentResponse<BearResearch>> {
+    return this.analyzeWithData(context, [], '')
+  }
+
+  async analyzeWithData(
+    context: MarketContext,
+    analystReports: CompactAnalystReport[] = [],
+    bullCase: string = ''
+  ): Promise<AgentResponse<BearResearch>> {
     const btcPrice = context.prices['BTC/USD']
     const ethPrice = context.prices['ETH/USD']
+
+    const reportsSection = analystReports.length > 0
+      ? `\nAnalyst Reports:\n${analystReports.map(r => `- ${r.role}: ${r.stance.toUpperCase()} (${r.confidence}%): ${r.summary}`).join('\n')}`
+      : ''
+
+    const bullCaseSection = bullCase ? `\nBull Case To Challenge:\n${bullCase}` : ''
 
     const userPrompt = `Build the bear case for the current market:
 
@@ -52,6 +67,8 @@ Today's PnL: $${context.todayPnl.toFixed(2)}
 Win Rate: ${context.winRate.toFixed(1)}%
 Open Positions: ${context.openPositions.length}
 Recent Trades: ${context.recentTrades.length}
+${reportsSection}
+${bullCaseSection}
 
 Consider:
 1. What are the biggest risks right now?

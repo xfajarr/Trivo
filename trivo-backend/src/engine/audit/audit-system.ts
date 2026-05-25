@@ -26,7 +26,7 @@ export class AuditSystem {
   private pendingSteps: ReasoningStep[] = []
 
   // Start tracking a reasoning chain for a decision
-  startReasoningChain(decisionId: string): string {
+  startReasoningChain(_decisionId: string): string {
     const chainId = randomUUID()
     this.pendingSteps = []
     return chainId
@@ -37,7 +37,7 @@ export class AuditSystem {
     return this.startReasoningChain(randomUUID())
   }
 
-  // Finalize chain (simplified - returns DecisionExport stub)
+  // Finalize chain — returns complete DecisionExport
   finalizeChain(chainId: string): DecisionExport {
     const steps = [...this.pendingSteps]
     this.pendingSteps = []

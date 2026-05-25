@@ -82,7 +82,8 @@ export async function withFallback<T>(
       throw new Error(
         `${context}: primary and fallback both failed. ` +
         `Primary: ${(primaryError as Error).message}. ` +
-        `Fallback: ${(fallbackError as Error).message}`
+        `Fallback: ${(fallbackError as Error).message}`,
+        { cause: fallbackError }
       )
     }
   }

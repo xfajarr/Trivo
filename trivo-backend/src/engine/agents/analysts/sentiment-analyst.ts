@@ -14,6 +14,13 @@ const SentimentAnalysisSchema = z.object({
   fear_greed_estimate: z.number().min(0).max(100),
   summary: z.string().max(500),
   confidence: z.number().min(0).max(100),
+  evidence: z.array(z.object({
+    source: z.string(),
+    content: z.string(),
+    confidence: z.number().min(0).max(100),
+  })).max(5).optional(),
+  challenges: z.array(z.string()).max(3).optional(),
+  warnings: z.array(z.string()).max(3).optional(),
 })
 
 type SentimentAnalysis = z.infer<typeof SentimentAnalysisSchema>
@@ -58,7 +65,10 @@ Provide your sentiment analysis as JSON:
   "news_impact": "positive" | "negative" | "neutral" | "mixed",
   "fear_greed_estimate": <0-100>,
   "summary": "<analysis summary>",
-  "confidence": <0-100>
+  "confidence": <0-100>,
+  "evidence": [{"source": "<data source>", "content": "<specific data point>", "confidence": <0-100>}],
+  "challenges": ["<question for other analysts>"],
+  "warnings": ["<risk warning>"]
 }`
 
     return this.callLLM(userPrompt, SentimentAnalysisSchema)

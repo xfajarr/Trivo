@@ -48,7 +48,19 @@ export class PortfolioManagerAgent extends BaseAgent {
   }
 
   async analyze(context: MarketContext): Promise<AgentResponse<PortfolioDecision>> {
+    return this.analyzeWithProposal(context, '', '')
+  }
+
+  async analyzeWithProposal(
+    context: MarketContext,
+    traderProposal: string = '',
+    researchPlan: string = ''
+  ): Promise<AgentResponse<PortfolioDecision>> {
     const btcPrice = context.prices['BTC/USD']
+
+    const proposalSection = traderProposal ? `\nTrader Proposal:\n${traderProposal}` : ''
+    const researchSection = researchPlan ? `\nResearch Plan:\n${researchPlan}` : ''
+
     const userPrompt = `Make the final portfolio decision:
 
 BTC Price: $${btcPrice?.toLocaleString() ?? 'N/A'}
@@ -56,6 +68,8 @@ Today's PnL: $${context.todayPnl.toFixed(2)}
 Win Rate: ${context.winRate.toFixed(1)}%
 Total Trades: ${context.totalTrades}
 Open Positions: ${context.openPositions.length || 0}
+${proposalSection}
+${researchSection}
 
 You must consider:
 1. Overall portfolio health and risk exposure

@@ -7,6 +7,13 @@ import type { BaseProvider } from '../../providers/base-provider.js'
 import type { MarketContext } from '../../types.js'
 import { BaseAgent, type AgentConfig, type AgentResponse } from '../base-agent.js'
 
+export interface CompactAnalystReport {
+  role: string
+  stance: string
+  confidence: number
+  summary: string
+}
+
 const BullResearchSchema = z.object({
   stance: z.enum(['bullish', 'neutral']),
   confidence: z.number().min(0).max(100),
@@ -44,8 +51,22 @@ export class BullResearcherAgent extends BaseAgent {
   }
 
   async analyze(context: MarketContext): Promise<AgentResponse<BullResearch>> {
+    return this.analyzeWithData(context, [], '')
+  }
+
+  async analyzeWithData(
+    context: MarketContext,
+    analystReports: CompactAnalystReport[] = [],
+    bearCase: string = ''
+  ): Promise<AgentResponse<BullResearch>> {
     const btcPrice = context.prices['BTC/USD']
     const ethPrice = context.prices['ETH/USD']
+
+    const reportsSection = analystReports.length > 0
+      ? `\nAnalyst Reports:\n${analystReports.map(r => `- ${r.role}: ${r.stance.toUpperCase()} (${r.confidence}%): ${r.summary}`).join('\n')}`
+      : ''
+
+    const bearCaseSection = bearCase ? `\nBear Case To Address:\n${bearCase}` : ''
 
     const userPrompt = `Build the bull case for the current market:
 
@@ -54,6 +75,8 @@ Today's PnL: $${context.todayPnl.toFixed(2)}
 Win Rate: ${context.winRate.toFixed(1)}%
 Open Positions: ${context.openPositions.length}
 Recent Trades: ${context.recentTrades.length}
+${reportsSection}
+${bearCaseSection}
 
 Consider:
 1. What positive catalysts exist right now?
