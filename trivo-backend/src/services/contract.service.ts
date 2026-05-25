@@ -119,7 +119,7 @@ export async function reportPositionOnChain(
     address: config.COPY_TRADING as `0x${string}`,
     abi: CopyTradingABI,
     functionName: 'reportPosition',
-    args: [BigInt(agentId), venue, market, side, BigInt(size), BigInt(entryPrice), BigInt(leverage), refId],
+    args: [BigInt(agentId), venue, market, side, BigInt(Math.round(size)), BigInt(Math.round(entryPrice)), BigInt(Math.round(leverage)), refId],
   } as any)
   const receipt = await publicClient.waitForTransactionReceipt({ hash: tx })
   return { txHash: receipt.transactionHash, positionId: 0 }
