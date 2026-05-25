@@ -5,7 +5,7 @@ import type {
   SeriesMarker,
   Time,
 } from "lightweight-charts";
-import { ColorType } from "lightweight-charts";
+import { ColorType, LineStyle } from "lightweight-charts";
 import type { Candle } from "@/lib/api";
 
 interface TradeMarker {
@@ -19,7 +19,20 @@ interface TradeMarker {
   size?: number;
 }
 
-const TIMEFRAMES = ["1m", "5m", "15m", "1h", "4h", "1d"];
+const TIMEFRAMES = ["4h", "1d"];
+const RECOMMENDED_TIMEFRAME = "4h";
+
+function formatPair(pair: string): string {
+  return pair.replace(/\/USD$/i, "-USDC").replace("/", "-").toUpperCase();
+}
+
+function formatPrice(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "--";
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: value >= 1_000 ? 0 : 2,
+  });
+}
 
 export function AgentChart({
   pair = "BTC/USD",
@@ -44,12 +57,12 @@ export function AgentChart({
 
   const chartCandles = useMemo(
     () =>
-      candles.map((candle) => ({
-        time: candle.time as Time,
-        open: candle.open,
-        high: candle.high,
-        low: candle.low,
-        close: candle.close,
+      candles.map((c) => ({
+        time: c.time as Time,
+        open: c.open,
+        high: c.high,
+        low: c.low,
+        close: c.close,
       })),
     [candles],
   );
@@ -57,37 +70,37 @@ export function AgentChart({
   const markers = useMemo(() => {
     const seen = new Set<string>();
     return trades
-      .filter((trade) => {
-        const key = `${trade.type}-${trade.time}-${trade.price}-${trade.side}`;
+      .filter((t) => {
+        const key = `${t.type}-${t.time}-${t.side}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       })
-      .map((trade) => ({
-        time: trade.time as Time,
-        position: trade.type === "entry" ? ("belowBar" as const) : ("inBar" as const),
-        color:
-          trade.type === "entry"
-            ? ["long", "yes", "add"].includes(trade.side)
-              ? "#22c55e"
-              : "#ef4444"
-            : (trade.pnl || 0) >= 0
-              ? "#22c55e"
-              : "#ef4444",
-        shape:
-          trade.type === "entry"
-            ? ["long", "yes", "add"].includes(trade.side)
-              ? ("arrowUp" as const)
-              : ("arrowDown" as const)
-            : ("circle" as const),
-        text:
-          trade.type === "entry"
-            ? `${trade.side.toUpperCase()} ${trade.reasoning ? `· ${trade.reasoning}` : ""}`.trim()
-            : trade.pnl !== undefined
-              ? `${trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}`
-              : "",
-        size: 2,
-      })) as SeriesMarker<Time>[];
+      .map((t) => {
+        const isLong = ["long", "yes", "add", "buy"].includes(t.side.toLowerCase());
+        const isEntry = t.type === "entry";
+        const isProfitable = (t.pnl || 0) >= 0;
+
+        if (isEntry) {
+          return {
+            time: t.time as Time,
+            position: isLong ? ("belowBar" as const) : ("aboveBar" as const),
+            color: isLong ? "#49b84f" : "#ef3024",
+            shape: "square" as const,
+            text: isLong ? "B" : "S",
+            size: 1,
+          };
+        }
+
+        return {
+          time: t.time as Time,
+          position: isProfitable ? ("belowBar" as const) : ("aboveBar" as const),
+          color: isProfitable ? "#49b84f" : "#ef3024",
+          shape: "square" as const,
+          text: "E",
+          size: 1,
+        };
+      }) as SeriesMarker<Time>[];
   }, [trades]);
 
   useEffect(() => {
@@ -105,20 +118,53 @@ export function AgentChart({
       chart = createChart(el, {
         width: el.clientWidth,
         height,
-        layout: { background: { type: ColorType.Solid, color: "#09090b" }, textColor: "#71717a" },
-        grid: { vertLines: { color: "#18181b" }, horzLines: { color: "#18181b" } },
-        crosshair: { mode: 0 as const },
-        rightPriceScale: { borderColor: "#27272a", scaleMargins: { top: 0.1, bottom: 0.1 } },
-        timeScale: { borderColor: "#27272a", timeVisible: true },
+        autoSize: true,
+        layout: {
+          background: { type: ColorType.Solid, color: "#fbfdf8" },
+          textColor: "#102a14",
+          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+          fontSize: 12,
+        },
+        grid: {
+          vertLines: { color: "rgba(15, 42, 20, 0.08)" },
+          horzLines: { color: "rgba(15, 42, 20, 0.08)" },
+        },
+        crosshair: {
+          mode: 1 as const,
+          vertLine: { color: "rgba(15, 42, 20, 0.22)", width: 1, style: LineStyle.Dashed },
+          horzLine: { color: "rgba(15, 42, 20, 0.22)", width: 1, style: LineStyle.Dashed },
+        },
+        localization: {
+          priceFormatter: (price: number) => formatPrice(price),
+        },
+        rightPriceScale: {
+          borderColor: "#102a14",
+          textColor: "#102a14",
+          scaleMargins: { top: 0.08, bottom: 0.1 },
+        },
+        timeScale: {
+          borderColor: "#102a14",
+          timeVisible: true,
+          secondsVisible: false,
+          rightOffset: 1,
+          barSpacing: 7,
+        },
+        handleScroll: true,
+        handleScale: true,
       });
 
       const series = chart.addSeries(CandlestickSeries, {
-        upColor: "#22c55e",
-        downColor: "#ef4444",
-        borderUpColor: "#22c55e",
-        borderDownColor: "#ef4444",
-        wickUpColor: "#71717a",
-        wickDownColor: "#71717a",
+        upColor: "#4caf50",
+        downColor: "#ff4b38",
+        borderUpColor: "#4caf50",
+        borderDownColor: "#ff4b38",
+        wickUpColor: "#4caf50",
+        wickDownColor: "#ff4b38",
+        priceLineVisible: true,
+        priceLineColor: "#ef3024",
+        priceLineStyle: LineStyle.Dotted,
+        priceLineWidth: 1,
+        lastValueVisible: true,
       } as CandlestickSeriesPartialOptions);
 
       if (chartCandles.length > 0) {
@@ -141,47 +187,62 @@ export function AgentChart({
   }, [chartCandles, markers, height]);
 
   return (
-    <div className="rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-4 py-2.5 border-b border-border/50">
+    <div className="rounded-2xl border border-[#dfe7dc] bg-[#fbfdf8] p-6 shadow-[0_18px_60px_rgba(15,42,20,0.08)]">
+      <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <span className="font-display text-sm font-bold text-foreground">{pair}</span>
-          <div className="mt-0.5 flex items-center gap-2">
-            <span className="font-mono text-xs text-foreground font-semibold">
-              {currentPrice !== null
-                ? `$${currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                : "Waiting for candles..."}
-            </span>
-            {isLoading ? (
-              <span className="ticker text-[9px] text-muted-foreground/60 uppercase tracking-wider">
-                Loading
-              </span>
-            ) : null}
-          </div>
+          <h2 className="font-display text-lg font-bold tracking-tight text-[#0b2a12]">
+            {formatPair(pair)}
+          </h2>
+          <p className="mt-1 font-mono text-[11px] tabular-nums text-[#55705b]">
+            Last {formatPrice(currentPrice)} · Signals overlay
+          </p>
         </div>
-        <div className="flex items-center gap-1">
-          {TIMEFRAMES.map((tf) => (
-            <button
-              key={tf}
-              onClick={() => onTimeframeChange(tf)}
-              className={`h-6 px-2 rounded text-[10px] ticker tracking-wider transition-colors ${
-                timeframe === tf
-                  ? "bg-neon/20 text-neon border border-neon/30"
-                  : "text-muted-foreground hover:text-foreground hover:bg-surface-2/50"
-              }`}
-            >
-              {tf}
-            </button>
-          ))}
+
+        <div className="flex items-center gap-2" aria-label="Chart timeframe controls">
+          {TIMEFRAMES.map((tf) => {
+            const isActive = timeframe === tf;
+            const isRecommended = tf === RECOMMENDED_TIMEFRAME;
+            return (
+              <button
+                key={tf}
+                type="button"
+                onClick={() => onTimeframeChange(tf)}
+                className={`inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b7ff2a] focus-visible:ring-offset-2 ${
+                  isActive || isRecommended
+                    ? "bg-[#c8ff2d] text-[#245000] shadow-sm hover:bg-[#baff1e]"
+                    : "bg-[#eef1f0] text-[#334238] hover:bg-[#e3e8e4]"
+                }`}
+                aria-pressed={isActive}
+              >
+                {tf.toUpperCase()}
+                {isRecommended && (
+                  <span className="rounded-full bg-[#408b08] px-1.5 py-0.5 text-[9px] font-bold leading-none text-white">
+                    Recommended
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      <div ref={containerRef} className="w-full" style={{ height }} />
+      <div className="relative overflow-hidden rounded-sm bg-[#fbfdf8]">
+        <div ref={containerRef} className="w-full" style={{ height }} />
 
-      {!isLoading && chartCandles.length === 0 ? (
-        <div className="flex h-[360px] items-center justify-center border-t border-border/50 text-sm text-muted-foreground">
-          Waiting for market candles...
-        </div>
-      ) : null}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#fbfdf8]/70 backdrop-blur-[1px]">
+            <span className="rounded-full border border-[#dfe7dc] bg-white/80 px-3 py-1 text-xs font-medium text-[#55705b] shadow-sm">
+              Loading candles…
+            </span>
+          </div>
+        )}
+
+        {!isLoading && chartCandles.length === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-[#55705b]">
+            Waiting for market candles…
+          </div>
+        )}
+      </div>
     </div>
   );
 }
