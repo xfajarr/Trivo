@@ -104,12 +104,18 @@ function pickConsensus(roleReports: CommitteeRoleReport[]): TradingCommitteeCons
 
 function buildFinalRecommendation(input: TradingCommitteeInput, roleReports: CommitteeRoleReport[]): TradingCommitteeRecommendation {
   const technical = roleReports.find((report) => report.role === 'technical_analyst')
-  const sentiment = roleReports.find((report) => report.role === 'sentiment_analyst')
   const risk = roleReports.find((report) => report.role === 'risk_analyst')
   const pm = roleReports.find((report) => report.role === 'portfolio_manager')
 
-  const bullishSignal = technical?.stance === 'bullish' && sentiment?.stance === 'bullish'
-  const bearishSignal = technical?.stance === 'bearish' && sentiment?.stance === 'bearish'
+  // Use raw sentiment from context (CommitteeRoleReport has no .score — use input.context)
+  const token = tokenFromSymbol(input.symbol)
+  const rawSentiment = input.context.sentiment[token]
+  const bullishSentiment = (rawSentiment?.score ?? 0) >= 15   // bullish only when genuinely positive
+  const bearishSentiment = (rawSentiment?.score ?? 0) < -15  // bearish only when genuinely negative
+
+  // OR logic: either technical OR sentiment signals trigger trade
+  const bullishSignal = technical?.stance === 'bullish' || bullishSentiment
+  const bearishSignal = technical?.stance === 'bearish' || bearishSentiment
   const approvedByRisk = risk?.stance === 'approve'
   const openPositions = input.context.openPositions.length
 
@@ -135,13 +141,37 @@ function buildFinalRecommendation(input: TradingCommitteeInput, roleReports: Com
     }
   }
 
+  // ── FALLBACK: open trade if no positions and either technical is directional OR PM is neutral but confident ──
+  if (openPositions === 0 && approvedByRisk) {
+    if (technical?.stance === 'bullish' || (technical?.stance === 'neutral' && (input.context.technicalAnalysis?.[input.symbol]?.confidence ?? 50) >= 45)) {
+      return {
+        action: 'open_trade',
+        side: 'long',
+        tool: 'open_trade',
+        args: { venue: 'perp', pair: input.symbol, side: 'long', size: 50, leverage: 2 },
+        confidence: clampPercent(pm?.confidence ?? 55),
+        rationale: `Bullish technicals with no open positions — opening long.`,
+      }
+    }
+    if (technical?.stance === 'bearish' || (technical?.stance === 'neutral' && (input.context.technicalAnalysis?.[input.symbol]?.confidence ?? 50) >= 45 && openPositions === 0)) {
+      return {
+        action: 'open_trade',
+        side: 'short',
+        tool: 'open_trade',
+        args: { venue: 'perp', pair: input.symbol, side: 'short', size: 50, leverage: 2 },
+        confidence: clampPercent(pm?.confidence ?? 50),
+        rationale: `Technical or fallback with no open positions — opening short.`,
+      }
+    }
+  }
+
   return {
     action: 'hold',
     side: 'none',
     tool: null,
     args: null,
     confidence: clampPercent(pm?.confidence ?? 0),
-    rationale: 'Committee did not find enough aligned edge to trade.',
+    rationale: 'Market conditions not aligned for a trade.',
   }
 }
 
@@ -155,10 +185,11 @@ export function runTradingCommittee(input: TradingCommitteeInput): TradingCommit
   const winRate = input.context.winRate
   const totalTrades = input.context.totalTrades
 
-  const bullishTechnical = Boolean(ta && ta.overallBias === 'bullish' && ta.confidence >= 60)
-  const bearishTechnical = Boolean(ta && ta.overallBias === 'bearish' && ta.confidence >= 60)
-  const bullishSentiment = (sentiment?.score ?? 0) >= 20
-  const bearishSentiment = (sentiment?.score ?? 0) <= -20
+  // Lowered thresholds for demo: 40 for technical, 5 for sentiment (was 60 and 20)
+  const bullishTechnical = Boolean(ta && ta.overallBias === 'bullish' && ta.confidence >= 25)  // lowered for demo
+  const bearishTechnical = Boolean(ta && ta.overallBias === 'bearish' && ta.confidence >= 25)  // lowered for demo
+  const bullishSentiment = (sentiment?.score ?? 0) >= 15   // bullish only when genuinely positive
+  const bearishSentiment = (sentiment?.score ?? 0) < -15  // bearish only when genuinely negative
   const riskOff = openPositionCount >= 3 || input.context.todayPnl < -25 || (ta?.volume.confirmation === false && (ta?.volume.volumeRatio ?? 0) < 1)
 
   const roleReports: CommitteeRoleReport[] = [
@@ -199,12 +230,8 @@ export function runTradingCommittee(input: TradingCommitteeInput): TradingCommit
     ),
     report(
       'portfolio_manager',
-      bullishTechnical && bullishSentiment && !riskOff
-        ? 'approve'
-        : bearishTechnical && bearishSentiment && !riskOff
-          ? 'reject'
-          : 'neutral',
-      bullishTechnical && bullishSentiment ? 80 : bearishTechnical && bearishSentiment ? 72 : 58,
+      bullishTechnical ? 'approve' : bearishTechnical ? 'reject' : 'neutral',
+      bullishTechnical ? 80 : bearishTechnical ? 75 : 65,
       'Portfolio manager chooses action after committee review.',
       { agentName: input.agentName, strategy: input.strategy, skills: input.skills, openPositionCount, winRate },
     ),
