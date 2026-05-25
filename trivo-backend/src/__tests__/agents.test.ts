@@ -50,17 +50,23 @@ describe('agent creation provisioning', () => {
     vi.clearAllMocks()
     insertValues.mockResolvedValue(undefined)
     updateSet.mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) })
-    selectWhere.mockResolvedValue([
-      {
-        id: 'agent-1',
-        ownerId: 'user-1',
-        name: 'Test Agent',
-        handle: 'test-agent',
-        status: 'active',
-        circleWalletId: 'wallet-1',
-        circleWalletAddress: '0xabc',
-      },
-    ])
+    // First call returns empty (handle pre-check passes), subsequent calls return agent data
+    let callCount = 0
+    selectWhere.mockImplementation(() => {
+      callCount++
+      if (callCount === 1) return Promise.resolve([]) // pre-check: handle not taken
+      return Promise.resolve([
+        {
+          id: 'agent-1',
+          ownerId: 'user-1',
+          name: 'Test Agent',
+          handle: 'test-agent',
+          status: 'active',
+          circleWalletId: 'wallet-1',
+          circleWalletAddress: '0xabc',
+        },
+      ])
+    })
     createAgentWallet.mockResolvedValue({ walletId: 'wallet-1', walletAddress: '0xabc' })
   })
 

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -308,4 +308,16 @@ export const tradeOutcomes = pgTable('trade_outcomes', {
   wasCorrect: text('was_correct'),
   won: text('won'),
   createdAt: timestamp('created_at').defaultNow(),
+})
+
+// ─── Agent Event Store Table (Phase 6) ──────────────────────────────────────
+// Persisted event sourcing for autonomous agent operation
+
+export const agentEvents = pgTable('agent_events', {
+  id: text('id').primaryKey(),
+  agentId: text('agent_id').notNull(),
+  type: text('type').notNull(), // EventType enum values
+  data: text('data').notNull(), // JSON string
+  timestamp: timestamp('timestamp').notNull(),
+  sequence: integer('sequence').notNull(), // Append-only sequence for ordering
 })
