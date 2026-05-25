@@ -6,10 +6,22 @@ import type { BaseProvider } from '../engine/providers/base-provider.js'
 const chat = new Hono()
 
 function getProvider(): BaseProvider {
-  const apiKey = process.env.AI_API_KEY ?? process.env.OPENAI_API_KEY ?? ''
-  const baseURL = process.env.AI_BASE_URL ?? ''
+  const providerName = (process.env.AI_PROVIDER ?? 'heurist').toLowerCase()
+  const apiKey = process.env.AI_API_KEY ?? ''
   const model = process.env.AI_MODEL ?? 'asi1-mini'
 
+  if (!apiKey) {
+    throw new Error('AI_API_KEY is not set. Set AI_API_KEY in your .env file.')
+  }
+
+  if (providerName === 'heurist') {
+    return new HeuristProvider({ apiKey, model })
+  }
+  if (providerName === 'asi1' || providerName === 'asi-one' || providerName === 'asi') {
+    return new ASIOneProvider({ apiKey, model })
+  }
+  // Fallback: detect from base URL
+  const baseURL = process.env.AI_BASE_URL ?? ''
   if (baseURL.includes('heurist')) {
     return new HeuristProvider({ apiKey, model })
   }
@@ -66,7 +78,14 @@ Be concise, friendly, and helpful. Use emojis occasionally.`,
     })
   } catch (error) {
     console.error('Chat error:', error)
-    return c.json({ error: String(error) }, 500)
+    const msg = String(error)
+    if (msg.includes('401') || msg.includes('AuthenticationError')) {
+      return c.json({
+        error: `AI provider auth failed. Check AI_API_KEY / AI_PROVIDER env vars. Provider: ${process.env.AI_PROVIDER ?? 'heurist'}`,
+        detail: msg,
+      }, 502)
+    }
+    return c.json({ error: msg }, 500)
   }
 })
 
@@ -126,6 +145,13 @@ The user is your creator. They are chatting with you to train, refine your strat
     })
   } catch (error) {
     console.error('Agent chat error:', error)
-    return c.json({ error: String(error) }, 500)
+    const msg = String(error)
+    if (msg.includes('401') || msg.includes('AuthenticationError')) {
+      return c.json({
+        error: `AI provider auth failed. Check AI_API_KEY / AI_PROVIDER env vars. Provider: ${process.env.AI_PROVIDER ?? 'heurist'}`,
+        detail: msg,
+      }, 502)
+    }
+    return c.json({ error: msg }, 500)
   }
 })

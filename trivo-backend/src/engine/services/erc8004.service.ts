@@ -101,7 +101,28 @@ export class ERC8004Service {
       toBlock: latestBlock,
     })
 
-    if (transferLogs.length === 0) throw new Error('No Transfer events found — ERC-8004 registration may have failed')
+    if (transferLogs.length === 0) {
+      // Try reading totalSupply or latest token as fallback
+      try {
+        // Scan for ALL Transfer events from address(0) (mint events)
+        const mintLogs = await this.publicClient.getLogs({
+          address: IDENTITY_REGISTRY as `0x${string}`,
+          event: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'),
+          args: { from: '0x0000000000000000000000000000000000000000' as `0x${string}` },
+          fromBlock,
+          toBlock: latestBlock,
+        })
+        const agentId = mintLogs[mintLogs.length - 1]?.args?.tokenId?.toString() ?? '0'
+        if (agentId !== '0') {
+          console.log(`🆔 ERC-8004 agent #${agentId} registered (via mint scan)`)
+          return { agentId, txHash }
+        }
+      } catch {
+        // fall through
+      }
+      console.warn('⚠️ ERC-8004 registered but could not determine token ID from events')
+      return { agentId: '0', txHash }
+    }
     const agentId = transferLogs[transferLogs.length - 1]?.args?.tokenId?.toString() ?? '0'
     return { agentId, txHash }
   }

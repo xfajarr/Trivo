@@ -30,9 +30,9 @@ export async function fetchAndPushPrices(): Promise<Record<string, number>> {
 
     for (const [pair, price] of Object.entries(prices)) {
       try {
-        await updatePrice(pair, price)
-        const shortPair = pair.split('-')[0] ?? pair
-        console.log(`📊 ${shortPair} → $${price} (🔗 https://testnet.arcscan.app/tx/latest)`)
+        const shortPair = pair.split('/')[0]
+        const receipt = await updatePrice(pair, price)
+        console.log(`📊 ${shortPair} → $${price} (🔗 https://testnet.arcscan.app/tx/${receipt?.transactionHash ?? 'pending'})`)
       } catch (err) {
         console.error(`❌ Failed to push ${pair}:`, err)
       }

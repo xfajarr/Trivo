@@ -2,9 +2,7 @@
 // Core PnL tracking: realized/unrealized, mark-to-market, aggregation, performance metrics
 
 import { db } from '../lib/db.js'
-import { positions } from '../lib/schema.js'
-import { agentPnlSnapshots } from '../lib/schema.js'
-import { tradeOutcomes } from '../lib/schema.js'
+import { positions, agentPnlSnapshots, tradeOutcomes } from '../lib/schema.js'
 import { eq, and, gte, desc } from 'drizzle-orm'
 import { randomUUID } from 'crypto'
 
@@ -136,6 +134,9 @@ export class PnLService {
         .update(positions)
         .set({
           markPrice: currentPrice.toString(),
+          unrealizedPnl: pnl.unrealizedPnl.toString(),
+          pnl: pnl.unrealizedPnl.toString(),
+          pnlPct: pnl.pnlPct.toString(),
         })
         .where(eq(positions.id, position.id))
     }
@@ -191,7 +192,7 @@ export class PnLService {
 
     // Record trade outcome for learning
     const outcome: TradeOutcomeRecord = {
-      decisionId: p.id,
+      decisionId: p.decisionId || p.id,
       positionId: p.id,
       market: p.market,
       side,
@@ -208,7 +209,7 @@ export class PnLService {
     }
 
     // Save to trade_outcomes table
-    await db.insert(tradeOutcomes as never).values({
+    await db.insert(tradeOutcomes).values({
       id: randomUUID(),
       agentId: p.agentId,
       decisionId: outcome.decisionId,
@@ -223,8 +224,8 @@ export class PnLService {
       netPnl: outcome.netPnl.toString(),
       pnlPct: outcome.pnlPct.toString(),
       holdTimeMs: outcome.holdTimeMs.toString(),
-      wasCorrect: outcome.wasCorrect,
-      won: outcome.won,
+      wasCorrect: outcome.wasCorrect.toString(),
+      won: outcome.won.toString(),
     })
 
     return outcome
@@ -407,17 +408,17 @@ export class PnLService {
     // Get current portfolio value (would come from wallet service)
     const portfolioValue = 10000 + aggregated.totalPnl
 
-    await db.insert(agentPnlSnapshots as never).values({
+    await db.insert(agentPnlSnapshots).values({
       id: randomUUID(),
       agentId,
       window: 'hourly',
       realizedPnl: aggregated.realizedPnl.toString(),
       unrealizedPnl: aggregated.unrealizedPnl.toString(),
       totalPnl: aggregated.totalPnl.toString(),
-      openPositions: aggregated.tradeCount - aggregated.winCount - aggregated.lossCount,
-      closedPositions: aggregated.winCount + aggregated.lossCount,
-      winningPositions: aggregated.winCount,
-      losingPositions: aggregated.lossCount,
+      openPositions: (aggregated.tradeCount - aggregated.winCount - aggregated.lossCount).toString(),
+      closedPositions: (aggregated.winCount + aggregated.lossCount).toString(),
+      winningPositions: aggregated.winCount.toString(),
+      losingPositions: aggregated.lossCount.toString(),
       winRate: aggregated.winRate.toString(),
       sharpeRatio: aggregated.sharpeRatio.toString(),
       maxDrawdown: aggregated.maxDrawdown.toString(),
@@ -438,12 +439,7 @@ export class PnLService {
     totalTrades: number
     avgHoldTime: number
   }> {
-    const [day, week, month, all] = await Promise.all([
-      this.aggregatePnL(agentId, 'day'),
-      this.aggregatePnL(agentId, 'week'),
-      this.aggregatePnL(agentId, 'month'),
-      this.aggregatePnL(agentId, 'all'),
-    ])
+    const all = await this.aggregatePnL(agentId, 'all')
 
     // Get average hold time from trade outcomes
     const outcomes = await db

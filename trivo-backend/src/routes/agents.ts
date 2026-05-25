@@ -173,8 +173,8 @@ agentRoutes.patch('/:id/status', authMiddleware, async (c) => {
 
 // ── Phase 6: Decision / Insight / Identity Routes ─────────────────────────
 
-import { agentDecisions, agentReflections, tradeOutcomes } from '../lib/schema'
-import { desc, and } from 'drizzle-orm'
+import { agentDecisions, agentReflections } from '../lib/schema'
+import { desc } from 'drizzle-orm'
 
 // GET /:id/decisions — recent decisions
 agentRoutes.get('/:id/decisions', async (c) => {
@@ -206,7 +206,7 @@ agentRoutes.get('/:id/decisions', async (c) => {
 
 // GET /:id/decisions/:decisionId — full decision detail
 agentRoutes.get('/:id/decisions/:decisionId', async (c) => {
-  const { id: _agentId, decisionId } = c.req.param()
+  const { decisionId } = c.req.param()
 
   const decision = await db
     .select()
@@ -303,4 +303,119 @@ agentRoutes.get('/:id/identity', async (c) => {
     },
     identityProof,
   })
+})
+
+// ── Phase 6: Missing Endpoints (Ticket IN3) ────────────────────────────────
+
+// GET /:id/decisions/:decisionId/audit — audit trail for a decision
+agentRoutes.get('/:id/decisions/:decisionId/audit', async (c) => {
+  const { decisionId } = c.req.param()
+
+  const decision = await db
+    .select()
+    .from(agentDecisions)
+    .where(eq(agentDecisions.id, decisionId))
+    .limit(1)
+
+  if (!decision[0]) {
+    return c.json({ error: 'Decision not found' }, 404)
+  }
+
+  const { auditSystem } = await import('../engine/audit/audit-system.js')
+  const auditTrail = auditSystem.getAuditTrail()
+  const chainValid = auditSystem.verifyAuditChain()
+
+  return c.json({
+    decisionId,
+    auditTrail: auditTrail.slice(-50), // Last 50 entries
+    chainValid: chainValid.valid,
+    brokenAt: chainValid.brokenAt ?? null,
+  })
+})
+
+// GET /:id/patterns — recurring mistake/win patterns
+agentRoutes.get('/:id/patterns', async (c) => {
+  const agentId = c.req.param('id')
+  const limit = Math.min(Number(c.req.query('limit') || '20'), 50)
+
+  const reflections = await db
+    .select()
+    .from(agentReflections)
+    .where(eq(agentReflections.agentId, agentId))
+    .orderBy(desc(agentReflections.createdAt))
+    .limit(limit)
+
+  // Extract patterns from reflections
+  const patternCounts: Record<string, { count: number; type: 'win' | 'loss' | 'neutral'; improvements: string[] }> = {}
+  for (const r of reflections) {
+    const pattern = r.mistakePattern || 'unknown'
+    if (!patternCounts[pattern]) {
+      patternCounts[pattern] = { count: 0, type: 'neutral', improvements: [] }
+    }
+    patternCounts[pattern]!.count++
+    if (r.outcomePnl && parseFloat(r.outcomePnl) > 0) {
+      patternCounts[pattern]!.type = 'win'
+    } else if (r.outcomePnl && parseFloat(r.outcomePnl) < 0) {
+      patternCounts[pattern]!.type = 'loss'
+    }
+    if (r.improvement) {
+      patternCounts[pattern]!.improvements.push(r.improvement)
+    }
+  }
+
+  return c.json({
+    patterns: Object.entries(patternCounts).map(([pattern, data]) => ({
+      pattern,
+      occurrences: data.count,
+      type: data.type,
+      improvements: [...new Set(data.improvements)].slice(0, 3),
+    })),
+    total: Object.keys(patternCounts).length,
+  })
+})
+
+// GET /:id/verify — verify agent identity
+agentRoutes.get('/:id/verify', async (c) => {
+  const id = c.req.param('id')
+
+  const agent = await db
+    .select()
+    .from(agentsTable)
+    .where(eq(agentsTable.id, id))
+    .limit(1)
+
+  if (!agent[0]) {
+    return c.json({ error: 'Agent not found' }, 404)
+  }
+
+  const a = agent[0]
+
+  if (!a.erc8004TokenId) {
+    return c.json({
+      verified: false,
+      hasIdentity: false,
+      message: 'Agent has no ERC-8004 token',
+    })
+  }
+
+  try {
+    const { identityService } = await import('../engine/identity/identity-service.js')
+    const verification = await identityService.verifyIdentity(
+      '0x8004A818BFB912233c491871b3d84c89A494BD9e' as const,
+      BigInt(a.erc8004TokenId)
+    )
+
+    return c.json({
+      verified: verification.verified,
+      hasIdentity: true,
+      owner: verification.owner,
+      tokenId: verification.tokenId,
+    })
+  } catch {
+    return c.json({
+      verified: false,
+      hasIdentity: true,
+      message: 'On-chain verification failed',
+    })
+  }
 })

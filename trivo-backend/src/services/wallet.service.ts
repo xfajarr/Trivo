@@ -23,28 +23,43 @@ let _walletSetId: string | null = null
  * Creates once, then reuses the ID.
  */
 async function getWalletSetId(): Promise<string> {
-  if (_walletSetId) return _walletSetId
+  if (_walletSetId) return _walletSetId!
 
   const c = getClient()
   try {
     const response = await c.createWalletSet({ name: 'Trivo Agents' })
-    _walletSetId = response.data?.walletSet?.id ?? null
-    if (_walletSetId) return _walletSetId
-  } catch {
-    // Wallet set may already exist — use a deterministic ID
-    _walletSetId = 'trivo-agents-wallet-set'
-    return _walletSetId
+    const id = response.data?.walletSet?.id
+    if (id) {
+      _walletSetId = id
+      return _walletSetId!
+    }
+  } catch (e) {
+    console.warn('⚠️ createWalletSet failed, trying to list existing sets:', (e as Error).message)
   }
 
-  throw new Error('Failed to create wallet set')
+  // Try listing existing wallet sets
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const listResponse = (c as any).listWalletSets?.({})
+    if (listResponse?.data?.walletSets?.length > 0) {
+      _walletSetId = listResponse.data.walletSets[0].id ?? ""
+      console.log(`📦 Reusing existing wallet set: ${_walletSetId}`)
+      return _walletSetId!
+    }
+  } catch {
+    // ignore
+  }
+
+  throw new Error('Failed to create or find wallet set — check Circle API credentials')
 }
 
 /**
  * Create a wallet for an agent on Arc Testnet
  */
-export async function createAgentWallet(_agentName: string): Promise<{ walletId: string; walletAddress: string }> {
+export async function createAgentWallet(agentName: string): Promise<{ walletId: string; walletAddress: string }> {
   const c = getClient()
   const setId = await getWalletSetId()
+  console.log(`💳 Creating Circle wallet for "${agentName}" in wallet set: ${setId}`)
 
   const response = await c.createWallets({
     accountType: 'SCA',

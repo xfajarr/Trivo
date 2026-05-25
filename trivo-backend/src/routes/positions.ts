@@ -2,8 +2,42 @@ import { Hono } from 'hono'
 import { eq, desc } from 'drizzle-orm'
 import { db } from '../lib/db'
 import { positions as positionsTable } from '../lib/schema'
+import { getPrice } from '../services/contract.service'
 
 export const positionRoutes = new Hono()
+
+// Helper: calculate unrealized PnL for a position using current oracle price
+async function calcUnrealizedPnl(
+  market: string,
+  side: string,
+  size: string,
+  entryPrice: string,
+  storedPnl: string
+): Promise<{ pnl: number; pnlPct: number; currentPrice: number; markPrice: string }> {
+  const entry = Number(entryPrice) || 0
+  const sz = Number(size) || 0
+  if (entry === 0 || sz === 0) {
+    return { pnl: Number(storedPnl) || 0, pnlPct: 0, currentPrice: entry, markPrice: entryPrice }
+  }
+  let currentPrice = entry
+  try {
+    currentPrice = await getPrice(market || 'BTC/USD')
+    if (currentPrice <= 0) currentPrice = entry
+  } catch {
+    currentPrice = entry
+  }
+  const isLong = (side || 'long').toLowerCase() === 'long'
+  const pnl = isLong
+    ? ((currentPrice - entry) / entry) * sz
+    : ((entry - currentPrice) / entry) * sz
+  const pnlPct = ((currentPrice - entry) / entry) * 100 * (isLong ? 1 : -1)
+  return {
+    pnl: Math.round(pnl * 100) / 100,
+    pnlPct: Math.round(pnlPct * 100) / 100,
+    currentPrice,
+    markPrice: String(Math.round(currentPrice * 100) / 100),
+  }
+}
 
 positionRoutes.get('/', async (c) => {
   const agentId = c.req.query('agentId')
@@ -18,7 +52,18 @@ positionRoutes.get('/', async (c) => {
   if (status) allPositions = allPositions.filter((p: typeof positionsTable.$inferSelect) => p.status === status)
 
   const total = allPositions.length
-  const page = allPositions.slice(offset, offset + limit)
+  const rawPage = allPositions.slice(offset, offset + limit)
+
+  // Calculate fresh unrealized PnL for each open position using current oracle prices
+  const page = await Promise.all(
+    rawPage.map(async (p) => {
+      if (p.status === 'open') {
+        const fresh = await calcUnrealizedPnl(p.market, p.side, p.size, p.entryPrice, p.pnl || '0')
+        return { ...p, pnl: String(fresh.pnl), pnlPct: String(fresh.pnlPct), markPrice: fresh.markPrice }
+      }
+      return p
+    })
+  )
 
   return c.json({ positions: page, total, limit, offset })
 })
@@ -27,7 +72,12 @@ positionRoutes.get('/:id', async (c) => {
   const id = c.req.param('id')
   const position = await db.select().from(positionsTable).where(eq(positionsTable.id, id))
   if (position.length === 0) return c.json({ error: 'Position not found' }, 404)
-  return c.json({ position: position[0] })
+  const p = position[0]!
+  if (p.status === 'open') {
+    const fresh = await calcUnrealizedPnl(p.market, p.side, p.size, p.entryPrice, p.pnl || '0')
+    return c.json({ position: { ...p, pnl: String(fresh.pnl), pnlPct: String(fresh.pnlPct), markPrice: fresh.markPrice } })
+  }
+  return c.json({ position: p })
 })
 
 // Trade history for an agent (all closed positions with PnL)

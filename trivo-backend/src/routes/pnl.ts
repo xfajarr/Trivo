@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { db } from '../lib/db.js'
 import { positions, tradeOutcomes } from '../lib/schema.js'
-import { eq, and, lte } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { getPrice } from '../services/contract.service.js'
 import { pnlService } from '../services/pnl.service.js'
 
@@ -88,6 +88,7 @@ pnlRoutes.get('/agents/:id', async (c) => {
     maxDrawdown: aggregated.maxDrawdown,
     sharpeRatio: aggregated.sharpeRatio,
     positions: positionDetails,
+    totalPositions: openPositions.length,
   })
 })
 

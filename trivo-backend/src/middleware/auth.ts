@@ -12,6 +12,8 @@ declare module 'hono' {
 
 export const authMiddleware = createMiddleware(async (c, next) => {
   const authHeader = c.req.header('Authorization')
+
+
   if (!authHeader?.startsWith('Bearer ')) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return c.json({ error: 'Missing authorization token' }, 401) as any
