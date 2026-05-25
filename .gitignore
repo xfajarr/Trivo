@@ -51,3 +51,9 @@ yarn.lock
 package-lock.json
 docs/submission-google-form.txt
 docs/submission-text.md
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+!.env.example
