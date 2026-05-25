@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Verify with backend
           try {
             await fetch(
-              `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/auth/verify`,
+              `${import.meta.env.VITE_API_URL || "https://trivo-production.up.railway.app"}/api/auth/verify`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

@@ -10,7 +10,7 @@ export interface Candle {
   volume: number;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE = import.meta.env.VITE_API_URL || "https://trivo-production.up.railway.app";
 
 export const api = axios.create({ baseURL: API_BASE });
 
