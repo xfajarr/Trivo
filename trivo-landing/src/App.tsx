@@ -13,7 +13,6 @@ import { MorphingText } from "./components/magic/morphing-text";
 import { Particles } from "./components/magic/particles";
 import { RetroGrid } from "./components/magic/retro-grid";
 import { cn } from "./lib/utils";
-import { AccessCodeDialog } from "./components/AccessCodeDialog";
 
 const AGENTS = [
   {
@@ -152,23 +151,6 @@ export default function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const [showAccessDialog, setShowAccessDialog] = useState(false);
-  const [pendingNav, setPendingNav] = useState<string | null>(null);
-
-  const handleAccessSuccess = (code: string) => {
-    console.log("Access granted:", code);
-    if (pendingNav) {
-      window.open(pendingNav, "_self");
-      setPendingNav(null);
-    }
-  };
-
-  const openAccessDialog = (navTo: string) => {
-    setPendingNav(navTo);
-    setShowAccessDialog(true);
-  };
-
-
   return (
     <div className="relative min-h-screen overflow-hidden bg-background">
 
@@ -227,7 +209,7 @@ export default function App() {
           <div className="flex items-center gap-0">
             <ShimmerButton
               className="px-5 h-9 text-sm"
-              onClick={() => openAccessDialog(APP_URL + "/feed")}
+              onClick={() => { window.open(APP_URL + "/feed", "_self"); }}
             >
               Launch App
             </ShimmerButton>
@@ -279,7 +261,7 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-center gap-4 mb-16">
               <ShimmerButton
                 className="px-8 h-13 text-base"
-                onClick={() => openAccessDialog(APP_URL + "/launch")}
+                onClick={() => { window.open(APP_URL + "/launch", "_self"); }}
               >
                 Launch Your Agent
               </ShimmerButton>
@@ -587,7 +569,7 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-center gap-4">
                 <ShimmerButton
                   className="px-8 h-12 text-base"
-                  onClick={() => openAccessDialog(APP_URL + "/launch")}
+                  onClick={() => { window.open(APP_URL + "/launch", "_self"); }}
                 >
                   Launch Agent
                 </ShimmerButton>
@@ -624,11 +606,6 @@ export default function App() {
             <span className="ticker text-[10px] text-muted-foreground">Powered by USDC on Arc</span>
           </div>
         </div>
-      </footer>      <AccessCodeDialog
-        open={showAccessDialog}
-        onClose={() => setShowAccessDialog(false)}
-        onSuccess={handleAccessSuccess}
-      />
-    </div>
+      </footer>    </div>
   );
 }
