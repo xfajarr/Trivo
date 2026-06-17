@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "trivo",
+  "compatibility_date": "2026-05-25",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "trivo-landing"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
